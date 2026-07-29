@@ -74,7 +74,7 @@ Re-running this doesn't duplicate rows — it updates what already exists and in
 
 **Version note:** `MERGE` is standard across SQL Server, Oracle, Snowflake, and BigQuery, but in **PostgreSQL it only exists from v15 (October 2022)** — anything older needs an `INSERT ... ON CONFLICT DO UPDATE` upsert instead. `MERGE ... RETURNING` (and `merge_action()` to tell which branch fired) wasn't added until **PostgreSQL 17 (September 2024)** — don't write a `RETURNING`-based `MERGE` example against a PG15/16 target.
 
-**Oracle note:** Oracle's `MERGE` support and restriction details (e.g., limits on matching a target row more than once per statement) have not been verified against Oracle documentation for this skill — confirm before treating Oracle-specific `MERGE` details in this section as authoritative.
+**Oracle note:** Oracle has had `MERGE` since 9i, and Oracle's own reference is explicit that "MERGE is a deterministic statement: you cannot update the same row of the target table multiple times in the same MERGE statement." If the source produces more than one row matching the same target row, Oracle doesn't silently apply one and drop the rest — it raises `ORA-30926` ("unable to get a stable set of rows in the source tables"). Oracle also allows exactly one `WHEN MATCHED` and one `WHEN NOT MATCHED` clause per statement (each can carry its own conditional `WHERE`, and `WHEN MATCHED` can nest a `DELETE WHERE` that only removes rows the same statement just matched/updated) — there's no SQL-Server-style multiple conditional branches or `WHEN NOT MATCHED BY SOURCE`.
 
 ## Slowly Changing Dimension Type 2
 
@@ -126,3 +126,4 @@ Note the `MERGE` form above only closes the old row — it does **not** insert t
 | Writing a `MERGE ... RETURNING` example without checking the Postgres version | Fails on PG15/16 — `RETURNING` support is PG17+ | Confirm target Postgres version, or use a separate `SELECT` to inspect affected rows on older versions |
 | Overwriting a dimension row in place when history matters | Loses the ability to report "as it was at the time" | SCD Type 2: close the old row, insert a new one, surrogate key |
 | Reaching for a self-join or procedural loop for gaps/islands or sessionization | Slower and far more code than the window-function idiom | Use the `ROW_NUMBER` subtraction trick (gaps/islands) or `LAG` + running sum (sessionization) |
+| A staging table with duplicate keys feeding a `MERGE` on Oracle | Raises `ORA-30926` — Oracle refuses to update the same target row twice in one `MERGE` | Deduplicate the source (see [window-functions.md](window-functions.md)'s `ROW_NUMBER` pattern) before the `MERGE`, don't rely on the engine to pick one |

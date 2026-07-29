@@ -41,7 +41,7 @@ SELECT * FROM org_chart ORDER BY level;
 
 **Recursive CTE support is not uniformly old across engines** — PostgreSQL has had `WITH RECURSIVE` since 8.4 (2009) and SQL Server since 2005, but **BigQuery only added `WITH RECURSIVE` around February 2022** (initially as a preview feature). Don't assume a recursive-CTE pattern is safely portable to a BigQuery pipeline without confirming the platform version, especially for anything built before 2022.
 
-**Oracle note:** Oracle traditionally expresses hierarchical queries with `CONNECT BY PRIOR` rather than (or alongside) an ANSI recursive `WITH` clause — the exact current support, syntax, and any behavioral differences from `WITH RECURSIVE` have not been verified against Oracle documentation for this skill and should be confirmed before relying on this section for an Oracle target.
+**Oracle supports both forms, and the syntax has a real gotcha.** Oracle has had `CONNECT BY PRIOR ... START WITH` since long before the ANSI form existed, and added ANSI-style recursive subquery factoring in **Oracle Database 11g Release 2 (11.2.0.1)**. The gotcha: Oracle's `WITH` clause doesn't take (and doesn't support) the literal `RECURSIVE` keyword — recursion is inferred automatically whenever a `WITH` query references its own name, so the query above runs on Oracle only after dropping the word `RECURSIVE` (`WITH org_chart AS (...)`, not `WITH RECURSIVE org_chart AS (...)`). Oracle's own docs frame recursive `WITH` as strictly more capable than `CONNECT BY` (it adds `SEARCH`/`CYCLE` clauses for ordering and cycle detection, and supports multiple recursive branches), but `CONNECT BY` remains fully supported and stays the terser, idiomatic choice for a simple single-root hierarchy.
 
 ## The senior framing
 
@@ -55,3 +55,4 @@ CTEs are for legibility and for expressing recursion — not a performance tool 
 | Assuming a CTE is never an optimization barrier | On pre-12 PostgreSQL it always is; SQL Server, Snowflake, and BigQuery inline it, so the barrier isn't universal either | Know your engine's CTE inlining behavior; force materialization with `AS MATERIALIZED` on PG12+ if needed |
 | Assuming `WITH RECURSIVE` works identically on any warehouse | BigQuery only added it in ~2022 | Confirm platform version/support before relying on it |
 | Reaching for recursion to generate a date range when a built-in generator exists | More verbose than necessary on engines with native series generation (e.g. Postgres `GENERATE_SERIES`) | Prefer the engine's native series-generation function when available |
+| Writing `WITH RECURSIVE` on Oracle | Fails — Oracle infers recursion automatically and doesn't accept the `RECURSIVE` keyword | Drop the keyword: `WITH query_name AS (...)`, same as any other CTE there |
