@@ -923,13 +923,15 @@ git commit -m "Add sql skill: SKILL.md"
 
 Two scenarios test both discoverability and whether the corrected technical content actually surfaces — not just that the skill fires.
 
-- [ ] **Step 1: Symlink the skill for testing**
+- [x] **Step 1: Symlink the skill for testing**
 
 ```bash
 ln -sf "$(pwd)/data-engineering-skills/skills/sql" ~/.claude/skills/sql
 ```
 
-- [ ] **Step 2: Run the NULL-trap correctness scenario**
+Confirmed 2026-07-28: symlink present and resolving correctly.
+
+- [x] **Step 2: Run the NULL-trap correctness scenario**
 
 Dispatch a fresh `general-purpose` agent with this prompt:
 
@@ -937,7 +939,9 @@ Dispatch a fresh `general-purpose` agent with this prompt:
 
 Expected: the agent invokes `sql`, correctly identifies that `NOT IN` with a NULL in the subquery's result silently returns zero rows (not an error), and recommends `NOT EXISTS` as the fix.
 
-- [ ] **Step 3: Run the window-function frame-default scenario**
+**Result (2026-07-28): PASS.** Agent invoked `sql`, correctly explained the three-valued-logic mechanics (`id <> NULL` → UNKNOWN, poisoning the whole `AND` chain), stated the query silently returns zero rows with no error, and recommended `NOT EXISTS` as the default fix.
+
+- [x] **Step 3: Run the window-function frame-default scenario**
 
 Dispatch a fresh `general-purpose` agent with this prompt:
 
@@ -945,9 +949,13 @@ Dispatch a fresh `general-purpose` agent with this prompt:
 
 Expected: the agent invokes `sql`, explains that the implicit default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` (not `ROWS`), that `RANGE` includes all rows tied on the `ORDER BY` value at each of those rows (causing the running total to jump on duplicate dates), and recommends an explicit `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` frame.
 
-- [ ] **Step 4: Record the result**
+**Result (2026-07-28): PASS — exceeds expectations.** Agent invoked `sql` (citing `references/window-functions.md`), correctly explained the RANGE default and that Snowflake follows the ANSI default for aggregate functions specifically (not a blanket Snowflake exception), recommended an explicit `ROWS` frame, and additionally caught a grain-mismatch issue (pre-aggregating to daily grain before windowing) that went beyond the literal question.
+
+- [x] **Step 4: Record the result**
 
 If either scenario fails (skill doesn't fire, or the technical answer is wrong/vague), fix the relevant wording in the affected reference file or `SKILL.md`'s quick-reference table, and re-run only the failing scenario.
+
+Both scenarios passed on the first run — no content changes needed.
 
 ---
 
