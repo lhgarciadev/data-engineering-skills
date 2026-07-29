@@ -12,9 +12,9 @@ FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY
 
 Three consequences follow directly, and interviewers test all three:
 
-- **You can't reference a SELECT alias in WHERE — on PostgreSQL, MySQL, SQL Server, and BigQuery.** WHERE runs before SELECT, so the alias doesn't exist yet:
+- **You can't reference a SELECT alias in WHERE — on PostgreSQL, MySQL, SQL Server, BigQuery, and Redshift.** WHERE runs before SELECT, so the alias doesn't exist yet:
   ```sql
-  -- fails on PostgreSQL, MySQL, SQL Server, BigQuery: "column total_price does not exist" (alias not yet defined)
+  -- fails on PostgreSQL, MySQL, SQL Server, BigQuery, Redshift: "column total_price does not exist" (alias not yet defined)
   SELECT price * qty AS total_price FROM orders WHERE total_price > 100;
 
   -- works everywhere: repeat the expression, or move the filter to an outer query
@@ -38,7 +38,7 @@ Three consequences follow directly, and interviewers test all three:
   ```
   On Snowflake, BigQuery, and Redshift, `QUALIFY` filters a window function's result directly, without the CTE wrap — see [window-functions.md](window-functions.md) for the syntax and why PostgreSQL/MySQL/SQL Server still need the CTE form.
 
-This underlying logical order — WHERE conceptually evaluated before SELECT, aggregates before HAVING, window functions after HAVING — holds across PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery; it's ANSI logical processing, not an engine quirk. Snowflake's alias-in-WHERE support (above) doesn't change that order — it's a documented syntax convenience layered on top via expression substitution, not a different evaluation sequence.
+This underlying logical order — WHERE conceptually evaluated before SELECT, aggregates before HAVING, window functions after HAVING — holds across PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift; it's ANSI logical processing, not an engine quirk. Snowflake's alias-in-WHERE support (above) doesn't change that order — it's a documented syntax convenience layered on top via expression substitution, not a different evaluation sequence.
 
 ## NULL and three-valued logic
 
@@ -46,7 +46,7 @@ SQL comparisons don't evaluate to true/false — they evaluate to **true / false
 
 The trap that bites most often:
 
-**`NOT IN` with a NULL in the list returns zero rows.** `x NOT IN (a, b, NULL)` expands to `x <> a AND x <> b AND x <> NULL`. That last comparison is unknown, and combining it with `AND` poisons the whole expression to unknown — so **every row** gets dropped, silently, with no error thrown. This is standard-mandated three-valued-logic behavior, not an optimizer bug, and it's identical across PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery.
+**`NOT IN` with a NULL in the list returns zero rows.** `x NOT IN (a, b, NULL)` expands to `x <> a AND x <> b AND x <> NULL`. That last comparison is unknown, and combining it with `AND` poisons the whole expression to unknown — so **every row** gets dropped, silently, with no error thrown. This is standard-mandated three-valued-logic behavior, not an optimizer bug, and it's identical across PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift.
 
 ```sql
 -- silently returns ZERO rows if any customer_id in the subquery is NULL
