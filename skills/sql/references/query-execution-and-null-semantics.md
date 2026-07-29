@@ -12,14 +12,15 @@ FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY
 
 Three consequences follow directly, and interviewers test all three:
 
-- **You can't reference a SELECT alias in WHERE.** WHERE runs before SELECT, so the alias doesn't exist yet.
+- **You can't reference a SELECT alias in WHERE — on PostgreSQL, MySQL, SQL Server, and BigQuery.** WHERE runs before SELECT, so the alias doesn't exist yet:
   ```sql
-  -- fails: "column total_price does not exist" (alias not yet defined)
+  -- fails on PostgreSQL, MySQL, SQL Server, BigQuery: "column total_price does not exist" (alias not yet defined)
   SELECT price * qty AS total_price FROM orders WHERE total_price > 100;
 
-  -- works: repeat the expression, or move the filter to an outer query
+  -- works everywhere: repeat the expression, or move the filter to an outer query
   SELECT price * qty AS total_price FROM orders WHERE price * qty > 100;
   ```
+  **Snowflake is a genuine, documented exception, not "some engines allow it."** Snowflake's own SQL Command Reference (SELECT page, Usage Notes) states that a SELECT-list column alias can be referenced in that same query's WHERE clause (and its JOIN, FROM, and GROUP BY too) — the first query above runs fine, unmodified, on Snowflake. This isn't true alias binding, though: Snowflake re-evaluates the aliased expression rather than reusing a computed value, so it's expression substitution, not scoping. That distinction matters the moment the expression is non-deterministic (a UDF with side effects, `RANDOM()`, a sequence) — WHERE can evaluate to something different than what SELECT displayed. Don't port this assumption to any other engine, and don't lean on it even on Snowflake for anything non-deterministic.
 - **WHERE filters rows before grouping; HAVING filters groups after aggregating.** A condition on a raw column belongs in WHERE (cheaper — discards rows before the aggregation work); a condition on an aggregate result (`SUM(...)`, `COUNT(...)`) has to go in HAVING, because the aggregate doesn't exist until GROUP BY has run.
 - **Window functions evaluate in the SELECT phase — after HAVING, before DISTINCT/ORDER BY.** You cannot filter directly on a window function's result in WHERE (it doesn't exist there yet) or HAVING (window functions aren't aggregates). Wrap the query in a subquery or CTE and filter the outer layer:
   ```sql
@@ -35,8 +36,9 @@ Three consequences follow directly, and interviewers test all three:
   )
   SELECT * FROM ranked WHERE rn = 1;
   ```
+  On Snowflake, BigQuery, and Redshift, `QUALIFY` filters a window function's result directly, without the CTE wrap — see [window-functions.md](window-functions.md) for the syntax and why PostgreSQL/MySQL/SQL Server still need the CTE form.
 
-This order holds across PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery — it's ANSI logical processing, not an engine quirk.
+This underlying logical order — WHERE conceptually evaluated before SELECT, aggregates before HAVING, window functions after HAVING — holds across PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery; it's ANSI logical processing, not an engine quirk. Snowflake's alias-in-WHERE support (above) doesn't change that order — it's a documented syntax convenience layered on top via expression substitution, not a different evaluation sequence.
 
 ## NULL and three-valued logic
 

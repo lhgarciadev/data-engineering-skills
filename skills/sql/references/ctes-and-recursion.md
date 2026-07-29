@@ -2,7 +2,7 @@
 
 ## CTEs for readability and reuse
 
-`WITH` clauses decompose a complex query into named, readable steps and avoid repeating a subquery. One nuance worth knowing: in some engines a CTE is an **optimization barrier** — it gets materialized as-is and isn't fused with the rest of the query plan — while in others (modern PostgreSQL, since 12) the planner can inline it like a subquery when that's cheaper. In cloud warehouses this generally doesn't matter for performance, but knowing the difference exists — and checking your engine's specific behavior when a CTE-heavy query is unexpectedly slow — is a sign of depth beyond "I use CTEs for readability."
+`WITH` clauses decompose a complex query into named, readable steps and avoid repeating a subquery. One nuance worth knowing, named per engine rather than gestured at: **PostgreSQL before version 12 always materializes a CTE** — a true optimization barrier, evaluated once and spooled to a temp result regardless of how the outer query uses it. **PostgreSQL 12+ flips the default**: the planner can inline a CTE like a subquery when that's cheaper, unless you force the old behavior explicitly with `AS MATERIALIZED`. **SQL Server never treats a CTE as a materialization barrier** — a CTE there is just an aliased subquery/view over the query text, always inlined into the surrounding plan. **Snowflake and BigQuery's optimizers likewise inline CTEs into the overall plan rather than materializing them by default.** Knowing your engine's specific behavior — and reaching for `AS MATERIALIZED` on PG12+ when you deliberately want the old barrier (e.g., to avoid re-evaluating an expensive volatile expression multiple times) — is a sign of depth beyond "I use CTEs for readability."
 
 ## Correlated vs non-correlated subqueries
 
@@ -52,6 +52,6 @@ CTEs are for legibility and for expressing recursion — not a performance tool 
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | Writing a correlated subquery instead of a join for a per-row aggregate | Re-evaluates once per outer row — slow at scale | Rewrite as a join against a pre-aggregated subquery, or a window function |
-| Assuming a CTE never affects the query plan | On engines where it's an optimization barrier, it can force a suboptimal plan | Check the specific engine's CTE materialization behavior when a CTE-heavy query is unexpectedly slow |
+| Assuming a CTE is never an optimization barrier | On pre-12 PostgreSQL it always is; SQL Server, Snowflake, and BigQuery inline it, so the barrier isn't universal either | Know your engine's CTE inlining behavior; force materialization with `AS MATERIALIZED` on PG12+ if needed |
 | Assuming `WITH RECURSIVE` works identically on any warehouse | BigQuery only added it in ~2022 | Confirm platform version/support before relying on it |
 | Reaching for recursion to generate a date range when a built-in generator exists | More verbose than necessary on engines with native series generation (e.g. Postgres `GENERATE_SERIES`) | Prefer the engine's native series-generation function when available |

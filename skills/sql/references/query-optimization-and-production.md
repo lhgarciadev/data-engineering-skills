@@ -24,7 +24,7 @@ PostgreSQL isn't limited to B-tree — the other index types are worth knowing w
 | GiST | Geometric data, range types, nearest-neighbor search |
 | BRIN | Very large tables that are naturally sorted/clustered on disk (e.g., an append-only, time-ordered table) — tiny index size, block-range summaries instead of per-row entries |
 
-Once an index exists, `pg_stat_user_indexes` shows whether it's actually being used, and `pg_stat_statements` surfaces the queries actually consuming the most total time — check both before deciding an index helps or is dead weight.
+Once an index exists, `pg_stat_user_indexes` shows whether it's actually being used, and `pg_stat_statements` surfaces the queries actually consuming the most total time — check both before deciding an index helps or is dead weight. (`pg_stat_user_indexes` is built in; `pg_stat_statements` isn't — it requires adding it to `shared_preload_libraries` in `postgresql.conf`, restarting the instance, and then running `CREATE EXTENSION pg_stat_statements` before it starts collecting anything.)
 
 *(Index-type coverage and the monitoring queries above are adapted, with attribution, from `wshobson/agents`'s `sql-optimization-patterns` skill, MIT-licensed.)*
 
@@ -67,7 +67,7 @@ Other classic rewrites: a correlated subquery into a join or window function (se
 
 ## SQL in ELT/dbt
 
-A large share of a data engineer's SQL ends up living inside dbt as versioned models. From the SQL side, two things matter directly: **incremental models depend on the same idempotency mechanism as `MERGE`** — the `unique_key` config drives an update/insert (upsert) instead of a blind append, exactly the pattern in [engineering-query-patterns.md](engineering-query-patterns.md) — and dbt's generic tests (`unique`, `not_null`, `accepted_values`, `relationships`) are data-quality checks expressed directly as SQL assertions rather than a separate framework.
+A large share of a data engineer's SQL ends up living inside dbt as versioned models. From the SQL side, two things matter directly: **incremental models depend on the same idempotency mechanism as `MERGE`** — the `unique_key` config drives an update/insert (upsert) instead of a blind append, exactly the pattern in [engineering-query-patterns.md](engineering-query-patterns.md); the actual strategy behind that upsert is adapter-dependent, though, not universal — `merge` is the default incremental strategy on Snowflake, BigQuery, and Databricks, while PostgreSQL and Redshift default to `delete+insert`. dbt's generic tests (`unique`, `not_null`, `accepted_values`, `relationships`) are data-quality checks expressed directly as SQL assertions rather than a separate framework.
 
 Everything beyond that — medallion architecture, model layering and naming conventions, the dependency graph between models, project structure — is dbt as an orchestrator for the transformation layer, not a SQL-language concern; that content belongs to `pipelines-architecture`, alongside Airflow, Dagster, and Prefect.
 

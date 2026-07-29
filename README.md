@@ -23,8 +23,9 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 |---|---|
 | `data-engineering` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
 | `python` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
+| `sql` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
 
-More domain skills (`sql`, `spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud`) ship incrementally — see `docs/` for the design spec.
+The remaining domain skills (`spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud`) ship incrementally — see `docs/` for the design spec.
 
 ## Updating
 

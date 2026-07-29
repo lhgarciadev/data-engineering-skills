@@ -39,6 +39,18 @@ SELECT * FROM ranked WHERE rn = 1;
 
 **CTE + `ROW_NUMBER` + filter to `rn = 1`** is the pattern behind CDC deduplication, "latest version of each row," and general duplicate cleanup. It should come out automatically — that fluency is a direct senior signal.
 
+### The QUALIFY shortcut (Snowflake, BigQuery, Redshift)
+
+On these three engines, `QUALIFY` filters directly on a window function's result in the same query — no wrapping CTE or subquery needed. The dedup example above collapses to one statement:
+
+```sql
+SELECT *
+FROM events
+QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 1;
+```
+
+`QUALIFY` sits logically after `HAVING` and after the window function's own evaluation, which is exactly why it works: it's a purpose-built filter stage for window-function results, the same way `HAVING` is a purpose-built filter stage for aggregates. **PostgreSQL, MySQL, and SQL Server do not have `QUALIFY`** — on those three engines the CTE-wrap-and-filter pattern above is not a stylistic choice, it's the only way to do it.
+
 ### Top-N per group
 
 "Top 3 best-selling products per category":
@@ -51,7 +63,7 @@ SELECT * FROM (
 WHERE rnk <= 3;
 ```
 
-The choice between `RANK` and `DENSE_RANK` here depends on intent: do you want exactly 3 rows, or "everyone tied for 3rd place too"? `ROW_NUMBER` would give exactly 3 rows but arbitrarily picks which of several ties to include — usually the wrong choice for a "top N" business question.
+`RANK` and `DENSE_RANK` are not interchangeable here — they answer different questions. `RANK() <= 3` gives you the top 3 **rank positions**: if two rows tie for 2nd place, you get 1st, the two tied-for-2nd rows, and nothing else (3rd place is skipped because `RANK` leaves a gap) — already more than 3 rows the moment there's a tie in the top 3. `DENSE_RANK() <= 3` gives you the top 3 **distinct values**: with the same tie, you still get 1st, both rows tied for 2nd, *and* every row at 3rd place, because `DENSE_RANK` doesn't skip a rank slot for the tie — potentially many more rows than `RANK` would return for the same data. Pick `DENSE_RANK` when the business question is "everyone in the top 3 distinct sales figures," `RANK` when it's "the top 3 rank slots, however many rows that takes," and `ROW_NUMBER` only when you want exactly 3 rows and don't care which of several ties gets arbitrarily dropped.
 
 ## Comparing rows: LAG / LEAD
 
@@ -93,7 +105,7 @@ Window functions exist to avoid expensive self-joins and to express logic that w
 
 | Mistake | Why it hurts | Fix |
 |---|---|---|
-| Using `RANK` when you want exactly N rows for "top N" | Gaps mean you might get more or fewer rows than expected depending on ties | Use `ROW_NUMBER` for exactly N, `DENSE_RANK`/`RANK` for "N places, ties included" |
+| Using `RANK` when you want exactly N rows for "top N" | `RANK() <= N` can only ever return **at least** N rows — ties add rows, they never remove them | Use `ROW_NUMBER` for exactly N; `RANK` for "top N rank positions" and `DENSE_RANK` for "top N distinct values," picking the one that matches the actual business question |
 | Relying on the implicit frame default for a running total | Silently switches to peer-inclusive `RANGE` behavior on tied ORDER BY values | Always write `ROWS BETWEEN ... AND CURRENT ROW` explicitly |
 | Assuming Snowflake's default frame matches Postgres/SQL Server | Diverges for value functions (`FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE`) | Always specify the frame explicitly on Snowflake, per Snowflake's own recommendation |
 | Solving deduplication with a self-join on `MAX(updated_at)` | Correct but slower and more verbose than necessary | `ROW_NUMBER() OVER (PARTITION BY key ORDER BY updated_at DESC)` + filter `rn = 1` |

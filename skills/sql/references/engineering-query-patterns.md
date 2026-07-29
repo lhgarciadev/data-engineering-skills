@@ -2,6 +2,8 @@
 
 The patterns section — a set of idioms every data engineer should be able to produce from memory, not derive from scratch.
 
+A note on portability: the gaps-and-islands and sessionization examples below use PostgreSQL syntax for casts and interval arithmetic (`::int`, `INTERVAL '30 minutes'`) to keep the SQL concise. Neither runs unmodified elsewhere — BigQuery and SQL Server don't support `::` casts (use `CAST(x AS INT)`, or BigQuery's `SAFE_CAST`), and interval literals are engine-native (e.g., SQL Server has no `INTERVAL` type at all and needs `DATEADD`/`DATEDIFF`, BigQuery uses `INTERVAL 30 MINUTE` without quotes). Adapt the date/interval arithmetic to the target engine; the underlying window-function logic is portable even where the syntax isn't.
+
 ## Deduplication (canonical form)
 
 Covered in full in [window-functions.md](window-functions.md): CTE + `ROW_NUMBER() OVER (PARTITION BY key ORDER BY updated_at DESC)` + filter to `rn = 1`. This is the pattern behind CDC deduplication and "keep the latest version of each row."
@@ -42,11 +44,14 @@ sessions AS (
   SELECT
     *,
     SUM(CASE WHEN is_new_session OR is_new_session IS NULL THEN 1 ELSE 0 END)
-      OVER (PARTITION BY user_id ORDER BY event_time) AS session_id
+      OVER (PARTITION BY user_id ORDER BY event_time
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS session_id
   FROM gaps
 )
 SELECT * FROM sessions;
 ```
+
+The `session_id` running total needs the explicit `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` frame, not the implicit default — see [window-functions.md](window-functions.md)'s RANGE vs ROWS trap. Without it, two events tied on `event_time` would fall under the same `RANGE` peer group and get bumped into the new session together, corrupting the session boundary exactly on the ties you'd least expect it.
 
 ## Pivoting and unpivoting
 
@@ -73,7 +78,45 @@ Re-running this doesn't duplicate rows — it updates what already exists and in
 
 ## Slowly Changing Dimension Type 2
 
-When a dimension attribute changes and you need to preserve history, you don't overwrite — you **close out the current row** (set an end-date and `is_current = false`) and **insert a new row** for the changed version, keyed by a surrogate key rather than the natural key alone. Being able to describe the mechanics precisely — validity dates, a current-row flag, a surrogate key that lets the same natural key have multiple historical rows — is what separates someone who has built a warehouse from someone who has only queried one.
+When a dimension attribute changes and you need to preserve history, you don't overwrite — you **close out the current row** (set an end-date and `is_current = false`) and **insert a new row** for the changed version, keyed by a surrogate key rather than the natural key alone. The mechanics are a two-statement pattern (or a single `MERGE` that fires both branches), not a modeling exercise:
+
+```sql
+-- Step 1: close out the current row for any customer whose attributes changed
+UPDATE dim_customer
+SET end_date = CURRENT_DATE, is_current = false
+WHERE is_current = true
+  AND customer_id IN (
+    SELECT s.customer_id
+    FROM staging_customer s
+    JOIN dim_customer d
+      ON d.customer_id = s.customer_id AND d.is_current = true
+    WHERE s.email <> d.email OR s.address <> d.address
+  );
+
+-- Step 2: insert the new version as a fresh row, new surrogate key, open-ended
+INSERT INTO dim_customer (customer_id, email, address, start_date, end_date, is_current)
+SELECT s.customer_id, s.email, s.address, CURRENT_DATE, NULL, true
+FROM staging_customer s
+WHERE NOT EXISTS (
+  SELECT 1 FROM dim_customer d
+  WHERE d.customer_id = s.customer_id AND d.is_current = true
+);
+```
+
+The same two branches collapse into a single `MERGE`, provided the engine's `MERGE` supports it — the `WHEN MATCHED` branch closes out the old row and the `WHEN NOT MATCHED` branch inserts the new one:
+
+```sql
+MERGE INTO dim_customer t
+USING staging_customer s
+ON t.customer_id = s.customer_id AND t.is_current = true
+WHEN MATCHED AND (t.email <> s.email OR t.address <> s.address) THEN
+  UPDATE SET end_date = CURRENT_DATE, is_current = false
+WHEN NOT MATCHED THEN
+  INSERT (customer_id, email, address, start_date, end_date, is_current)
+  VALUES (s.customer_id, s.email, s.address, CURRENT_DATE, NULL, true);
+```
+
+Note the `MERGE` form above only closes the old row — it does **not** insert the new version in the same statement (a single `MERGE` can't both update an existing row and insert a fresh row for the same match), so it still needs the `INSERT` from Step 2 run afterward. This is why SCD Type 2 is usually written as the explicit two-statement `UPDATE` + `INSERT` pattern rather than forced into one `MERGE`. Being able to produce this SQL from memory — not just describe validity dates and a current-row flag conceptually — is what separates someone who has built a warehouse from someone who has only queried one.
 
 ## Common mistakes
 

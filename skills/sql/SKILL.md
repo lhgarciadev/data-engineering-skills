@@ -1,13 +1,13 @@
 ---
 name: sql
-description: Use when writing, reviewing, or optimizing SQL queries — analytical queries, aggregations, window functions, CTEs, joins, or query performance tuning. Covers logical execution order and NULL/three-valued logic, join semantics and the outer-join-filter trap, aggregation and conditional pivoting, window functions (ranking, deduplication, running totals, the frame clause), CTEs and recursion, engineering query patterns (gaps and islands, sessionization, MERGE, SCD Type 2), and query optimization (execution plans, indexing, partition pruning, cost model by cloud warehouse). Covers PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery, calling out engine-specific divergence where it exists. Does not cover schema/dimensional modeling (see data-modeling) or procedural extensions like PL/SQL and T-SQL stored procedures.
+description: Use when writing, reviewing, or optimizing SQL queries — analytical queries, aggregations, window functions, CTEs, joins, or query performance tuning. Covers logical execution order and NULL/three-valued logic, join semantics and the outer-join-filter trap, aggregation and conditional pivoting, window functions (ranking, deduplication, running totals, the frame clause), CTEs and recursion, engineering query patterns (gaps and islands, sessionization, MERGE, SCD Type 2), and query optimization (execution plans, indexing, partition pruning, cost model by cloud warehouse). Covers PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift, calling out engine-specific divergence where it exists. Does not cover schema/dimensional modeling (see data-modeling) or procedural extensions like PL/SQL and T-SQL stored procedures.
 ---
 
 # SQL for Data Engineering
 
 ## Overview
 
-Senior-level judgment calls for writing, reviewing, and optimizing SQL — which construct to reach for, which trap it avoids, and how it behaves differently across engines. Each reference file pairs a concept with the failure mode it exists to prevent, and calls out where PostgreSQL, MySQL, SQL Server, Snowflake, and BigQuery genuinely diverge rather than assuming one engine's behavior is universal. Read the relevant file(s) before writing or reviewing a query; don't rely on the table below alone.
+Senior-level judgment calls for writing, reviewing, and optimizing SQL — which construct to reach for, which trap it avoids, and how it behaves differently across engines. Each reference file pairs a concept with the failure mode it exists to prevent, and calls out where PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift genuinely diverge rather than assuming one engine's behavior is universal. Read the relevant file(s) before writing or reviewing a query; don't rely on the table below alone.
 
 ## When to use
 
@@ -16,7 +16,7 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 - Deduplicating records, finding gaps/streaks, sessionizing events, or writing an idempotent upsert
 - A query is slow and the cause isn't obvious
 - Deciding how to index a table, or reading an execution plan
-- Checking whether a query pattern is portable across engines (Postgres, MySQL, SQL Server, Snowflake, BigQuery)
+- Checking whether a query pattern is portable across engines (Postgres, MySQL, SQL Server, Snowflake, BigQuery, Redshift)
 - Not for schema or dimensional modeling design (star schema, SCDs at the modeling level) — that's `data-modeling`
 - Not for procedural extensions (PL/SQL, T-SQL stored procedures, PL/pgSQL) — this skill covers declarative SQL
 
@@ -34,6 +34,7 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 | "Keep only the latest row per key" | `ROW_NUMBER()` + CTE + filter `rn = 1` | [window-functions.md](references/window-functions.md) |
 | Top-N per group, period-over-period deltas | `RANK`/`DENSE_RANK`, `LAG`/`LEAD` | [window-functions.md](references/window-functions.md) |
 | A running total jumps unexpectedly on tied dates | Implicit `RANGE` frame default — make the frame explicit (`ROWS ...`) | [window-functions.md](references/window-functions.md) |
+| Filtering a window function's result on Snowflake/BigQuery/Redshift | `QUALIFY` clause (no CTE needed) | [window-functions.md](references/window-functions.md) |
 | A slow correlated subquery | Rewrite as a join or window function | [ctes-and-recursion.md](references/ctes-and-recursion.md) |
 | Org charts, nested categories, date spines | Recursive CTE (`WITH RECURSIVE`, anchor + `UNION ALL`) | [ctes-and-recursion.md](references/ctes-and-recursion.md) |
 | Consecutive streaks or gaps in a sequence | Gaps-and-islands (`ROW_NUMBER` subtraction trick) | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
@@ -76,4 +77,5 @@ SELECT * FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.custo
 | Assuming `FILTER (WHERE ...)` is universally portable | Fails outright on Snowflake, unavailable on current SQL Server/MySQL | Use `SUM(CASE WHEN ...)` unless the engine is confirmed; see [aggregation-patterns.md](references/aggregation-patterns.md) |
 | Relying on the implicit window frame default for a running total | Silently switches to peer-inclusive behavior on tied ORDER BY values | Always specify `ROWS BETWEEN ... AND CURRENT ROW`; see [window-functions.md](references/window-functions.md) |
 | Blind append-only writes on every load | Duplicates rows on any rerun/backfill | `MERGE` keyed by business key; see [engineering-query-patterns.md](references/engineering-query-patterns.md) |
+| Assuming a CTE is never an optimization barrier | On pre-12 PostgreSQL it always is | Know your engine's CTE inlining behavior; force materialization with `AS MATERIALIZED` on PG12+ if needed; see [ctes-and-recursion.md](references/ctes-and-recursion.md) |
 | Adding an index before reading the execution plan | Might not fix the actual bottleneck | Run `EXPLAIN ANALYZE` first; see [query-optimization-and-production.md](references/query-optimization-and-production.md) |
