@@ -789,7 +789,7 @@ Everything beyond that — medallion architecture, model layering and naming con
 - [ ] **Step 2: Verify the file**
 
 Run: `grep -c "^## " data-engineering-skills/skills/sql/references/query-optimization-and-production.md`
-Expected: `7`.
+Expected: `8`.
 
 - [ ] **Step 3: Commit**
 
