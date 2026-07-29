@@ -959,6 +959,19 @@ Both scenarios passed on the first run — no content changes needed.
 
 ---
 
+## Addendum (2026-07-29): Oracle verification closed, final-review findings fixed
+
+This plan (Global Constraints, and the Oracle notes embedded in Tasks 5 and 6's file content above) explicitly deferred Oracle-specific claims as unverified. That gap is now closed:
+
+- **Recursive CTEs** (`ctes-and-recursion.md`): Oracle supports both `CONNECT BY PRIOR` and ANSI recursive subquery factoring (since 11g Release 2 / 11.2.0.1) — verified against Oracle's official SQL Language Reference. Gotcha: Oracle's `WITH` clause does not accept the literal `RECURSIVE` keyword; recursion is inferred automatically.
+- **MERGE** (`engineering-query-patterns.md`): Oracle has had `MERGE` since 9i. Verified against Oracle's official MERGE reference: it is a "deterministic statement" — updating the same target row twice in one execution raises `ORA-30926`, not silent single-application. Exactly one `WHEN MATCHED` and one `WHEN NOT MATCHED` clause per statement (no SQL-Server-style multiple conditional branches).
+
+Also folded into the same pass: a whole-branch final review (dispatched separately from this plan, most capable model) found 5 Important + 5 Minor issues after Task 9 (Redshift missing from `SKILL.md`'s engine list; SCD Type 2 section contradicting the skill's own modeling-vs-query-mechanics boundary; a sessionization example violating the skill's own RANGE/ROWS frame rule; the `QUALIFY` clause entirely missing for Snowflake/BigQuery/Redshift; vague "some engines" language in the CTE-materialization discussion; plus wording/attribution/staleness nits). All were fixed in one dispatch and scoped re-review; two residual issues surfaced by the re-review (a RANK worked-example arithmetic error, and Redshift dropped from two engine lists in the same fix) were corrected in a follow-up pass alongside the Oracle closure above.
+
+See `docs/superpowers/specs/2026-07-28-sql-skill-design.md` (Estado line, and §2/§4.5/§4.6/§5) for the updated spec-level record. No further open items for the `sql` skill.
+
+---
+
 ## Self-Review Notes
 
 - **Spec coverage**: Task 1 ↔ spec §4.1; Task 2 ↔ §4.2; Task 3 ↔ §4.3; Task 4 ↔ §4.4; Task 5 ↔ §4.5; Task 6 ↔ §4.6; Task 7 ↔ §4.7; Task 8 ties them together per spec §4's file-structure diagram; Task 9 mirrors the discoverability validation already run for `python` and `data-engineering`.

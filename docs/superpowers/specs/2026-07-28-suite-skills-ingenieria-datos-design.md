@@ -3,6 +3,7 @@
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz (Org)
+**Estado (2026-07-29):** 3 de 8 skills entregadas — orquestadora `data-engineering`, `python`, `sql`. Quedan 6 skills de dominio por construir: `spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud` (ver sección 7, ítem 6, actualizado). El `name` del manifiesto `.claude-plugin/plugin.json` se renombró de `data-engineering` a `data-engineering-suite` (ver sección 2) para evitar que la skill orquestadora, también llamada `data-engineering`, se invoque como `data-engineering:data-engineering` cuando se instala vía el flujo de plugin — el identificador de la skill orquestadora no cambió.
 
 ---
 
@@ -35,7 +36,7 @@ Nombre propuesto del repo: `data-engineering-skills` (renombrable si el equipo p
 data-engineering-skills/
   README.md                     # instrucciones de instalación (symlinks) por runtime
   .claude-plugin/                # OPCIONAL — solo para instalar vía plugin de Claude Code
-    plugin.json                 # name: "data-engineering", version, description, skills: "./skills/"
+    plugin.json                 # name: "data-engineering-suite" (renombrado 2026-07-29, ver Estado arriba), version, description, skills: "./skills/"
   skills/
     data-engineering/           # orquestadora — punto de entrada para tareas amplias/cruzadas
       SKILL.md
@@ -102,7 +103,7 @@ La skill ya construida en `legacy-repo/.claude/skills/python-data-engineering/` 
 3. Migrar `python` según la sección 6.
 4. Escribir `SKILL.md` de la orquestadora `data-engineering` según la sección 5.
 5. Validar la orquestadora con un escenario de prueba que cruce 3+ dominios (análogo al test de discoverability que ya se le hizo a `python` con el escenario de la API paginada) — confirmar que el fan-out y la síntesis funcionan antes de darla por lista.
-6. Por cada una de las 7 skills de dominio restantes: el usuario aporta tópicos → investigación web complementaria → redacción → validación de discoverability liviana (mismo proceso que `python`).
+6. Por cada una de las 6 skills de dominio restantes (`spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud` — `sql` ya se entregó 2026-07-29, ver `docs/superpowers/specs/2026-07-28-sql-skill-design.md`): el usuario aporta tópicos → investigación web complementaria → redacción → validación de discoverability liviana (mismo proceso que `python` y `sql`).
 
 ## 8. Fuera de alcance (de esta fase)
 

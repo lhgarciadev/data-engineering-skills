@@ -3,6 +3,7 @@
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz
+**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-28-sql-skill-implementation.md` para el registro de ejecución. La verificación de Oracle que este spec dejaba pendiente (§2, §4.5, §4.6, §5) se cerró en un pase posterior — ver notas inline abajo.
 
 ---
 
@@ -21,7 +22,7 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
   - Modelado de esquemas/dimensional (star/snowflake, Kimball vs Data Vault) → `data-modeling`.
   - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) → `pipelines-architecture`. Mismo tratamiento que ya reciben Airflow/Dagster/Prefect en `python/production-patterns.md` hoy: mención ilustrativa breve, con recorte/cross-link pendiente cuando `pipelines-architecture` exista (spec de la suite, §8). dbt es, en esencia, otro orquestador — especializado en la capa de transformación SQL — no un tema propio de lenguaje de consulta.
   - Extensiones procedimentales (PL/SQL, T-SQL con stored procedures, PL/pgSQL) → fuera de las 8 skills actuales, no se cubre.
-- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift — como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4). Oracle: la semántica ANSI base aplica, pero los caveats específicos (p. ej. `CONNECT BY PRIOR` vs `WITH RECURSIVE`, soporte de `MERGE`) quedan **pendientes de verificar en la fase de redacción** — no se afirma nada de Oracle sin verificar primero.
+- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift, y (desde el cierre de 2026-07-29) Oracle — todos como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4).
 
 ## 3. Fuentes
 
@@ -83,7 +84,7 @@ CTEs para legibilidad/reuso, CTE como optimization barrier en algunos motores vs
 
 **Corrección a incorporar:** BigQuery solo soporta `WITH RECURSIVE` desde ~feb. 2022 (inicialmente en preview) — no asumir portabilidad hacia atrás.
 
-**Pendiente de verificar en drafting:** soporte y sintaxis de Oracle para jerarquías (`CONNECT BY PRIOR` histórico vs `WITH RECURSIVE` ANSI desde 11g R2) — no afirmar sin verificar primero.
+**Oracle (cerrado 2026-07-29):** Oracle soporta ambas formas — `CONNECT BY PRIOR` desde siempre, y subquery factoring recursivo ANSI desde 11g R2 (11.2.0.1). El gotcha verificado: la cláusula `WITH` de Oracle no acepta la palabra clave `RECURSIVE` — la recursión se infiere automáticamente. Verificado contra la documentación oficial de Oracle.
 
 ### 4.6 `engineering-query-patterns.md`
 
@@ -91,7 +92,7 @@ Deduplicación canónica (cross-link a 4.4), gaps and islands, sesionización (`
 
 **Corrección a incorporar:** `MERGE` en PostgreSQL existe desde v15 (oct. 2022); `RETURNING`/`merge_action()` con `MERGE` recién en PostgreSQL 17 (sept. 2024) — cualquier ejemplo con `RETURNING` debe marcarse como PG17+.
 
-**Pendiente de verificar en drafting:** soporte y restricciones de `MERGE` en Oracle.
+**Oracle (cerrado 2026-07-29):** `MERGE` existe en Oracle desde 9i. Verificado contra la documentación oficial: es una "sentencia determinística" — no puede actualizar la misma fila destino dos veces en una misma ejecución, y si el source produce más de una fila coincidente para un mismo destino, lanza `ORA-30926` en vez de aplicar una silenciosamente. Además admite exactamente una cláusula `WHEN MATCHED` y una `WHEN NOT MATCHED` por sentencia (sin las ramas condicionales múltiples de SQL Server).
 
 ### 4.7 `query-optimization-and-production.md`
 
@@ -107,7 +108,6 @@ Leer el plan de ejecución (`EXPLAIN`/`EXPLAIN ANALYZE`) antes de optimizar, ín
 ## 5. Fuera de alcance (de esta fase)
 
 - Contenido OLTP de `database-design` (normalización, constraints, JSONB, RLS) — no encaja limpio en `sql` ni en `data-modeling` tal como están definidas hoy; queda anotado para cuando se planee `data-modeling`.
-- Verificación específica de Oracle — diferida a la fase de redacción de `ctes-and-recursion.md` y `engineering-query-patterns.md` (secciones 4.5, 4.6).
 - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos) — pertenece a la futura skill `pipelines-architecture`.
 - Extensiones procedimentales (PL/SQL, T-SQL, PL/pgSQL) — no es una de las 8 skills de la suite.
 
