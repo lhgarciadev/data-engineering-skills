@@ -315,14 +315,16 @@ git commit -m "Add data-engineering orchestrator skill"
 
 Two scenarios — both must pass before Task 7 removes the backup.
 
-- [ ] **Step 1: Symlink both skills for testing**
+- [x] **Step 1: Symlink both skills for testing**
 
 ```bash
 ln -sf "$(pwd)/data-engineering-skills/skills/python" ~/.claude/skills/python
 ln -sf "$(pwd)/data-engineering-skills/skills/data-engineering" ~/.claude/skills/data-engineering
 ```
 
-- [ ] **Step 2: Run the single-domain bypass scenario**
+Confirmed 2026-07-28: both symlinks present and resolving correctly.
+
+- [x] **Step 2: Run the single-domain bypass scenario**
 
 Dispatch a fresh `general-purpose` agent with this prompt:
 
@@ -330,7 +332,9 @@ Dispatch a fresh `general-purpose` agent with this prompt:
 
 Expected: the agent invokes `python` directly and does **not** invoke `data-engineering` — this is a single-domain question, so the orchestrator should not fire.
 
-- [ ] **Step 3: Run the multi-domain, partial-coverage scenario**
+**Result (2026-07-28): PASS.** Agent invoked `python` only (cited `concurrency-and-the-gil.md`), correctly diagnosed the `multiprocessing.Pool` choice as wrong tool for an I/O-bound workload, and did not invoke `data-engineering`.
+
+- [x] **Step 3: Run the multi-domain, partial-coverage scenario**
 
 Dispatch a fresh `general-purpose` agent with this prompt:
 
@@ -338,9 +342,13 @@ Dispatch a fresh `general-purpose` agent with this prompt:
 
 Expected: the agent invokes `data-engineering`, identifies `python`, `spark`, and `iac-cloud` as relevant domains, uses `python`'s actual content for the Python-side concerns, and **explicitly states that `spark` and `iac-cloud` have no installed skill yet** rather than fabricating coverage for them.
 
-- [ ] **Step 4: Record the result**
+**Result (2026-07-28): PASS.** Agent invoked `data-engineering`, identified `python`, `spark`, `data-modeling`, `pipelines-architecture`, and `iac-cloud` as relevant, used `python`'s actual reference content for the PySpark job's code design, and explicitly named `spark`, `data-modeling`, `pipelines-architecture`, and `iac-cloud` as not installed rather than fabricating coverage — meets and exceeds the expected outcome.
+
+- [x] **Step 4: Record the result**
 
 If either scenario fails (orchestrator fires on a single-domain question, or silently fabricates coverage for a missing domain), fix the relevant `description` or `Process` wording in `skills/data-engineering/SKILL.md` and re-run only the failing scenario. Do not proceed to Task 7 until both pass.
+
+Both scenarios passed on the first run — no `SKILL.md` changes needed.
 
 ---
 
@@ -351,12 +359,14 @@ If either scenario fails (orchestrator fires on a single-domain question, or sil
 **Files:**
 - Delete: `legacy-repo/.claude/skills/python-data-engineering/`
 
-- [ ] **Step 1: Confirm the new repo has the migrated skill committed**
+- [x] **Step 1: Confirm the new repo has the migrated skill committed**
 
 Run (in `data-engineering-skills`): `git log --oneline -1 -- skills/python/`
 Expected: shows Task 4's commit.
 
-- [ ] **Step 2: Remove the backup from this repo**
+**Result (2026-07-28):** confirmed — `3887b94 Migrate python-data-engineering skill as skills/python`.
+
+- [x] **Step 2: Remove the backup from this repo**
 
 ```bash
 cd /Users/leonardogarcia/dev/legacy-repo
@@ -364,10 +374,14 @@ git rm -r .claude/skills/python-data-engineering/
 git commit -m "Remove python-data-engineering: migrated to data-engineering-skills repo"
 ```
 
-- [ ] **Step 3: Verify**
+**Result (2026-07-28): no-op — nothing to remove.** Checked `legacy-repo`: `.claude/skills/python-data-engineering/` doesn't exist there (not tracked, not untracked, no commit in its history touches that path). Task 1's backup commit — which this task assumed as a precondition — never actually landed in that repo; the skill's original content only exists as of Task 4's commit here. Since the folder is already absent, there's nothing left to delete.
+
+- [x] **Step 3: Verify**
 
 Run: `git status --short .claude/skills/`
 Expected: no output.
+
+**Result (2026-07-28):** confirmed — no output for that path (only an unrelated untracked file elsewhere in the repo).
 
 ---
 
