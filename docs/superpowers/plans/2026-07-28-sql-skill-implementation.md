@@ -235,7 +235,7 @@ Every join decision runs on three axes: **semantics** (which rows do I actually 
 - [ ] **Step 2: Verify the file**
 
 Run: `grep -c "^## " data-engineering-skills/skills/sql/references/joins.md`
-Expected: `5`.
+Expected: `6`.
 
 - [ ] **Step 3: Commit**
 
