@@ -706,7 +706,7 @@ print(f"warm: {time.perf_counter() - start:.2f}s")
 
 The fix isn't "always benchmark warm" or "always benchmark cold" — it's that whichever one production actually is, your benchmark has to match it, or the number is fiction. A job that runs once nightly on freshly-provisioned executors is genuinely a cold-cache workload — benchmarking it warm will understate its real runtime and hide a problem that will show up in production every single night. A job hitting a long-lived cluster with data already cached from upstream jobs is a warm workload — benchmarking it cold will overstate the fix's impact and make a change look like a bigger win than it is in steady state. Neither is more "correct" in the abstract; the only wrong answer is picking one without checking which one production is.
 
-## Senior framing
+## The senior framing
 
 Anyone can turn on `spark.sql.adaptive.enabled` and move on — it's true by default anyway on any cluster running 3.2+. What separates a senior engineer is knowing *why* AQE exists (static estimates rot, runtime stats don't), being able to point at `explain("formatted")` and show which specific optimization fired instead of asserting AQE "did something," and treating benchmark methodology as part of the deliverable rather than an afterthought. A number without a stated cache state is not a benchmark, it's an anecdote — and the honest answer to "is this fast" is "fast under which conditions, and do those conditions match where it actually runs."
 
