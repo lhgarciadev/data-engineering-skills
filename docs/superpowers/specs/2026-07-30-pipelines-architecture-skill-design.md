@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-07-30
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Diseño completo, pendiente de plan de implementación — ver §6.
+**Estado:** Implementado y shippeado (2026-07-30) — ver `docs/superpowers/plans/2026-07-30-pipelines-architecture-skill-implementation.md` para el registro de ejecución (14 tareas + Task 14 agregada mid-project + revisión final de rama con fix wave).
 
 ---
 
