@@ -970,7 +970,9 @@ Also folded into the same pass: a whole-branch final review (dispatched separate
 
 See `docs/superpowers/specs/2026-07-28-sql-skill-design.md` (Estado line, and §2/§4.5/§4.6/§5) for the updated spec-level record. No further open items for the `sql` skill.
 
-**Second addendum, same day:** the skill identifier itself was then renamed from `sql` to `dataeng-sql` (folder: `skills/dataeng-sql/`), part of prefixing every skill in the suite with `dataeng-` to avoid collisions in the flat, shared `~/.claude/skills/`/`~/.agents/skills/` namespace. This plan's tasks above still say `sql` throughout — historical record of what Tasks 1-9 actually built under that name at the time. See the suite spec's Estado line for the rename rationale.
+**Second addendum, same day:** the skill identifier itself was then renamed from `sql` to `dataeng-sql` (folder: `skills/dataeng-sql/`), part of prefixing every skill in the suite with `dataeng-` to avoid collisions in the flat, shared `~/.claude/skills/`/`~/.agents/skills/` namespace. This plan's tasks above still say `sql` throughout — historical record of what Tasks 1-9 actually built under that name at the time. See the suite spec's Estado line for the rename rationale. Task 9's two discoverability scenarios were re-run fresh under `dataeng-sql` after symlinking it — both still PASS (the window-frame scenario again caught an unprompted grain issue, same as the original run).
+
+**Third addendum, 2026-07-29:** a 5-way research pass re-verified sql's technical claims against primary vendor docs — see `docs/superpowers/research/2026-07-29-sql-python-claims-verification.md`. Two fixes landed (BigQuery `WITH RECURSIVE` GA date, dbt's `unique_key`-conditional default on Postgres/Redshift); everything else confirmed unchanged.
 
 ---
 
