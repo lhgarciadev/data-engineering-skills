@@ -109,7 +109,7 @@ La skill ya construida en `legacy-repo/.claude/skills/python-data-engineering/` 
 
 ## 8. Fuera de alcance (de esta fase)
 
-- Contenido detallado (reference files) de las 7 skills de dominio pendientes — se define skill por skill en la fase siguiente.
+- Contenido detallado (reference files) de las skills de dominio pendientes — se define skill por skill en la fase siguiente. Eran 7 al escribir esta spec (2026-07-28); `dataeng-sql` y `dataeng-spark` ya se entregaron desde entonces, quedan 5 (ver Estado arriba y §7 ítem 6).
 - Visibilidad del repo (privado del equipo vs. algo más amplio) y si se publica además en un marketplace de Claude Code — se resuelve al crear el repo; no afecta la vía universal de symlinks, que ya queda definida en la sección 2.
 - Cualquier convención o mandato específico de Org — la suite es agnóstica por decisión explícita (sección 1).
 - Recorte y cross-linking de contenido que hoy vive en `dataeng-python` pero en rigor pertenece a otra skill futura: las menciones a Airflow/Dagster/Prefect en `skills/dataeng-python/references/production-patterns.md` (territorio de `dataeng-pipelines-architecture`) y a Great Expectations en `skills/dataeng-python/references/data-validation.md` (territorio de `dataeng-data-quality`). Ambas se aplican recién cuando esas skills existan — hacerlo antes dejaría referencias rotas. El tercer cross-link de este ítem, desde `concurrency-and-the-gil.md` (que ya menciona "delego a Spark" en la respuesta senior sobre el GIL) hacia `dataeng-spark`, ya se cerró (2026-07-29) — esa skill entregó, ver Estado arriba.

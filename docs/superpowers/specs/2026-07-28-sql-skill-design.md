@@ -9,7 +9,7 @@
 
 ## 1. Contexto y objetivo
 
-Primera de las 7 skills de dominio pendientes definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (sección 4). Cubre optimización de queries, window functions, CTEs, planes de ejecución, indexación y modelado de queries analíticas — SQL declarativo, no procedimental, y no modelado de esquemas (eso es `dataeng-data-modeling`).
+Primera de las 7 skills de dominio pendientes definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (sección 4) al momento de escribir esta spec (2026-07-28) — ya entregada, ver Estado arriba; quedan 5 (`dataeng-spark` se entregó después, 2026-07-29). Cubre optimización de queries, window functions, CTEs, planes de ejecución, indexación, modelado de queries analíticas, y (agregado 2026-07-30, §4.8) extensiones procedurales — SQL declarativo y procedural, no modelado de esquemas (eso es `dataeng-data-modeling`).
 
 Insumo: borrador de contenido aportado por el usuario (7 "capas", de fundamentos a optimización en producción), verificado contra documentación oficial (PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift, dbt) y complementado con revisión del plugin `data-engineering`/`developer-essentials` de `wshobson/agents` (MIT), según lo ya anticipado en la spec de la suite §4.
 
