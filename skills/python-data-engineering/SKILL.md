@@ -1,6 +1,6 @@
 ---
 name: python-data-engineering
-description: Python data engineering guidance — writing, reviewing, or making design decisions on ETL/ELT pipelines, batch jobs, dataframe transformations, or pipeline architecture. Use when choosing a concurrency model, a dataframe library, or a validation approach, or when a pipeline is slow, leaking memory, or unsafe to rerun. Covers generators/streaming, decorators and context managers, GIL-aware concurrency, pandas/Polars/DuckDB tradeoffs, Pydantic/Pandera validation, idempotent writes, and pipeline testing/error handling. Not for general Python questions unrelated to data workloads.
+description: Python data engineering guidance — writing, reviewing, or making design decisions on ETL/ELT pipelines, batch jobs, dataframe transformations, or pipeline architecture. Use when choosing a concurrency model, a dataframe library, or a validation approach, or when a pipeline is slow, leaking memory, or unsafe to rerun. Covers generators/streaming, decorators and context managers, GIL-aware concurrency, pandas/Polars/DuckDB tradeoffs, Pydantic/Pandera validation, idempotent writes, external API consumption (auth, pagination, rate limiting/backoff), and pipeline testing/error handling. Not for general Python questions unrelated to data workloads.
 ---
 
 # Python for Data Engineering
@@ -18,6 +18,7 @@ Senior-level judgment calls for Python data pipelines — which tool or pattern 
 - Validating a dataframe's schema/content, or a single record/API payload
 - Writing retry logic, idempotent writes, or structured error handling for a pipeline
 - Deciding how a pipeline tracks what's new since its last run, or whether it even needs to (full pull vs incremental)
+- Calling an external API for ingestion — auth, pagination, rate limiting, retries
 - Not for general Python questions unrelated to data workloads
 
 ## Quick reference

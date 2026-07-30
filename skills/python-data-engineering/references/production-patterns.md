@@ -49,7 +49,7 @@ None of this is needed for small or infrequently-updated sources — a full pull
 
 Not `try/except: pass`. Distinguish:
 
-- **Retryable** errors (transient network blip, rate limit) → retry with backoff (see [decorators-and-context-managers.md](decorators-and-context-managers.md)).
+- **Retryable** errors (transient network blip) → retry with backoff (see [decorators-and-context-managers.md](decorators-and-context-managers.md)); for rate limits (429) specifically, see [external-api-integration.md](external-api-integration.md) for `Retry-After` handling and jitter.
 - **Non-retryable** errors (malformed record, schema violation) → log it with context and route it to a dead-letter queue/table so one bad record doesn't halt the whole batch.
 - **Structured logging**, not `print` — JSON logs with context (record id, batch id, stage) so failures are queryable, not just visible. `structlog` is the common choice for pipeline/service code (fast JSON output, integrates cleanly with OpenTelemetry); plain stdlib `logging` plus a JSON formatter is the safer default for a reusable library.
 - Fail loudly when a failure genuinely should stop the pipeline (e.g., the sink is unreachable) — don't swallow everything just to keep the job "green."

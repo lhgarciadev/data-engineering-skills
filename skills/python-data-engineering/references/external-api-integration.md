@@ -92,7 +92,8 @@ def resilient_get(session, url, params=None, max_attempts=5):
         try:
             resp = session.get(url, params=params, timeout=30)
             if resp.status_code in TRANSIENT:
-                wait = int(resp.headers.get("Retry-After", 2 ** attempt))
+                retry_after = resp.headers.get("Retry-After")
+                wait = int(retry_after) if retry_after and retry_after.isdigit() else 2 ** attempt
                 wait += random.uniform(0, 1)               # jitter
                 if attempt == max_attempts - 1:
                     resp.raise_for_status()

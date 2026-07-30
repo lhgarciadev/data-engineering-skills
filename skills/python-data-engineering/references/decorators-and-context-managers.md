@@ -34,6 +34,8 @@ The senior details:
 - Three levels of nesting are required *because* the decorator itself takes arguments (`retry(attempts=5)` → returns `decorator` → returns `wrapper`).
 - `*args, **kwargs` in `wrapper` are mandatory for the decorator to stay generic across any wrapped signature.
 
+For calls to an external API specifically, also add jitter — see `external-api-integration.md` for why (a backoff without jitter can synchronize retries across many failed clients).
+
 ## Context managers for guaranteed cleanup
 
 `with` guarantees resource cleanup (closing files/connections, committing or rolling back transactions) even when an exception is raised. Implement `__enter__`/`__exit__` directly, or more concisely with `@contextmanager`:
@@ -64,6 +66,6 @@ The pattern to internalize: `yield` marks the setup/teardown boundary, and `try/
 | Mistake | Fix |
 |---|---|
 | Omitting `@functools.wraps` on a custom decorator | Add it — otherwise stack traces, `help()`, and introspection-based tooling see the wrapper's identity, not the original function's |
-| Fixed-interval retry sleep | Use exponential backoff so a struggling dependency isn't hammered harder under load |
+| Fixed-interval retry sleep | Use exponential backoff so a struggling dependency isn't hammered harder under load; for an external API specifically, add jitter too — see `external-api-integration.md` (backoff without jitter can still synchronize retries across many clients) |
 | Closing a connection only in the "happy path" | Put cleanup in `finally` (or after `yield` in a `@contextmanager`), not just at the end of the try block |
 | Swallowing the exception inside a context manager's `except` without `raise` | Re-raise after cleanup unless you specifically intend to suppress the error |
