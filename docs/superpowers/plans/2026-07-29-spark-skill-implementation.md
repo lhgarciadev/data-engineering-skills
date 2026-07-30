@@ -1074,12 +1074,45 @@ git commit -m "Add spark skill: SKILL.md"
 
 ---
 
-### Task 9: Validate the `dataeng-spark` skill
+### Task 9: Review against `writing-great-skills`
+
+**Owner:** Claude, applying the mattpocock `writing-great-skills` reference directly against the assembled skill — same method already used this session to audit `dataeng`, `dataeng-python`, and `dataeng-sql` (see commit `6bd7ef1`, which fixed a leading-word violation in all three descriptions and an incomplete common-mistakes table in `dataeng-python`). This is a self-review checklist, not a subagent dispatch — same posture as the Self-Review Notes below.
+
+**Interfaces:**
+- Consumes: `skills/dataeng-spark/SKILL.md` and all 7 reference files (Tasks 1-8).
+
+- [ ] **Step 1: Read the standard**
+
+Read `.agents/skills/writing-great-skills/SKILL.md` (and `GLOSSARY.md` in the same folder if it defines a term used below) as the authoritative reference.
+
+- [ ] **Step 2: Check the description**
+
+Confirm `SKILL.md`'s `description` front-loads a leading word/identity clause rather than opening with "Use when…" (the exact violation found and fixed in `dataeng`, `dataeng-python`, `dataeng-sql` earlier this session), gives one trigger per branch with no duplicated synonyms, and doesn't restate identity already covered in the Overview body.
+
+- [ ] **Step 3: Check information hierarchy**
+
+Across all 7 reference files, check for content in `SKILL.md` that belongs behind a reference-file pointer instead, or reference-only content every branch actually needs inline. Check co-location: does each concept's rule stay with its caveat, or is anything split across files that shouldn't be?
+
+- [ ] **Step 4: Check pruning**
+
+Hunt for duplication, no-op sentences, and sediment across the 7 files and `SKILL.md` — a sentence that doesn't change behavior versus the model's default should go.
+
+- [ ] **Step 5: Check the suite's own §3 template compliance**
+
+Confirm `SKILL.md`'s common-mistakes table cites all 7 reference files, not a subset — this is the exact gap the earlier audit found in `dataeng-python` (3 of 7 files were missing from its table). Confirm overview/when-to-use/quick-reference/common-mistakes are all present.
+
+- [ ] **Step 6: Fix and record**
+
+Fix any findings inline in the relevant file(s). If nothing needs fixing, record that explicitly in the Self-Review Notes below rather than leaving the question open.
+
+---
+
+### Task 10: Validate the `dataeng-spark` skill
 
 **Owner:** Claude, using the `Agent` tool to run fresh-context scenarios (same method used to validate `dataeng-python`, `dataeng`, and `dataeng-sql`).
 
 **Interfaces:**
-- Consumes: `skills/dataeng-spark/` (Tasks 1-8), symlinked into a live Claude Code environment so a fresh agent can discover it.
+- Consumes: `skills/dataeng-spark/` (Tasks 1-9), symlinked into a live Claude Code environment so a fresh agent can discover it.
 
 Two scenarios test both discoverability and whether the two corrected findings from this build (AQE skew-join vs. salting, and the py4j misdiagnosis) actually surface — not just that the skill fires.
 
@@ -1114,7 +1147,7 @@ If either scenario fails (skill doesn't fire, or the technical answer is wrong/v
 
 ## Self-Review Notes
 
-- **Spec coverage**: Task 1 ↔ design spec §4.1; Task 2 ↔ §4.2; Task 3 ↔ §4.3; Task 4 ↔ §4.4; Task 5 ↔ §4.5; Task 6 ↔ §4.6; Task 7 ↔ §4.7; Task 8 ties them together per the design spec's file-structure diagram; Task 9 mirrors the discoverability validation already run for `dataeng-python`, `dataeng`, and `dataeng-sql`.
+- **Spec coverage**: Task 1 ↔ design spec §4.1; Task 2 ↔ §4.2; Task 3 ↔ §4.3; Task 4 ↔ §4.4; Task 5 ↔ §4.5; Task 6 ↔ §4.6; Task 7 ↔ §4.7; Task 8 ties them together per the design spec's file-structure diagram; Task 9 applies the `writing-great-skills` standard (added after the original plan review, matching the QA gate already used to audit the other 3 skills this session); Task 10 mirrors the discoverability validation already run for `dataeng-python`, `dataeng`, and `dataeng-sql`.
 - **No placeholders**: every task's content is the actual final file content (English, all corrections from the design spec §4 incorporated: 3-cost shuffle, non-guaranteed `repartition` balance, AQE-first skew framing, MEMORY_AND_DISK-family persist default, 5-not-3 AQE features, `spark.memory.fraction` dated to 2.0.0, broadcast variables on executors not driver, py4j corrected to worker-process IPC), not a description of what to write.
 - **Type/name consistency**: reference filenames match exactly between the design spec (§4), the File Structure section above, each task's own file, and `SKILL.md`'s quick-reference table links — verified via Task 8 Step 2's link-check commands. Cross-links between reference files (execution-model → shuffle-and-partitioning; shuffle-and-partitioning → joins-and-skew; joins-and-skew → adaptive-query-execution-and-benchmarking; caching-and-file-formats → memory-management, pyspark-specifics; memory-management → pyspark-specifics) all resolve to filenames actually produced by this plan.
 - **Attribution consistency**: every wshobson/agents-sourced addition (bucket joins, checkpointing, programmatic skew detection, `approx_count_distinct`) carries an inline "(Adapted from wshobson/agents' spark-optimization skill, MIT.)" attribution at first use, matching the policy already applied in the `dataeng-sql` build.
