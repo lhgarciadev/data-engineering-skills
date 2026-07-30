@@ -372,7 +372,7 @@ Nearly every "why didn't my task run" bug reduces to one primitive: task state, 
 
 ## Task states
 
-A task ends in one of several states — `success`, `failed`, `skipped`, `upstream_failed`, among others. If you've seen `shutdown` mentioned as a task state, drop it: it existed through Airflow 2.7.0/2.7.1 and was explicitly removed in **2.7.2**, so it isn't part of the current state machine. A newer addition worth knowing about is `awaiting_input`, added in 3.3.0 for Human-in-the-Loop tasks — a different feature, not something to dig into here.
+A task ends in one of several states — `success`, `failed`, `skipped`, `upstream_failed`, among others. If you've seen `shutdown` mentioned as a task state, drop it: it was marked deprecated in **2.7.2** (kept in the codebase for backward compatibility, with a `# TODO: Remove in Airflow 3.0` comment) but stayed present through the rest of the 2.x series, and was only actually removed in **3.0.0** — so it isn't part of the current state machine. A newer addition worth knowing about is `awaiting_input`, added in 3.3.0 for Human-in-the-Loop tasks — a different feature, not something to dig into here.
 
 ## Trigger rules
 
@@ -389,7 +389,7 @@ Airflow's official catalog has **13** trigger rules total. The six below are the
 | `one_success` / `one_failed` | Runs as soon as *one* parent reaches that state, without waiting for the rest — `one_failed` is the alert/fallback-path pattern |
 | `always` | Runs no matter what |
 
-The remaining seven — `all_failed`, `all_skipped`, `one_done`, `all_done_min_one_success`, `all_done_setup_success`, and others — cover narrower cases; check Airflow's trigger-rule reference when one of the six above doesn't fit.
+The remaining six — `all_failed`, `all_skipped`, `one_done`, `all_done_min_one_success`, `all_done_setup_success`, and `none_skipped` — cover narrower cases; check Airflow's trigger-rule reference when one of the six above doesn't fit.
 
 One rename worth knowing if you read older code or tutorials: `none_failed_min_one_success` was called `none_failed_or_skipped` before **Airflow 2.2.0** — the old name is fully gone as of 3.0.
 
