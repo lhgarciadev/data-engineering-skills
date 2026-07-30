@@ -4,7 +4,7 @@ Most non-trivial Spark jobs get slow for one of two reasons: a shuffle that didn
 
 ## What shuffle is, and what it costs
 
-Shuffle is Spark redistributing data across partitions — and usually across nodes — by key, so that rows the next stage needs to see together end up on the same partition. Any wide transformation triggers one: `groupBy`, a non-broadcast `join`, `distinct`, `repartition`, `orderBy`. For the detailed mechanics of data flow across stages, see [execution-model.md](execution-model.md).
+Shuffle is Spark redistributing data across partitions — and usually across nodes — by key for most wide operations, or round-robin for a columnless `repartition`, so that rows the next stage needs to see together end up on the same partition. Any wide transformation triggers one: `groupBy`, a non-broadcast `join`, `distinct`, `repartition`, `orderBy`. Wide dependencies — the transformations that trigger this — are defined in [execution-model.md](execution-model.md).
 
 Spark's own docs (RDD Programming Guide, "Shuffle operations" → "Performance Impact") name exactly three cost factors — not just "it's slow because network": **disk I/O** (writing and reading shuffle files), **data serialization** (encoding/decoding records to move them), and **network I/O** (moving those files between executors). All three stack on every shuffle; there's no version of a shuffle that only pays one of these costs.
 
@@ -45,8 +45,6 @@ The two variants of `repartition` use fundamentally different partitioning strat
 - **Column-based overloads** (`repartition("col")`, `repartition(n, "col1", "col2")`) redistribute via **hash partitioning** on the given columns. Hash partitioning spreads *distinct key values* across partitions, not *rows*; if one key value dominates the dataset, every row for it lands in the same partition regardless of `n`. This is where skew happens. PySpark's docstring says repartition "hash partitions," and for the column-based case, that's accurate — but skew on a key is a skew problem, not something a bigger `n` will fix.
 - **Columnless overload** (`repartition(n)`) is different in kind: Spark's internal implementation (Catalyst's `Repartition` logical plan node) uses **round-robin partitioning**, not hash partitioning. Round-robin has no concept of a key, so it can't skew on dominant values; it simply distributes rows sequentially across the `n` output partitions. This makes it evenly balanced by row count, but it also means there's no co-location of related rows by key for downstream operations.
 
-PySpark's docstring says all `repartition` overloads are "hash partitioned," but this blanket statement is imprecise for the columnless case — its actual implementation is round-robin.
-
 ```python
 # column-based: hash-partitions by customer_id; if one customer_id is 40% of the rows,
 # that single output partition ends up ~40% of the data regardless of n
@@ -76,7 +74,7 @@ Asking `coalesce` for more partitions than currently exist, without `shuffle=Tru
 
 ## The senior framing
 
-Every partitioning decision runs through the same order: can this shuffle be avoided entirely — a broadcast join, pre-partitioned storage, filtering before the wide operation? If not, can its volume be cut — project down to the columns actually needed, filter earlier in the plan? Only after that does "how do I control partition count" become the real question, and even then `repartition`'s hash-based redistribution is a rebalancing tool, not a guarantee — it will not rescue you from a genuinely skewed key. That's where [joins-and-skew.md](joins-and-skew.md) picks up: what happens when a shuffle meets a skewed key, and how to fix it.
+Every partitioning decision runs through the same order: can this shuffle be avoided entirely — a broadcast join, pre-partitioned storage, filtering before the wide operation? If not, can its volume be cut — project down to the columns actually needed, filter earlier in the plan? Only after that does "how do I control partition count" become the real question, and even then the column-based form of `repartition`'s hash-based redistribution is a rebalancing tool, not a guarantee — it will not rescue you from a genuinely skewed key. That's where [joins-and-skew.md](joins-and-skew.md) picks up: what happens when a shuffle meets a skewed key, and how to fix it.
 
 ## Common mistakes
 

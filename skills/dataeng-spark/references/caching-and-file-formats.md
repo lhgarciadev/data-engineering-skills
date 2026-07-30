@@ -7,6 +7,8 @@ Spark's laziness means a DataFrame is a recipe, not a result — every action re
 Call `.cache()` or `.persist()` when a DataFrame feeds more than one action — otherwise Spark recomputes its entire lineage, from the original read, once per action.
 
 ```python
+from pyspark.sql import functions as F
+
 df_clean = (
     spark.read.parquet("s3://bucket/events/")
     .filter(F.col("status") == "active")
@@ -67,7 +69,7 @@ long_chain = (
 checkpointed = long_chain.checkpoint()
 ```
 
-Reach for this when the lineage graph itself — not just the data — is the expensive part: many chained joins and aggregations produce a DAG that's costly for the driver to track and for the catalyst optimizer to plan against on every subsequent action. Checkpointing resets that graph to a single read from the checkpoint files. Caching a DataFrame in the same situation still leaves the long lineage attached as a fallback.
+Reach for this when the lineage graph itself — not just the data — is the expensive part: many chained joins and aggregations produce a DAG that's costly for the driver to track and for the Catalyst optimizer to plan against on every subsequent action. Checkpointing resets that graph to a single read from the checkpoint files. Caching a DataFrame in the same situation still leaves the long lineage attached as a fallback.
 
 ## Parquet and predicate pushdown
 
@@ -93,7 +95,7 @@ The `.select("user_id", "amount")` above also benefits from projection pushdown 
 df.write.partitionBy("country", "event_date").parquet("s3://bucket/output/")
 ```
 
-Spark's `DataFrameWriter.partitionBy` guidance gives a concrete cardinality boundary: the number of distinct values in a partition column should typically stay under tens of thousands. Partitioning by something like `user_id` blows past that — millions of directories, each holding a handful of rows, dominated by file-open and listing overhead rather than actual scan work. Past that cardinality threshold, use `bucketBy` instead, which doesn't have the same ceiling.
+Spark's `DataFrameWriter.partitionBy` guidance gives a concrete cardinality boundary: the number of distinct values in a partition column should typically stay under tens of thousands. Partitioning by something like `user_id` blows past that — millions of directories, each holding a handful of rows, dominated by file-open and listing overhead rather than actual scan work. Past that cardinality threshold, use `bucketBy` instead, which doesn't have the same ceiling — see [joins-and-skew.md](joins-and-skew.md) for how bucketing also eliminates join-time shuffle.
 
 ## `approx_count_distinct`: skip the shuffle when exact isn't needed
 
@@ -117,5 +119,5 @@ Getting caching, checkpointing, and file layout right is what separates a job th
 | Never calling `.unpersist()` on DataFrames that are done being reused | Stale cached data competes with execution memory until LRU eviction eventually forces it out | Unpersist explicitly once a DataFrame's reuse is over |
 | Reaching for `.cache()` on a DataFrame built from a long join/aggregation chain | Caching keeps the expensive lineage graph attached as a fallback — doesn't solve planning overhead | Use `.checkpoint()` to truncate the lineage instead |
 | Assuming projection pushdown is a config flag like predicate pushdown | There's no equivalent boolean to check or disable — it's implicit reader behavior | Just call `.select()` early; verify via the physical plan, not a config |
-| Partitioning writes by a high-cardinality column (e.g. `user_id`) | Produces millions of tiny files - listing/open overhead dominates actual I/O | Keep partition columns under roughly tens of thousands of distinct values; use `bucketBy` beyond that |
+| Partitioning writes by a high-cardinality column (e.g. `user_id`) | Produces millions of tiny files - listing/open overhead dominates actual I/O | Keep partition columns under roughly tens of thousands of distinct values; use `bucketBy` beyond that (see [joins-and-skew.md](joins-and-skew.md) for bucket joins) |
 | Using `countDistinct` when an approximate cardinality is good enough | Forces a full shuffle to get exactness nobody needed | Use `approx_count_distinct` with a tolerable `rsd` |

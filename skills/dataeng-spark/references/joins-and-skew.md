@@ -21,7 +21,7 @@ spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 100 * 1024 * 1024)  # rai
 spark.conf.set("spark.sql.autoBroadcastJoinThreshold", -1)  # disable automatic broadcasting entirely
 ```
 
-The failure mode runs in both directions. Leave the threshold too low and a dimension table that's genuinely small (say, 40MB) falls back to a full shuffle for no reason — you pay the shuffle cost for a join that didn't need it. Push the threshold up carelessly, or hint `broadcast()` on a table that turns out to be large, and every executor tries to hold a full copy in memory at once; that's a broadcast-timeout error or an executor OOM, not a performance win. Broadcast is for dimension tables and lookup tables, not for anything that could grow past a few hundred MB.
+The failure mode runs in both directions. Leave the threshold too low and a dimension table that's genuinely small (say, 40MB) falls back to a full shuffle for no reason — you pay the shuffle cost for a join that didn't need it. Push the threshold up carelessly, or hint `broadcast()` on a table that turns out to be large, and every executor tries to hold a full copy in memory at once; that's a broadcast-timeout error or an executor OOM, not a performance win. Broadcast is for dimension tables and lookup tables — tens to low hundreds of MB, not GB — not for anything that could grow past that.
 
 ## Detecting data skew before you treat it as skew
 

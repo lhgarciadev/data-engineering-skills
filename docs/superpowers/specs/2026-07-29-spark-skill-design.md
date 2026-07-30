@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-07-29
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Diseño completo, pendiente de `superpowers:writing-plans` para el plan de implementación.
+**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-29-spark-skill-implementation.md` para el registro de ejecución.
 
 ---
 

@@ -35,7 +35,7 @@ df_result.explain("formatted")  # look for "AdaptiveSparkPlan isFinalPlan=true"
                                   # and check which join physical operator actually ran
 ```
 
-Skew join handling is the fifth (well-documented) AQE optimization from the list above, and it deserves its own treatment rather than a paragraph here — see [joins-and-skew.md](joins-and-skew.md) for how AQE detects and splits skewed partitions.
+Skew join handling is the well-documented skew optimization from the list above, and it deserves its own treatment rather than a paragraph here — see [joins-and-skew.md](joins-and-skew.md) for how AQE detects and splits skewed partitions.
 
 ## Confirming AQE actually did something
 

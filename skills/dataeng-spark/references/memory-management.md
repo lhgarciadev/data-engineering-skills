@@ -33,7 +33,7 @@ When execution reclaims space from storage, the evicted blocks are chosen by LRU
 That's exactly the trap: nothing fails, so nothing tells you it happened. A pipeline that "used to be fast" after someone added a memory-heavy join upstream is a classic symptom — the cache is being silently evicted and recomputed every iteration. Two ways to confirm and fix it:
 
 - Check the **Storage** tab in the Spark UI — "Fraction Cached" below 100% means eviction is happening.
-- If recomputation from lineage is expensive (long DAG, expensive source read) and you need the result to actually stick, `checkpoint()` it instead of just `persist()` — checkpointing writes to reliable storage and truncates lineage, so there's nothing to fall back to and nothing to recompute.
+- If recomputation from lineage is expensive (long DAG, expensive source read) and you need the result to actually stick, `checkpoint()` it instead of just `persist()` — checkpointing writes to reliable storage and truncates lineage, so there's nothing to fall back to and nothing to recompute. See [caching-and-file-formats.md](caching-and-file-formats.md) for checkpointing in depth.
 
 ## The driver is a coordinator, not a worker
 
@@ -73,7 +73,7 @@ None of this is exotic tuning — it's the baseline model for reading a Spark UI
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | Assuming `spark.memory.fraction` is a Spark 3.x tuning knob | Leads to hunting for the wrong changelog/version notes when tuning older clusters | It's a Spark 2.0.0 default (SPARK-15796); the unified model itself is from 1.6 |
-| Treating cache eviction as "the cache is broken" | Masks the real issue - execution pressure upstream - and wastes time debugging the wrong stage | Check the Storage tab for Fraction Cached; if lineage is expensive, `checkpoint()` instead of relying on `persist()` |
+| Treating cache eviction as "the cache is broken" | Masks the real issue - execution pressure upstream - and wastes time debugging the wrong stage | Check the Storage tab for Fraction Cached; if lineage is expensive, `checkpoint()` instead of relying on `persist()` (see [caching-and-file-formats.md](caching-and-file-formats.md)) |
 | `.collect()` / `.toPandas()` on a DataFrame sized for the cluster, not the driver | Silently fine in dev on small data, OOMs the driver in production at scale | Aggregate/filter down first, or write to storage and read back if the full dataset is genuinely needed on one machine |
-| Assuming a large broadcast table only costs the driver | Actually pressures every executor's storage region simultaneously - a cluster-wide spike, not a single-node one | Keep broadcast tables small (tens of MB, not GB) and check `spark.sql.autoBroadcastJoinThreshold` before relying on auto-broadcast |
+| Assuming a large broadcast table only costs the driver | Actually pressures every executor's storage region simultaneously - a cluster-wide spike, not a single-node one | Keep broadcast tables small (tens to low hundreds of MB, not GB) and check `spark.sql.autoBroadcastJoinThreshold` before relying on auto-broadcast |
 | Bumping `spark.executor.memory` to fix spilling without checking `storageFraction` | Can throw memory at a problem that's actually about execution/storage balance, not total size | Look at whether it's spilling (execution-bound) or evicting cache (storage-bound) before resizing anything |

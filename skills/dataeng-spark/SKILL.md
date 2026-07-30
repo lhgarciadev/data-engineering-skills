@@ -29,7 +29,7 @@ Senior-level judgment calls for designing, reviewing, and tuning Spark and PySpa
 | Deciding whether a transformation will trigger a shuffle | Narrow vs. wide dependency | [execution-model.md](references/execution-model.md) |
 | A job is slow and shuffle is suspected | Shuffle costs disk I/O, serialization, and network I/O — all three | [shuffle-and-partitioning.md](references/shuffle-and-partitioning.md) |
 | Reducing partition count before a write | `coalesce` — no full shuffle | [shuffle-and-partitioning.md](references/shuffle-and-partitioning.md) |
-| Rebalancing skewed partitions or raising parallelism | `repartition` — full shuffle, hash-based, not a balance guarantee | [shuffle-and-partitioning.md](references/shuffle-and-partitioning.md) |
+| Rebalancing skewed partitions or raising parallelism | `repartition` — full shuffle; round-robin for `repartition(n)` (no key, can't skew), hash-based for the column-based form (can skew on a dominant key value) | [shuffle-and-partitioning.md](references/shuffle-and-partitioning.md) |
 | Joining a large table against a small lookup/dimension table | Broadcast join (`broadcast()` hint or the 10MB auto threshold) | [joins-and-skew.md](references/joins-and-skew.md) |
 | One task in a sort-merge join runs far longer than the rest | AQE's automatic skew-join optimization (primary fix on Spark 3.0+) | [joins-and-skew.md](references/joins-and-skew.md) |
 | Skew in a `groupBy`/aggregation, not a join | `REBALANCE` hint, or manual salting as the fallback | [joins-and-skew.md](references/joins-and-skew.md) |
