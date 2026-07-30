@@ -1,15 +1,15 @@
-# Especificación de Diseño: Skill `sql`
+# Especificación de Diseño: Skill `dataeng-sql`
 ## Segunda skill de dominio de la suite `data-engineering-skills`
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-28-sql-skill-implementation.md` para el registro de ejecución. La verificación de Oracle que este spec dejaba pendiente (§2, §4.5, §4.6, §5) se cerró en un pase posterior — ver notas inline abajo.
+**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-28-sql-skill-implementation.md` para el registro de ejecución. La verificación de Oracle que este spec dejaba pendiente (§2, §4.5, §4.6, §5) se cerró en un pase posterior — ver notas inline abajo. El identificador de esta skill se renombró después, de `sql` a `dataeng-sql` (mismo día, ver Estado de la spec de la suite) — este documento ya usa el nombre nuevo en todo salvo donde cita rutas de terceros (`wshobson/agents`).
 
 ---
 
 ## 1. Contexto y objetivo
 
-Primera de las 7 skills de dominio pendientes definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (sección 4). Cubre optimización de queries, window functions, CTEs, planes de ejecución, indexación y modelado de queries analíticas — SQL declarativo, no procedimental, y no modelado de esquemas (eso es `data-modeling`).
+Primera de las 7 skills de dominio pendientes definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (sección 4). Cubre optimización de queries, window functions, CTEs, planes de ejecución, indexación y modelado de queries analíticas — SQL declarativo, no procedimental, y no modelado de esquemas (eso es `dataeng-data-modeling`).
 
 Insumo: borrador de contenido aportado por el usuario (7 "capas", de fundamentos a optimización en producción), verificado contra documentación oficial (PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift, dbt) y complementado con revisión del plugin `data-engineering`/`developer-essentials` de `wshobson/agents` (MIT), según lo ya anticipado en la spec de la suite §4.
 
@@ -19,8 +19,8 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
 
 - **Cubre**: SQL declarativo — orden lógico de ejecución, NULL/lógica de tres valores, joins, agregaciones, window functions, CTEs/recursión, patrones de ingeniería (dedup, gaps & islands, sesionización, MERGE, SCD2), optimización (EXPLAIN, índices, pushdown, costo por motor).
 - **No cubre — frontera con otra skill**:
-  - Modelado de esquemas/dimensional (star/snowflake, Kimball vs Data Vault) → `data-modeling`.
-  - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) → `pipelines-architecture`. Mismo tratamiento que ya reciben Airflow/Dagster/Prefect en `python/production-patterns.md` hoy: mención ilustrativa breve, con recorte/cross-link pendiente cuando `pipelines-architecture` exista (spec de la suite, §8). dbt es, en esencia, otro orquestador — especializado en la capa de transformación SQL — no un tema propio de lenguaje de consulta.
+  - Modelado de esquemas/dimensional (star/snowflake, Kimball vs Data Vault) → `dataeng-data-modeling`.
+  - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) → `dataeng-pipelines-architecture`. Mismo tratamiento que ya reciben Airflow/Dagster/Prefect en `skills/dataeng-python/references/production-patterns.md` hoy: mención ilustrativa breve, con recorte/cross-link pendiente cuando `dataeng-pipelines-architecture` exista (spec de la suite, §8). dbt es, en esencia, otro orquestador — especializado en la capa de transformación SQL — no un tema propio de lenguaje de consulta.
   - Extensiones procedimentales (PL/SQL, T-SQL con stored procedures, PL/pgSQL) → fuera de las 8 skills actuales, no se cubre.
 - **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift — como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4). Oracle recibe cobertura dirigida y verificada (cerrado 2026-07-29) solo en dos frentes — CTEs recursivas y `MERGE` (§4.5, §4.6) — no paridad completa con los otros seis motores en el resto de los archivos de referencia; `SKILL.md` refleja este alcance acotado en vez de listar a Oracle junto a los demás.
 
@@ -30,15 +30,15 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
 - Verificación directa contra documentación oficial: PostgreSQL, MySQL 8.0/8.4, SQL Server (MS Learn), Snowflake, BigQuery (GCP docs), dbt-core.
 - `wshobson/agents` (MIT) — revisado como insumo adicional, con atribución, sin adopción literal:
   - `plugins/developer-essentials/skills/sql-optimization-patterns/SKILL.md` — tipos de índice más allá de B-tree (GIN, GiST, BRIN), queries de monitoreo (`pg_stat_statements`). Aporta contenido nuevo a `query-optimization-and-production.md`.
-  - `plugins/data-engineering/skills/dbt-transformation-patterns/` — confirma que el contenido de arquitectura dbt pertenece a `pipelines-architecture`, no a `sql` (ver sección 2).
-  - `plugins/database-cloud-optimization/` y `plugins/database-design/skills/postgresql/` — solapamiento fuerte con `sql-optimization-patterns`, sin aporte adicional a esta skill; `database-design` trae contenido OLTP (normalización, constraints, JSONB, RLS) que no encaja limpio en `sql` ni en `data-modeling` tal como están definidas hoy — anotado como pendiente para cuando se planee `data-modeling`, no bloquea esta skill.
-  - `plugins/database-migrations/` — mayormente territorio de `iac-cloud` (Flyway/Liquibase, Terraform), sin aporte a `sql`.
+  - `plugins/data-engineering/skills/dbt-transformation-patterns/` — confirma que el contenido de arquitectura dbt pertenece a `dataeng-pipelines-architecture`, no a `dataeng-sql` (ver sección 2).
+  - `plugins/database-cloud-optimization/` y `plugins/database-design/skills/postgresql/` — solapamiento fuerte con `sql-optimization-patterns`, sin aporte adicional a esta skill; `database-design` trae contenido OLTP (normalización, constraints, JSONB, RLS) que no encaja limpio en `dataeng-sql` ni en `dataeng-data-modeling` tal como están definidas hoy — anotado como pendiente para cuando se planee `dataeng-data-modeling`, no bloquea esta skill.
+  - `plugins/database-migrations/` — mayormente territorio de `dataeng-iac-cloud` (Flyway/Liquibase, Terraform), sin aporte a `dataeng-sql`.
   - `plugins/data-validation-suite/` — descartado: es seguridad de aplicación (injection, JWT, CORS), no relacionado con ninguna de las 8 skills.
 
 ## 4. Estructura de archivos
 
 ```
-skills/sql/
+skills/dataeng-sql/
   SKILL.md
   references/
     query-execution-and-null-semantics.md
@@ -50,7 +50,7 @@ skills/sql/
     query-optimization-and-production.md
 ```
 
-Mismo formato que `python`: overview, when to use, tabla de quick reference y tabla de common mistakes en `SKILL.md`; un archivo de reference por tema pesado.
+Mismo formato que `dataeng-python`: overview, when to use, tabla de quick reference y tabla de common mistakes en `SKILL.md`; un archivo de reference por tema pesado.
 
 ### 4.1 `query-execution-and-null-semantics.md`
 
@@ -103,14 +103,14 @@ Leer el plan de ejecución (`EXPLAIN`/`EXPLAIN ANALYZE`) antes de optimizar, ín
 **Correcciones a incorporar:**
 - Redshift no usa "clustering keys" ni "micro-particiones" (vocabulario propio de Snowflake) — Redshift usa **sort keys + zone maps + distribution keys**. Nombrar cada motor con su terminología real, no generalizar.
 - "Optimizo por bytes escaneados, no por tiempo de CPU" es preciso para BigQuery on-demand, pero es una simplificación excesiva para Snowflake: Snowflake cobra por **tiempo de cómputo del warehouse** (créditos por segundo), correlacionado con bytes escaneados pero no equivalente. Distinguir ambos modelos explícitamente en el cierre.
-- Cierre de dbt: solo materializations, `unique_key`/incremental como mecanismo de idempotencia (conecta con `MERGE` de 4.6), y tests genéricos como aserciones SQL — con una línea explícita de que la arquitectura de proyecto dbt vive en `pipelines-architecture` (ver sección 2).
+- Cierre de dbt: solo materializations, `unique_key`/incremental como mecanismo de idempotencia (conecta con `MERGE` de 4.6), y tests genéricos como aserciones SQL — con una línea explícita de que la arquitectura de proyecto dbt vive en `dataeng-pipelines-architecture` (ver sección 2).
 
 ## 5. Fuera de alcance (de esta fase)
 
-- Contenido OLTP de `database-design` (normalización, constraints, JSONB, RLS) — no encaja limpio en `sql` ni en `data-modeling` tal como están definidas hoy; queda anotado para cuando se planee `data-modeling`.
-- Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos) — pertenece a la futura skill `pipelines-architecture`.
+- Contenido OLTP de `database-design` (normalización, constraints, JSONB, RLS) — no encaja limpio en `dataeng-sql` ni en `dataeng-data-modeling` tal como están definidas hoy; queda anotado para cuando se planee `dataeng-data-modeling`.
+- Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos) — pertenece a la futura skill `dataeng-pipelines-architecture`.
 - Extensiones procedimentales (PL/SQL, T-SQL, PL/pgSQL) — no es una de las 8 skills de la suite.
 
 ## 6. Próximos pasos
 
-Transición a `superpowers:writing-plans` para el plan de implementación: redacción completa de `SKILL.md` + los 7 reference files, con el contenido final en inglés y las correcciones de la sección 4 incorporadas, siguiendo el mismo proceso de validación liviana de discoverability ya usado con `python` y con la orquestadora `data-engineering`.
+Transición a `superpowers:writing-plans` para el plan de implementación: redacción completa de `SKILL.md` + los 7 reference files, con el contenido final en inglés y las correcciones de la sección 4 incorporadas, siguiendo el mismo proceso de validación liviana de discoverability ya usado con `dataeng-python` y con la orquestadora `dataeng`.

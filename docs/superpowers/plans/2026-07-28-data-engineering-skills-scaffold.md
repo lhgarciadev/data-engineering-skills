@@ -387,7 +387,9 @@ Expected: no output.
 
 ## Addendum (2026-07-29): `plugin.json` renamed after this plan shipped
 
-Task 3 Step 3 created `.claude-plugin/plugin.json` with `"name": "data-engineering"` — the embedded content in that step still shows that original value, left as-is as a historical record of what the task actually produced at the time. That name was later renamed to `data-engineering-suite` (see `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md`, Estado line and §2) to stop the orchestrator skill — also named `data-engineering` — from being invoked as `data-engineering:data-engineering` when installed through the Claude Code plugin flow. The orchestrator skill's own identifier (`skills/data-engineering/`) did not change. The live file on disk carries the renamed value.
+Task 3 Step 3 created `.claude-plugin/plugin.json` with `"name": "data-engineering"` — the embedded content in that step still shows that original value, left as-is as a historical record of what the task actually produced at the time. That name was later renamed to `data-engineering-suite` (see `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md`, Estado line and §2) to stop the orchestrator skill — also named `data-engineering` — from being invoked as `data-engineering:data-engineering` when installed through the Claude Code plugin flow. The orchestrator skill's own identifier (`skills/data-engineering/`) did not change at that point. The live file on disk carries the renamed value.
+
+**Second addendum, same day:** every skill identifier in this suite was then prefixed with `dataeng-` (the orchestrator became `dataeng`, dropping the redundant suffix). Task 4's `python` and Task 5's `data-engineering` throughout this plan are the pre-rename names — the live folders are now `skills/dataeng-python/` and `skills/dataeng/`. See the suite spec's Estado line for the rationale (generic identifiers in a flat, shared `~/.claude/skills/`/`~/.agents/skills/` namespace are a symlink collision waiting to happen).
 
 ## Self-Review Notes
 

@@ -21,11 +21,13 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 
 | Skill | Covers |
 |---|---|
-| `data-engineering` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
-| `python` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
-| `sql` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
+| `dataeng` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
+| `dataeng-python` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
+| `dataeng-sql` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
 
-The remaining domain skills (`spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud`) ship incrementally — see `docs/` for the design spec.
+The remaining domain skills (`dataeng-spark`, `dataeng-data-modeling`, `dataeng-pipelines-architecture`, `dataeng-streaming`, `dataeng-data-quality`, `dataeng-iac-cloud`) ship incrementally — see `docs/` for the design spec.
+
+All skill identifiers share the `dataeng-` prefix (the orchestrator is just `dataeng`) so they don't collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces.
 
 ## Updating
 

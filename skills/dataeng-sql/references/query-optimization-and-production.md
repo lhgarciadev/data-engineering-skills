@@ -69,7 +69,7 @@ Other classic rewrites: a correlated subquery into a join or window function (se
 
 A large share of a data engineer's SQL ends up living inside dbt as versioned models. From the SQL side, two things matter directly: **incremental models depend on the same idempotency mechanism as `MERGE`** — the `unique_key` config drives an update/insert (upsert) instead of a blind append, exactly the pattern in [engineering-query-patterns.md](engineering-query-patterns.md); the actual strategy behind that upsert is adapter-dependent, though, not universal — `merge` is the default incremental strategy on Snowflake, BigQuery, and Databricks, while PostgreSQL and Redshift default to `delete+insert`. dbt's generic tests (`unique`, `not_null`, `accepted_values`, `relationships`) are data-quality checks expressed directly as SQL assertions rather than a separate framework.
 
-Everything beyond that — medallion architecture, model layering and naming conventions, the dependency graph between models, project structure — is dbt as an orchestrator for the transformation layer, not a SQL-language concern; that content belongs to `pipelines-architecture`, alongside Airflow, Dagster, and Prefect.
+Everything beyond that — medallion architecture, model layering and naming conventions, the dependency graph between models, project structure — is dbt as an orchestrator for the transformation layer, not a SQL-language concern; that content belongs to `dataeng-pipelines-architecture`, alongside Airflow, Dagster, and Prefect.
 
 ## Common mistakes
 
@@ -80,4 +80,4 @@ Everything beyond that — medallion architecture, model layering and naming con
 | Applying a function to a filtered/partitioned column | Non-sargable — blocks index use and partition pruning | Rewrite as a plain range/equality comparison on the raw column |
 | Calling Redshift's storage mechanism a "clustering key" or "micro-partition" | Those are Snowflake terms — Redshift uses sort keys/zone maps/distribution keys | Use the terminology of the actual engine in question |
 | Saying "I optimize for bytes scanned" for both BigQuery and Snowflake | Accurate for BigQuery on-demand, an oversimplification for Snowflake's compute-time billing | Name the actual cost driver per engine |
-| Treating dbt project/model-layering concerns as a SQL topic | Conflates the transformation-orchestration layer with the query language | SQL-level idempotency and tests stay here; architecture questions go to `pipelines-architecture` |
+| Treating dbt project/model-layering concerns as a SQL topic | Conflates the transformation-orchestration layer with the query language | SQL-level idempotency and tests stay here; architecture questions go to `dataeng-pipelines-architecture` |

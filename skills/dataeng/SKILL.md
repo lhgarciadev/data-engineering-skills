@@ -1,6 +1,6 @@
 ---
-name: data-engineering
-description: Cross-domain router for data engineering tasks that span more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of python, sql, spark, data-modeling, pipelines-architecture, streaming, data-quality, or iac-cloud at once. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
+name: dataeng
+description: Cross-domain router for data engineering tasks that span more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of dataeng-python, dataeng-sql, dataeng-spark, dataeng-data-modeling, dataeng-pipelines-architecture, dataeng-streaming, dataeng-data-quality, or dataeng-iac-cloud at once. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
 ---
 
 # Data Engineering (Orchestrator)
@@ -13,13 +13,13 @@ Entry point for data engineering tasks that cross domain boundaries. Identifies 
 
 - A request explicitly spans multiple domains ("design this pipeline end-to-end: Kafka → PySpark → warehouse, with data quality checks, deployed via Terraform")
 - Reviewing a full data solution rather than one component
-- Not for single-domain tasks — let that domain's own skill trigger directly (`python`, `sql`, `spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud`)
+- Not for single-domain tasks — let that domain's own skill trigger directly (`dataeng-python`, `dataeng-sql`, `dataeng-spark`, `dataeng-data-modeling`, `dataeng-pipelines-architecture`, `dataeng-streaming`, `dataeng-data-quality`, `dataeng-iac-cloud`)
 
 ## Process
 
 1. **Identify relevant domains.** Read the request and list which of the 8 domain skills apply. If only one applies, stop and use that skill directly instead of continuing here.
 2. **Dispatch one subagent per relevant domain, in parallel when your environment supports it.** Each subagent's prompt must: name the specific domain skill to read first, quote the slice of the original request relevant to that domain, and ask for a focused analysis from that lens only — not a full solution. If your environment does not support parallel or background subagent dispatch, perform each domain's analysis in sequence within this session instead of skipping any.
-3. **Synthesize.** Combine the per-domain analyses into one answer. Do not just concatenate them — explicitly call out interactions between domains that no single analysis would see (a partition scheme in `spark` that conflicts with a clustering key decision in `sql`; a Terraform-provisioned resource in `iac-cloud` that a `streaming` consumer assumes already exists). If a domain you identified in step 1 has no installed skill yet in your environment, say so explicitly in the synthesis instead of silently presenting the analysis as complete.
+3. **Synthesize.** Combine the per-domain analyses into one answer. Do not just concatenate them — explicitly call out interactions between domains that no single analysis would see (a partition scheme in `dataeng-spark` that conflicts with a clustering key decision in `dataeng-sql`; a Terraform-provisioned resource in `dataeng-iac-cloud` that a `dataeng-streaming` consumer assumes already exists). If a domain you identified in step 1 has no installed skill yet in your environment, say so explicitly in the synthesis instead of silently presenting the analysis as complete.
 
 ## What this skill does not do
 

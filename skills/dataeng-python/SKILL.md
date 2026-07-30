@@ -1,5 +1,5 @@
 ---
-name: python
+name: dataeng-python
 description: Python data engineering guidance — writing, reviewing, or making design decisions on ETL/ELT pipelines, batch jobs, dataframe transformations, or pipeline architecture. Use when choosing a concurrency model, a dataframe library, or a validation approach, or when a pipeline is slow, leaking memory, or unsafe to rerun. Covers generators/streaming, decorators and context managers, GIL-aware concurrency, pandas/Polars/DuckDB tradeoffs, Pydantic/Pandera validation, idempotent writes, and pipeline testing/error handling. Not for general Python questions unrelated to data workloads.
 ---
 

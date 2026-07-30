@@ -1,6 +1,6 @@
 ---
-name: sql
-description: SQL query writing, review, and optimization guidance — analytical queries, aggregations, window functions, CTEs, joins, or query performance tuning. Use when writing, reviewing, or optimizing a query, or diagnosing one that's slow or returning a wrong row count. Covers logical execution order and NULL/three-valued logic, join semantics and the outer-join-filter trap, aggregation and conditional pivoting, window functions (ranking, deduplication, running totals, the frame clause), CTEs and recursion, engineering query patterns (gaps and islands, sessionization, MERGE, SCD Type 2), and query optimization (execution plans, indexing, partition pruning, cost model by cloud warehouse). Primary engines: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift, calling out engine-specific divergence where it exists — plus targeted Oracle notes for recursive CTEs and MERGE (not full parity with the other six). Does not cover schema/dimensional modeling (see data-modeling) or procedural extensions like PL/SQL and T-SQL stored procedures.
+name: dataeng-sql
+description: SQL query writing, review, and optimization guidance — analytical queries, aggregations, window functions, CTEs, joins, or query performance tuning. Use when writing, reviewing, or optimizing a query, or diagnosing one that's slow or returning a wrong row count. Covers logical execution order and NULL/three-valued logic, join semantics and the outer-join-filter trap, aggregation and conditional pivoting, window functions (ranking, deduplication, running totals, the frame clause), CTEs and recursion, engineering query patterns (gaps and islands, sessionization, MERGE, SCD Type 2), and query optimization (execution plans, indexing, partition pruning, cost model by cloud warehouse). Primary engines: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift, calling out engine-specific divergence where it exists — plus targeted Oracle notes for recursive CTEs and MERGE (not full parity with the other six). Does not cover schema/dimensional modeling (see dataeng-data-modeling) or procedural extensions like PL/SQL and T-SQL stored procedures.
 ---
 
 # SQL for Data Engineering
@@ -17,7 +17,7 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 - A query is slow and the cause isn't obvious
 - Deciding how to index a table, or reading an execution plan
 - Checking whether a query pattern is portable across engines (Postgres, MySQL, SQL Server, Snowflake, BigQuery, Redshift)
-- Not for schema or dimensional modeling design (star schema, SCDs at the modeling level) — that's `data-modeling`
+- Not for schema or dimensional modeling design (star schema, SCDs at the modeling level) — that's `dataeng-data-modeling`
 - Not for procedural extensions (PL/SQL, T-SQL stored procedures, PL/pgSQL) — this skill covers declarative SQL
 
 ## Quick reference
