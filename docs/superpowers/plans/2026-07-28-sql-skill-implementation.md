@@ -974,6 +974,10 @@ See `docs/superpowers/specs/2026-07-28-sql-skill-design.md` (Estado line, and §
 
 **Third addendum, 2026-07-29:** a 5-way research pass re-verified sql's technical claims against primary vendor docs — see `docs/superpowers/research/2026-07-29-sql-python-claims-verification.md`. Two fixes landed (BigQuery `WITH RECURSIVE` GA date, dbt's `unique_key`-conditional default on Postgres/Redshift); everything else confirmed unchanged.
 
+**Fourth addendum, 2026-07-29:** targeted Azure Synapse Analytics / Microsoft Fabric Warehouse coverage added, same treatment as Oracle above (not full parity). See `docs/superpowers/research/2026-07-29-sql-synapse-fabric-claims-verification.md` and the design spec's §2/§4.3/§4.4/§4.6/§4.7.
+
+**Fifth addendum, 2026-07-30:** this plan's Global Constraints (line 17) and Task 8's `SKILL.md` content excluded procedural extensions entirely — that exclusion was reversed. An 8th reference file, `procedural-extensions.md`, was added covering Oracle PL/SQL, SQL Server T-SQL, PostgreSQL PL/pgSQL, and MySQL stored routines, at the same fundamentals-to-senior depth as the rest of this skill. See `docs/superpowers/research/2026-07-30-sql-procedural-extensions-verification.md` and the design spec's §4.8. A pre-existing broken cross-link in `engineering-query-patterns.md` (pointed at `python/` instead of `dataeng-python/`, a leftover from the 2026-07-29 rename) was also fixed in the same pass.
+
 ---
 
 ## Self-Review Notes

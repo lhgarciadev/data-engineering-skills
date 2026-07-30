@@ -59,7 +59,7 @@ Pivot with conditional aggregation (see [aggregation-patterns.md](aggregation-pa
 
 ## Idempotent upserts with MERGE
 
-The pattern that makes a load idempotent — the piece a report-writing analyst rarely touches, but a data engineer has to own (connects directly to the idempotency discussion in [python's production-patterns.md](../../python/references/production-patterns.md)):
+The pattern that makes a load idempotent — the piece a report-writing analyst rarely touches, but a data engineer has to own (connects directly to the idempotency discussion in [python's production-patterns.md](../../dataeng-python/references/production-patterns.md)):
 
 ```sql
 MERGE INTO dim_customer t
