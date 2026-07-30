@@ -36,6 +36,7 @@ Senior-level judgment calls for Python data pipelines — which tool or pattern 
 | Re-running a job safely after a partial failure | idempotent upsert-by-key | [production-patterns.md](references/production-patterns.md) |
 | Tracking which rows are new/changed since the last run | Watermark/cursor state — persisted outside a single DAG run | [production-patterns.md](references/production-patterns.md) |
 | Pipeline testing, error handling, config, logging | — | [production-patterns.md](references/production-patterns.md) |
+| Calling an external API for ingestion (auth, pagination, rate limits) | Timeout + backoff/jitter + cursor pagination | [external-api-integration.md](references/external-api-integration.md) |
 
 ## Two traps everyone hits first
 
@@ -75,3 +76,6 @@ def add(item, acc=None):      # correct
 | Storing extraction state (watermark) in Airflow XCom | XCom doesn't persist across DAG runs — silently resets each run | Use an Airflow `Variable` or an external control table instead; see [production-patterns.md](references/production-patterns.md) |
 | `try/except: pass` around pipeline steps | Silently corrupts or drops data, hides root cause | Separate retryable vs non-retryable errors, log structured context, dead-letter the rest; see [production-patterns.md](references/production-patterns.md) |
 | Optimizing before measuring | Fixes the wrong bottleneck | Profile first (`cProfile`, `memory_profiler`) — see [memory-and-performance.md](references/memory-and-performance.md) |
+| Request to an external API without a timeout | Hangs the task indefinitely on a stalled server, blocking the whole DAG behind it | Always set `timeout=(connect, read)`; see [external-api-integration.md](references/external-api-integration.md) |
+| Retrying a failed API call at a fixed interval | Synchronized retries from many clients create a thundering-herd spike right as the API recovers | Exponential backoff plus jitter; see [external-api-integration.md](references/external-api-integration.md) |
+| Offset/limit pagination against a large, frequently-written API | Skips or duplicates rows as data shifts under the paging window, and gets slower at every page | Prefer cursor/keyset pagination when the API offers it; see [external-api-integration.md](references/external-api-integration.md) |
