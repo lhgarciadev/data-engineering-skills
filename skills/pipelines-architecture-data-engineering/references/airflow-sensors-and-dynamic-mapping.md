@@ -4,7 +4,7 @@
 
 A sensor is a task that waits for a condition before letting the DAG proceed: a file in S3 (`S3KeySensor`), a ready partition, a row in a table (`SqlSensor`), or another DAG's task finishing (`ExternalTaskSensor`). It's the classic mechanism for cross-pipeline dependencies when the source doesn't emit an event you can hook an Asset to.
 
-None of these ship in Airflow core anymore. `S3KeySensor` lives in `apache-airflow-providers-amazon`. As of Airflow 3.x, `SqlSensor` moved to `apache-airflow-providers-common-sql` and `ExternalTaskSensor` moved to `apache-airflow-providers-standard` — both used to be core (`airflow.sensors.*`) in 2.x. On 2.x the core import paths still work; on 3.x, install the matching provider.
+None of these ship in Airflow core anymore. `S3KeySensor` lives in `apache-airflow-providers-amazon`. `SqlSensor` moved to `apache-airflow-providers-common-sql` back in **Airflow 2.4.0** — its core import path stopped working from that release onward, well before Airflow 3.0 shipped. `ExternalTaskSensor` moved to `apache-airflow-providers-standard` as part of Airflow 3.0's core-to-provider split — its core import path worked throughout the entire 2.x line and only broke at the 3.0 boundary. The two sensors didn't move on the same timeline; install the matching provider for whichever Airflow version you're actually on.
 
 ## The antipattern that sinks clusters: poke mode
 
