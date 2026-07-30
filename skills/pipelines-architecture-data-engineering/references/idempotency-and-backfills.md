@@ -37,7 +37,7 @@ Core claim: **a backfill is trivial if — and only if — every run is idempote
 
 ## Concurrency and load control
 
-Backfilling two years can launch hundreds of runs that saturate the warehouse or blow straight through the source API's rate limit. Bound the backfill's parallelism: Airflow's Pools and `max_active_runs` (a DAG-level setting, not a task-level one) exist for exactly this.
+Backfilling two years can launch hundreds of runs that saturate the warehouse or blow straight through the source API's rate limit. Bound the backfill's parallelism: Airflow's Pools and `max_active_runs` exist for exactly this — see `airflow-structure-and-reliability.md` for what each actually controls.
 
 ## Isolating backfills from production
 

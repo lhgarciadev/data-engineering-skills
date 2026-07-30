@@ -112,7 +112,7 @@ One thing not to reach for: a `dag.test_cycle()` public method. It shows up in o
 
 ## Pools and reliability configuration
 
-**Pools** are the resource-protection pattern: a pool caps how many tasks hit a shared, finite resource at once. Give the pool `api_externa` 5 slots, and even if the DAG wants to fire 200 calls in parallel, only 5 run at a time. This is the mechanism that makes a large backfill safe against the systems it depends on — the concurrency control promised in `idempotency-and-backfills.md`, made concrete.
+**Pools** are the resource-protection pattern: a pool caps how many tasks hit a shared, finite resource at once. Give the pool `external_api` 5 slots, and even if the DAG wants to fire 200 calls in parallel, only 5 run at a time. This is the mechanism that makes a large backfill safe against the systems it depends on — the concurrency control promised in `idempotency-and-backfills.md`, made concrete.
 
 Task-level reliability config: `retries`, `retry_delay`, `retry_exponential_backoff` (accepts a float multiplier too, not just a boolean), `execution_timeout` (kills a hung task before it blocks everything). `max_active_runs` is a **DAG-level** setting, not a task-level one — it prevents overlapping runs from stepping on each other's data. `priority_weight` rounds out the set.
 
