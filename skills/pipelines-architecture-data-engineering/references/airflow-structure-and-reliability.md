@@ -50,6 +50,66 @@ cluster.as_teardown(setups=create_cluster)
 
 When you have 50 nearly-identical pipelines (one ingestion per source table), you don't write 50 files — you write a template that generates DAGs from configuration (a YAML per source). This cuts duplication and makes maintenance uniform. The senior caveat: this generator code runs on *every* parse (see the antipattern below), so it must be lightweight and deterministic — Airflow's own Best Practices guide connects this exact point directly to the top-level-code warning.
 
+## Testing a DAG
+
+Airflow's own Best Practices guide treats a DAG as production code, not a script that either runs or doesn't — and prescribes tests at increasing levels of rigor.
+
+**DAG loader test** — the cheapest check: run `python your_dag_file.py` and confirm it exits without error. Catches missing dependencies, syntax errors, and import failures, no test framework required. Run it in an environment matching your scheduler's (same dependencies, env vars), so a pass here actually means something.
+
+**Unit test for loading**, via `DagBag` — note the import path, which changed from the `airflow.models` location some older examples still show:
+
+```python
+import pytest
+from airflow.dag_processing.dagbag import DagBag
+
+@pytest.fixture()
+def dagbag():
+    return DagBag()
+
+def test_dag_loaded(dagbag):
+    dag = dagbag.get_dag(dag_id="hello_world")
+    assert dagbag.import_errors == {}
+    assert dag is not None
+    assert len(dag.tasks) == 1
+```
+
+`dagbag.import_errors` catches the same failure class as the loader test, but across every DAG in the folder at once, in a normal CI run.
+
+**Unit test a DAG's structure** — useful for a factory-generated DAG (the pattern just above), to assert the shape matches its config instead of eyeballing it:
+
+```python
+def assert_dag_dict_equal(source, dag):
+    assert dag.task_dict.keys() == source.keys()
+    for task_id, downstream_list in source.items():
+        assert dag.has_task(task_id)
+        task = dag.get_task(task_id)
+        assert task.downstream_task_ids == set(downstream_list)
+```
+
+**Test a task's actual behavior** — the highest-rigor layer: run the DAG for real, against a single logical date, and assert on the result:
+
+```python
+import pendulum
+from airflow.sdk import DAG, TaskInstanceState
+
+def test_my_custom_operator_execute_no_trigger(dag):
+    TEST_TASK_ID = "my_custom_operator_task"
+    with DAG(
+        dag_id="my_custom_operator_dag",
+        schedule="@daily",
+        start_date=pendulum.datetime(2021, 9, 13, tz="UTC"),
+    ) as dag:
+        MyCustomOperator(task_id=TEST_TASK_ID, prefix="s3://bucket/some/prefix")
+
+    dagrun = dag.test()
+    ti = dagrun.get_task_instance(task_id=TEST_TASK_ID)
+    assert ti.state == TaskInstanceState.SUCCESS
+```
+
+`dag.test()` actually executes the DAG locally against a single run and returns a real `DagRun` you can inspect — closer to an integration test than a unit test, and the right tool when you need to know the task did the right thing, not just that the graph is shaped correctly.
+
+One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — cycle-freedom is enforced by construction (a DAG is acyclic because you build it with `>>`/`<<`, not because you separately assert it), and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
+
 ## Pools and reliability configuration
 
 **Pools** are the resource-protection pattern: a pool caps how many tasks hit a shared, finite resource at once. Give the pool `api_externa` 5 slots, and even if the DAG wants to fire 200 calls in parallel, only 5 run at a time. This is the mechanism that makes a large backfill safe against the systems it depends on — the concurrency control promised in `idempotency-and-backfills.md`, made concrete.
