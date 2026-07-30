@@ -1,0 +1,5 @@
+# Local-only tooling — never tracked in this repo (see chat 2026-07-30)
+.agents/
+.claude/
+.superpowers/
+skills-lock.json
