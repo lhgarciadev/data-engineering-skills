@@ -25,7 +25,7 @@ ingestion_pipeline()
 
 ## TaskGroups — and why SubDAGs are gone
 
-For grouping tasks logically and visually (an "ingestion" section, a "transform" section), use **TaskGroups**. SubDAGs weren't just deprecated — they were **removed in Airflow 3.0**; Airflow's own migration notes list them under "Replaced by TaskGroups, Assets, and Data Aware Scheduling," and `SubDagOperator` no longer resolves in the current stable API reference at all. The reasoning behind the removal is accurately documented, not folklore: a SubDAG ran inside a single pool/concurrency slot, which could deadlock itself waiting on its own children. If you're maintaining a 2.x codebase you may still encounter one; on 3.x it's simply gone. Saying "SubDAGs, because they're deprecated" is dated — saying "TaskGroups, because SubDAGs were removed over the deadlock risk" is current.
+For grouping tasks logically and visually (an "ingestion" section, a "transform" section), use **TaskGroups**. SubDAGs weren't just deprecated — they were **removed in Airflow 3.0**; Airflow's own migration notes describe them as "Replaced by TaskGroups, Assets, and Data Aware Scheduling," and `SubDagOperator` no longer resolves in the current stable API reference at all. The reasoning behind the removal is accurately documented, not folklore: a SubDAG ran inside a single pool/concurrency slot, which could deadlock itself waiting on its own children. If you're maintaining a 2.x codebase you may still encounter one; on 3.x it's simply gone. Saying "SubDAGs, because they're deprecated" is dated — saying "TaskGroups, because SubDAGs were removed over the deadlock risk" is current.
 
 ```python
 from airflow.sdk import task_group
@@ -42,8 +42,9 @@ Introduced in **Airflow 2.7.0** — an elegant pattern for ephemeral resources: 
 
 ```python
 cluster = create_cluster()
-process_data(cluster)
-cluster.as_teardown(setups=create_cluster)
+work = process_data(cluster)
+teardown = delete_cluster()
+cluster >> work >> teardown.as_teardown(setups=cluster)
 ```
 
 ## Dynamic DAG generation (the factory pattern)
@@ -108,7 +109,7 @@ def test_my_custom_operator_execute_no_trigger(dag):
 
 `dag.test()` actually executes the DAG locally against a single run and returns a real `DagRun` you can inspect — closer to an integration test than a unit test, and the right tool when you need to know the task did the right thing, not just that the graph is shaped correctly.
 
-One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — cycle-freedom is enforced by construction (a DAG is acyclic because you build it with `>>`/`<<`, not because you separately assert it), and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
+One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — (cycles are rejected when Airflow parses and bags the DAG, not something your test needs to assert separately), and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
 
 ## Pools and reliability configuration
 
@@ -120,8 +121,8 @@ For observability: `on_failure_callback` fires alerts (Slack/PagerDuty) on failu
 
 ## The most dangerous topology antipattern: top-level code
 
-Everything written outside a task — in the module's top level — executes on *every DAG parse*, which happens on every scheduler heartbeat (every few seconds), not just when the DAG actually runs. Put an API call, a heavy query, or `pandas.read_csv` there, and you hammer that system thousands of times a day and slow down the entire scheduler. Airflow's own Best Practices page uses almost this exact example:
+Everything written outside a task — in the module's top level — executes on *every DAG parse*, which happens on every scheduler heartbeat (every few seconds), not just when the DAG actually runs. Put an API call, a heavy query, or `pandas.read_csv` there, and you hammer that system thousands of times a day and slow down the entire scheduler. Airflow's own Best Practices page states this directly:
 
-> an `expensive_api_call()` executed each time the DAG file is parsed
+> `expensive_api_call` is executed each time the Dag file is parsed, which will result in suboptimal performance in the Dag file processing.
 
 The rule: the top level only defines structure; all I/O and all compute go inside a task. This is one of the errors a senior interviewer actively probes for, and it connects straight back to the governing principle of the whole topic — the orchestrator coordinates, it doesn't compute.

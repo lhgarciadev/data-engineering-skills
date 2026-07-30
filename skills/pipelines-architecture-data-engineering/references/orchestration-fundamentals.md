@@ -54,7 +54,7 @@ def extract():
 # Correct: land the data, pass a pointer
 @task
 def extract():
-    path = f"s3://raw/orders/{ds}/"
+    path = f"s3://raw/orders/{ds}/"  # ds: Airflow's injected logical-date template variable
     write_to_s3(fetch_all_rows(), path)
     return path                      # small, stable metadata
 ```

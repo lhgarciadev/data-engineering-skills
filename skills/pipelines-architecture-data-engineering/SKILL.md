@@ -7,7 +7,7 @@ description: Pipeline orchestration architecture and DAG design guidance — orc
 
 ## Overview
 
-Senior-level judgment calls for the orchestration layer of a data pipeline — which pattern or orchestrator to reach for and why, not operator syntax. The orchestrator coordinates; it doesn't compute. Its value is dependency management, scheduling, retries, observability, and backfills — and all of that only works if tasks are idempotent, deterministic, and parameterized by their data window. Read the relevant file(s) before proposing a design or reviewing a DAG; don't rely on the table below alone.
+Senior-level judgment calls for the orchestration layer of a data pipeline — which pattern or orchestrator to reach for and why, not operator syntax. The orchestrator coordinates; it doesn't compute. Its value is dependency management, scheduling, retries, observability, and backfills — and all of that only works if tasks are idempotent, deterministic, and parameterized by their data window. Read the relevant file(s) before proposing a design or reviewing a DAG; don't rely on the table below alone. Airflow 3.x (current stable = 3.3.0) is the version baseline throughout; 2.x divergences are named explicitly wherever they still matter in production.
 
 ## When to use
 
@@ -39,6 +39,7 @@ Senior-level judgment calls for the orchestration layer of a data pipeline — w
 | Protecting a shared resource, or alerting on failure | Pools, retries, `on_failure_callback` | [airflow-structure-and-reliability.md](references/airflow-structure-and-reliability.md) |
 | Serving a pipeline's output to a consumer | Serving layer vs. warehouse; API vs. stream vs. export vs. share | [serving-pipeline-output.md](references/serving-pipeline-output.md) |
 | Consuming an external API for ingestion | Auth, pagination, backoff/jitter, watermark | [python-data-engineering](../python-data-engineering/references/external-api-integration.md) |
+| Testing a DAG before it ships | DAG loader test, DagBag import check, `dag.test()` | [airflow-structure-and-reliability.md](references/airflow-structure-and-reliability.md) |
 
 ## Common mistakes
 

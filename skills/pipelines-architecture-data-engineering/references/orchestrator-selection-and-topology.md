@@ -10,6 +10,8 @@ This isn't about having a favorite — it's about naming the decision axes and t
 
 **Prefect.** The most Pythonic and lightweight option: you turn Python functions into flows via decorators, with minimal ceremony, DAGs that can be dynamic and defined at runtime, and a gentle learning curve. Good for teams that want flexibility and speed without Airflow's operational weight. The axis: less infrastructure, more "it's just Python."
 
+One live wrinkle worth knowing as of this writing: Prefect announced acquiring Dagster Labs in July 2026, with the combined company operating under the Prefect name from August 2026 — Dagster and Dagster+ are stated to continue as products, but factor this consolidation into any long-term vendor bet between the two.
+
 ## The senior decision framework
 
 Not a ranking — the axes: team maturity and size, ecosystem and integrations needed, whether the asset-based model adds real value (do you actually care about lineage and per-dataset freshness?), operational complexity you can sustain, and what the team already operates. The honest closer: for most organizations, "the orchestrator your team already knows and operates well" beats the technically superior option in the abstract — the cost of migrating and operating something new rarely pays for itself on elegance alone.

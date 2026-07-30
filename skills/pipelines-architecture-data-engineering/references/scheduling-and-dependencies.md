@@ -22,7 +22,7 @@ def refresh_orders_dashboard():
     ...
 ```
 
-Dagster centers this model from the start — you think in assets (the data products you produce) and their dependencies, and the orchestrator understands the lineage.
+Dagster centers this model from the start — see `orchestrator-selection-and-topology.md` for the full Airflow-vs-Dagster-vs-Prefect comparison.
 
 ## Sensors, briefly
 

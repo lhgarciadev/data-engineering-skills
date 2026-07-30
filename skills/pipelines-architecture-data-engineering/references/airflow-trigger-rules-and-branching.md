@@ -10,7 +10,7 @@ A task ends in one of several states — `success`, `failed`, `skipped`, `upstre
 
 Each task decides whether to run based on its parents' states — that decision is `trigger_rule`, and its default is `all_success`: a task only runs if every parent succeeded. That default causes most "why did my task get skipped" surprises, including the branching trap below.
 
-Airflow's official catalog has **13** trigger rules total. The six below are the ones worth having at your fingertips — don't present them as the whole list:
+Airflow's official catalog has **13** trigger rules total. The seven below (across six rows — one row covers two rules) are the ones worth having at your fingertips — don't present them as the whole list:
 
 | Trigger rule | Runs when |
 |---|---|
