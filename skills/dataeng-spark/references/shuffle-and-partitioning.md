@@ -4,7 +4,7 @@ Most non-trivial Spark jobs get slow for one of two reasons: a shuffle that didn
 
 ## What shuffle is, and what it costs
 
-Shuffle is Spark redistributing data across partitions — and usually across nodes — by key, so that rows the next stage needs to see together end up on the same partition. Any wide transformation triggers one: `groupBy`, a non-broadcast `join`, `distinct`, `repartition`, `orderBy`.
+Shuffle is Spark redistributing data across partitions — and usually across nodes — by key, so that rows the next stage needs to see together end up on the same partition. Any wide transformation triggers one: `groupBy`, a non-broadcast `join`, `distinct`, `repartition`, `orderBy`. For the detailed mechanics of data flow across stages, see [execution-model.md](execution-model.md).
 
 Spark's own docs (RDD Programming Guide, "Shuffle operations" → "Performance Impact") name exactly three cost factors — not just "it's slow because network": **disk I/O** (writing and reading shuffle files), **data serialization** (encoding/decoding records to move them), and **network I/O** (moving those files between executors). All three stack on every shuffle; there's no version of a shuffle that only pays one of these costs.
 
@@ -40,18 +40,24 @@ If you're also partitioning the output by a column (`df.write.partitionBy("count
 
 ## `repartition` does not guarantee an even split
 
-It's tempting to reach for `repartition(n, "customer_id")` and assume Spark evens the data out. It doesn't, and Spark's own docs don't promise that it does:
+The two variants of `repartition` use fundamentally different partitioning strategies, and conflating them is a common source of confusion:
 
-- The column-based overloads (`repartition(cols...)`, `repartition(n, cols...)`) redistribute via **hash partitioning** when given columns, which can still skew on a low-cardinality key — not a guaranteed even balance. Hash partitioning spreads *distinct key values* across partitions, not *rows*; if one key value dominates the dataset, every row for it lands in the same partition no matter how large `n` is.
-- The columnless overload (`repartition(n)`) doesn't document its internal partitioning strategy in the official API reference at all — treat it as an implementation detail, not a balance guarantee.
+- **Column-based overloads** (`repartition("col")`, `repartition(n, "col1", "col2")`) redistribute via **hash partitioning** on the given columns. Hash partitioning spreads *distinct key values* across partitions, not *rows*; if one key value dominates the dataset, every row for it lands in the same partition regardless of `n`. This is where skew happens. PySpark's docstring says repartition "hash partitions," and for the column-based case, that's accurate — but skew on a key is a skew problem, not something a bigger `n` will fix.
+- **Columnless overload** (`repartition(n)`) is different in kind: Spark's internal implementation (Catalyst's `Repartition` logical plan node) uses **round-robin partitioning**, not hash partitioning. Round-robin has no concept of a key, so it can't skew on dominant values; it simply distributes rows sequentially across the `n` output partitions. This makes it evenly balanced by row count, but it also means there's no co-location of related rows by key for downstream operations.
+
+PySpark's docstring says all `repartition` overloads are "hash partitioned," but this blanket statement is imprecise for the columnless case — its actual implementation is round-robin.
 
 ```python
-# hash-partitions by customer_id; if one customer_id is 40% of the rows,
+# column-based: hash-partitions by customer_id; if one customer_id is 40% of the rows,
 # that single output partition ends up ~40% of the data regardless of n
 df.repartition(200, "customer_id")
+
+# columnless: round-robin partitioning; rows land evenly across 200 partitions,
+# but no key-based co-location for downstream joins or groupBys
+df.repartition(200)
 ```
 
-If the key itself is skewed, that's a skew problem, not something `repartition` will fix by adding more partitions — see [joins-and-skew.md](joins-and-skew.md) for salting and other mitigations.
+If you're using the column-based form and your key is actually skewed, that's a skew problem, not something `repartition` will fix by adding more partitions — see [joins-and-skew.md](joins-and-skew.md) for salting and other mitigations.
 
 ## `coalesce(shuffle=True)`: an RDD-only escape hatch
 
