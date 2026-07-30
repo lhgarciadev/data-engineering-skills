@@ -49,7 +49,7 @@ FROM events
 QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 1;
 ```
 
-`QUALIFY` sits logically after `HAVING` and after the window function's own evaluation, which is exactly why it works: it's a purpose-built filter stage for window-function results, the same way `HAVING` is a purpose-built filter stage for aggregates. **PostgreSQL, MySQL, and SQL Server do not have `QUALIFY`** — on those three engines the CTE-wrap-and-filter pattern above is not a stylistic choice, it's the only way to do it.
+`QUALIFY` sits logically after `HAVING` and after the window function's own evaluation, which is exactly why it works: it's a purpose-built filter stage for window-function results, the same way `HAVING` is a purpose-built filter stage for aggregates. **PostgreSQL, MySQL, and SQL Server do not have `QUALIFY`** — on those three engines the CTE-wrap-and-filter pattern above is not a stylistic choice, it's the only way to do it. Neither do Azure Synapse Analytics (dedicated SQL pools) or Microsoft Fabric Warehouse — both T-SQL-based, same restriction as SQL Server.
 
 ### Top-N per group
 

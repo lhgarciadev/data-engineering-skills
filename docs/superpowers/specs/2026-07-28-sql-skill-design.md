@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-28-sql-skill-implementation.md` para el registro de ejecución. La verificación de Oracle que este spec dejaba pendiente (§2, §4.5, §4.6, §5) se cerró en un pase posterior — ver notas inline abajo. El identificador de esta skill se renombró después, de `sql` a `dataeng-sql` (mismo día, ver Estado de la spec de la suite) — este documento ya usa el nombre nuevo en todo salvo donde cita rutas de terceros (`wshobson/agents`).
+**Estado:** Implementado y shippeado (2026-07-29) — ver `docs/superpowers/plans/2026-07-28-sql-skill-implementation.md` para el registro de ejecución. La verificación de Oracle que este spec dejaba pendiente (§2, §4.5, §4.6, §5) se cerró en un pase posterior — ver notas inline abajo. El identificador de esta skill se renombró después, de `sql` a `dataeng-sql` (mismo día, ver Estado de la spec de la suite) — este documento ya usa el nombre nuevo en todo salvo donde cita rutas de terceros (`wshobson/agents`). **Cierre adicional (2026-07-29):** se agregó cobertura dirigida y verificada de Azure Synapse Analytics (dedicated SQL pools) y Microsoft Fabric Warehouse — mismo tratamiento que Oracle, no paridad completa — tras detectar que ningún motor cloud de Microsoft estaba cubierto pese a que Snowflake/BigQuery/Redshift sí lo estaban. Registro completo: `docs/superpowers/research/2026-07-29-sql-synapse-fabric-claims-verification.md`.
 
 ---
 
@@ -22,7 +22,7 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
   - Modelado de esquemas/dimensional (star/snowflake, Kimball vs Data Vault) → `dataeng-data-modeling`.
   - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) → `dataeng-pipelines-architecture`. Mismo tratamiento que ya reciben Airflow/Dagster/Prefect en `skills/dataeng-python/references/production-patterns.md` hoy: mención ilustrativa breve, con recorte/cross-link pendiente cuando `dataeng-pipelines-architecture` exista (spec de la suite, §8). dbt es, en esencia, otro orquestador — especializado en la capa de transformación SQL — no un tema propio de lenguaje de consulta.
   - Extensiones procedimentales (PL/SQL, T-SQL con stored procedures, PL/pgSQL) → fuera de las 8 skills actuales, no se cubre.
-- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift — como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4). Oracle recibe cobertura dirigida y verificada (cerrado 2026-07-29) solo en dos frentes — CTEs recursivas y `MERGE` (§4.5, §4.6) — no paridad completa con los otros seis motores en el resto de los archivos de referencia; `SKILL.md` refleja este alcance acotado en vez de listar a Oracle junto a los demás.
+- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift — como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4). Oracle recibe cobertura dirigida y verificada (cerrado 2026-07-29) solo en dos frentes — CTEs recursivas y `MERGE` (§4.5, §4.6) — no paridad completa con los otros seis motores en el resto de los archivos de referencia; `SKILL.md` refleja este alcance acotado en vez de listar a Oracle junto a los demás. Azure Synapse Analytics (dedicated SQL pools) y Microsoft Fabric Warehouse reciben el mismo tratamiento (cerrado 2026-07-29): CTEs recursivas (no soportadas en ninguno de los dos), `MERGE` (preview en Synapse dedicated, GA en Fabric — divergen entre sí), `FILTER`/`ROLLUP`/`CUBE`/`GROUPING SETS` (§4.3), `QUALIFY` (§4.4), y mecánica/costo de warehouse (distribution types + clustered columnstore vs. autonomía de Fabric; DWU provisionado vs. Capacity Units de Fabric — §4.7). Synapse dedicated y Fabric Warehouse son productos relacionados pero distintos (Fabric es el sucesor activo) y divergen entre sí en varios de estos puntos — no tratarlos como intercambiables.
 
 ## 3. Fuentes
 
@@ -72,11 +72,15 @@ Verificado sin correcciones.
 - MySQL (hasta 8.4) no soporta `CUBE` ni `GROUPING SETS`, solo `ROLLUP` — debe emularse con `UNION ALL` si se necesita en ese motor.
 - `FILTER (WHERE ...)` no es tan portable como sugiere el borrador original: Snowflake no lo soporta en absoluto; SQL Server lo agregó apenas en SQL Server 2025; MySQL en 9.7.0. Para la inmensa mayoría de instancias en producción hoy, `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` es la forma **requerida**, no solo "la portable".
 
+**Synapse/Fabric (cerrado 2026-07-29):** `FILTER (WHERE ...)` no soportado en ninguno de los dos (ausencia confirmada en la referencia T-SQL de funciones agregadas, que aplica explícitamente a ambos). `ROLLUP`/`CUBE`/`GROUPING SETS` **no se comportan igual entre sí**: Synapse dedicated solo soporta `ROLLUP` (agregado marzo 2019, mismo punto que MySQL), mientras Fabric Warehouse soporta las tres con paridad completa con SQL Server (única excepción: `GROUPING_ID()` no disponible en Fabric, aunque `GROUPING()` sí). Verificado contra la documentación oficial de Microsoft Learn.
+
 ### 4.4 `window-functions.md`
 
 Anatomía (`PARTITION BY`/`ORDER BY`/frame), `ROW_NUMBER` vs `RANK` vs `DENSE_RANK`, deduplicación canónica (CTE + `ROW_NUMBER` + filtro), top-N por grupo, `LAG`/`LEAD`, acumulados/móviles con frame explícito.
 
 **Corrección a incorporar:** el default `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` aplica en Postgres/SQL Server/MySQL 8+/BigQuery, pero **Snowflake es la excepción real**: para funciones de agregación sigue el default ANSI (RANGE), pero para funciones de valor (`FIRST_VALUE`, `LAST_VALUE`, `NTH_VALUE`) el default es `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING` — Snowflake documenta esto como no conforme al estándar ANSI y recomienda ser siempre explícito con el frame. Nombrar a Snowflake explícitamente, no "algunos motores".
+
+**Synapse/Fabric (cerrado 2026-07-29):** ninguno de los dos soporta `QUALIFY` — mismo diagrama de sintaxis restringido que SQL Server, verificado contra la referencia oficial de `SELECT` de Microsoft Learn (rotulada explícitamente para "Azure Synapse Analytics... and Microsoft Fabric").
 
 ### 4.5 `ctes-and-recursion.md`
 
@@ -86,6 +90,8 @@ CTEs para legibilidad/reuso, CTE como optimization barrier en algunos motores vs
 
 **Oracle (cerrado 2026-07-29):** Oracle soporta ambas formas — `CONNECT BY PRIOR` desde siempre, y subquery factoring recursivo ANSI desde 11g R2 (11.2.0.1). El gotcha verificado: la cláusula `WITH` de Oracle no acepta la palabra clave `RECURSIVE` — la recursión se infiere automáticamente. Verificado contra la documentación oficial de Oracle.
 
+**Synapse/Fabric (cerrado 2026-07-29):** a diferencia de Oracle, **ninguno de los dos soporta CTEs recursivas en absoluto** — no hay sintaxis alternativa ni workaround de keyword, es un "no soportado" categórico en ambos, verificado contra la documentación oficial de Microsoft Learn (referencia T-SQL de `WITH` para Synapse, superficie T-SQL de Fabric Warehouse).
+
 ### 4.6 `engineering-query-patterns.md`
 
 Deduplicación canónica (cross-link a 4.4), gaps and islands, sesionización (`LAG` + suma acumulada de inicios de sesión), pivot/unpivot, upsert idempotente con `MERGE`, SCD Tipo 2.
@@ -93,6 +99,8 @@ Deduplicación canónica (cross-link a 4.4), gaps and islands, sesionización (`
 **Corrección a incorporar:** `MERGE` en PostgreSQL existe desde v15 (oct. 2022); `RETURNING`/`merge_action()` con `MERGE` recién en PostgreSQL 17 (sept. 2024) — cualquier ejemplo con `RETURNING` debe marcarse como PG17+.
 
 **Oracle (cerrado 2026-07-29):** `MERGE` existe en Oracle desde 9i. Verificado contra la documentación oficial: es una "sentencia determinística" — no puede actualizar la misma fila destino dos veces en una misma ejecución, y si el source produce más de una fila coincidente para un mismo destino, lanza `ORA-30926` en vez de aplicar una silenciosamente. Además admite exactamente una cláusula `WHEN MATCHED` y una `WHEN NOT MATCHED` por sentencia (sin las ramas condicionales múltiples de SQL Server).
+
+**Synapse/Fabric (cerrado 2026-07-29):** `MERGE` **diverge fuerte entre los dos productos** — Synapse dedicated lo tiene desde octubre 2020 pero sigue etiquetado *preview* en la documentación actual, con restricciones reales (sin `merge_hint`/`TOP`, `WHEN NOT MATCHED INSERT` no funciona con columnas `IDENTITY`, `WHEN NOT MATCHED BY TARGET` exige distribución `HASH`). Fabric Warehouse lo tiene como *GA* completo, sin ninguna de esas restricciones heredadas. Verificado contra la documentación oficial de Microsoft Learn — no tratar ambos productos como equivalentes en este punto.
 
 ### 4.7 `query-optimization-and-production.md`
 
@@ -104,6 +112,8 @@ Leer el plan de ejecución (`EXPLAIN`/`EXPLAIN ANALYZE`) antes de optimizar, ín
 - Redshift no usa "clustering keys" ni "micro-particiones" (vocabulario propio de Snowflake) — Redshift usa **sort keys + zone maps + distribution keys**. Nombrar cada motor con su terminología real, no generalizar.
 - "Optimizo por bytes escaneados, no por tiempo de CPU" es preciso para BigQuery on-demand, pero es una simplificación excesiva para Snowflake: Snowflake cobra por **tiempo de cómputo del warehouse** (créditos por segundo), correlacionado con bytes escaneados pero no equivalente. Distinguir ambos modelos explícitamente en el cierre.
 - Cierre de dbt: solo materializations, `unique_key`/incremental como mecanismo de idempotencia (conecta con `MERGE` de 4.6), y tests genéricos como aserciones SQL — con una línea explícita de que la arquitectura de proyecto dbt vive en `dataeng-pipelines-architecture` (ver sección 2).
+
+**Synapse/Fabric (cerrado 2026-07-29):** agregados a la sección de "mental model" de warehouses columnar junto a Snowflake/BigQuery/Redshift. Synapse dedicated: modelo MPP con distribution types (`HASH`/`ROUND_ROBIN`/`REPLICATE`) sobre 60 distribuciones fijas + clustered columnstore index por default; billing por DWU provisionado (capacidad fija, no consumo). Fabric Warehouse: arquitectura distinta pese a compartir superficie T-SQL — sin distribution key ni índice manual, Delta/Parquet sobre OneLake, distribución automática; billing por Capacity Units compartidas con el resto de Fabric. Gotcha propio de Synapse dedicated: distribution key de baja cardinalidad/sesgada concentra filas en una de las 60 distribuciones (se corrige con `CTAS`). Verificado contra la documentación oficial de Microsoft Learn.
 
 ## 5. Fuera de alcance (de esta fase)
 

@@ -46,8 +46,9 @@ GROUP BY customer_id;
 | Snowflake | **No — not supported at all**; `CASE WHEN` is the only option |
 | SQL Server | Only from SQL Server 2025 — not available in 2016–2022, still the majority of deployed instances |
 | MySQL | Only from 9.7.0 — not available in 8.0/8.4, the current LTS lines |
+| Azure Synapse Analytics (dedicated SQL pools) / Microsoft Fabric Warehouse | **No — not supported in either** |
 
-In practice, for anything that has to run on Snowflake, current SQL Server, or current MySQL, `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` isn't a fallback — it's the only form that works today. Treat `FILTER` as a Postgres/BigQuery convenience, not a cross-engine default.
+In practice, for anything that has to run on Snowflake, current SQL Server, Synapse/Fabric, or current MySQL, `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` isn't a fallback — it's the only form that works today. Treat `FILTER` as a Postgres/BigQuery convenience, not a cross-engine default.
 
 ## Subtotals in one pass: GROUPING SETS, ROLLUP, CUBE
 
@@ -65,6 +66,8 @@ GROUP BY ROLLUP (region, product);
 
 **Engine support is not universal** — the one real gap: **MySQL (through at least 8.4) supports only `ROLLUP`** (via `WITH ROLLUP` or standard `GROUP BY ... ROLLUP()` syntax since 8.0.12); it has no native `CUBE` or `GROUPING SETS`, which have to be emulated with `UNION ALL` of separate `GROUP BY` queries. PostgreSQL (9.5+), SQL Server, Snowflake, and BigQuery support all three.
 
+**Azure Synapse Analytics (dedicated SQL pools) lands in the same spot as MySQL, and Microsoft Fabric Warehouse doesn't inherit that limit.** Synapse dedicated added `ROLLUP` in March 2019 but has no `CUBE` or `GROUPING SETS` — same `UNION ALL`/`CROSS JOIN` workaround MySQL needs. Fabric Warehouse, despite sharing the same T-SQL surface as Synapse, supports all three with full SQL Server-level parity (the one narrow exception: `GROUPING_ID()` specifically isn't available there, though plain `GROUPING()` is). Don't assume a restriction verified on Synapse dedicated carries over to Fabric — Fabric is Microsoft's actively-developed successor, not a rebrand.
+
 In a pre-computed aggregates pipeline, reaching for these instead of unioning several queries by hand is what separates someone who's only used a flat `GROUP BY` from someone who's built reporting tables at scale.
 
 ## Common mistakes
@@ -72,6 +75,7 @@ In a pre-computed aggregates pipeline, reaching for these instead of unioning se
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | Confusing `COUNT(*)` with `COUNT(column)` | Silently wrong metric when the column has NULLs | Pick deliberately based on whether NULLs should count |
-| Assuming `FILTER (WHERE ...)` runs everywhere | Fails outright on Snowflake; unavailable on current SQL Server/MySQL | Use `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` unless the target engine is confirmed to support FILTER |
+| Assuming `FILTER (WHERE ...)` runs everywhere | Fails outright on Snowflake, Synapse, and Fabric Warehouse; unavailable on current SQL Server/MySQL | Use `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` unless the target engine is confirmed to support FILTER |
 | Assuming `CUBE`/`GROUPING SETS` work on MySQL | Not supported through 8.4 — query fails | Emulate with `UNION ALL`, or use `ROLLUP` if that's sufficient |
+| Assuming Fabric Warehouse inherits Synapse dedicated SQL pool's `CUBE`/`GROUPING SETS` restriction | They diverge — Synapse dedicated only has `ROLLUP`, Fabric Warehouse has full parity with SQL Server | Verify against the specific product, not "Azure SQL warehouse" generically |
 | Running N separate GROUP BY queries for N subtotal levels | Wasteful, multiple passes over the data | `ROLLUP`/`CUBE`/`GROUPING SETS` compute them in one pass |
