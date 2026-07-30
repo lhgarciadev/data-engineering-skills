@@ -1,6 +1,6 @@
 ---
 name: python
-description: Use when writing, reviewing, or making design decisions on Python data engineering code — ETL/ELT pipelines, batch jobs, dataframe transformations, or pipeline architecture. Covers generators and streaming, decorators and context managers for pipeline cross-cutting concerns, GIL-aware concurrency choice (threading vs multiprocessing vs asyncio), pandas/Polars/DuckDB memory and performance tradeoffs, dataframe and record validation, idempotent writes, and pipeline testing and error handling.
+description: Python data engineering guidance — writing, reviewing, or making design decisions on ETL/ELT pipelines, batch jobs, dataframe transformations, or pipeline architecture. Use when choosing a concurrency model, a dataframe library, or a validation approach, or when a pipeline is slow, leaking memory, or unsafe to rerun. Covers generators/streaming, decorators and context managers, GIL-aware concurrency, pandas/Polars/DuckDB tradeoffs, Pydantic/Pandera validation, idempotent writes, and pipeline testing/error handling. Not for general Python questions unrelated to data workloads.
 ---
 
 # Python for Data Engineering
@@ -64,8 +64,11 @@ def add(item, acc=None):      # correct
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | Materializing a full list when a generator would do | Blows up memory on large/unbounded inputs | Use `yield` / generator expressions; see [iterators-and-generators.md](references/iterators-and-generators.md) |
+| Cleaning up a connection/transaction only in the "happy path" | A job that dies mid-run leaks the connection or leaves a transaction open | Put cleanup in `finally` (or after `yield` in `@contextmanager`); see [decorators-and-context-managers.md](references/decorators-and-context-managers.md) |
+| Constructing a source/sink inside the function that uses it | Makes the pipeline untestable — no way to substitute a fake/mock | Inject it as a parameter (dependency injection); see [oop-for-pipelines.md](references/oop-for-pipelines.md) |
 | `df.iterrows()` for row-wise logic | 100x+ slower than vectorized ops | Vectorize, or `.apply()` as a last resort; see [memory-and-performance.md](references/memory-and-performance.md) |
 | Reaching for `multiprocessing` on an I/O-bound pipeline | Pays process-startup cost for zero benefit; threads/asyncio already overlap I/O waits | See [concurrency-and-the-gil.md](references/concurrency-and-the-gil.md) |
+| Reaching for Great Expectations to validate a single pipeline's output | Org-wide governance overhead for a job that just needs a dataframe check | Use Pandera unless there's an actual org-wide data-quality requirement; see [data-validation.md](references/data-validation.md) |
 | Blind `append`-only writes on reruns | Duplicates data on retry/backfill | Upsert/merge by partition key; see [production-patterns.md](references/production-patterns.md) |
 | `try/except: pass` around pipeline steps | Silently corrupts or drops data, hides root cause | Separate retryable vs non-retryable errors, log structured context, dead-letter the rest; see [production-patterns.md](references/production-patterns.md) |
 | Optimizing before measuring | Fixes the wrong bottleneck | Profile first (`cProfile`, `memory_profiler`) — see [memory-and-performance.md](references/memory-and-performance.md) |

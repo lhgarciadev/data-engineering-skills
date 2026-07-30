@@ -1,6 +1,6 @@
 ---
 name: data-engineering
-description: Use when a data engineering task spans more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of python, sql, spark, data-modeling, pipelines-architecture, streaming, data-quality, or iac-cloud at once. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
+description: Cross-domain router for data engineering tasks that span more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of python, sql, spark, data-modeling, pipelines-architecture, streaming, data-quality, or iac-cloud at once. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
 ---
 
 # Data Engineering (Orchestrator)
