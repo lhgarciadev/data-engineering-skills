@@ -385,6 +385,10 @@ Expected: no output.
 
 ---
 
+## Addendum (2026-07-29): `plugin.json` renamed after this plan shipped
+
+Task 3 Step 3 created `.claude-plugin/plugin.json` with `"name": "data-engineering"` — the embedded content in that step still shows that original value, left as-is as a historical record of what the task actually produced at the time. That name was later renamed to `data-engineering-suite` (see `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md`, Estado line and §2) to stop the orchestrator skill — also named `data-engineering` — from being invoked as `data-engineering:data-engineering` when installed through the Claude Code plugin flow. The orchestrator skill's own identifier (`skills/data-engineering/`) did not change. The live file on disk carries the renamed value.
+
 ## Self-Review Notes
 
 - **Spec coverage**: Task 1 ↔ spec §7 item 2; Task 2-3 ↔ item 1; Task 4 ↔ items 2/6; Task 5 ↔ item 4; Task 6 ↔ item 5; Task 7 closes out item 2's deferred removal. Item 6 (7 remaining domain skills) is explicitly out of scope (see Global Constraints) — each gets its own future plan.

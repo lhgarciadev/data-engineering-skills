@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz (Org)
-**Estado (2026-07-29):** 3 de 8 skills entregadas — orquestadora `data-engineering`, `python`, `sql`. Quedan 6 skills de dominio por construir: `spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud` (ver sección 7, ítem 6, actualizado). El `name` del manifiesto `.claude-plugin/plugin.json` se renombró de `data-engineering` a `data-engineering-suite` (ver sección 2) para evitar que la skill orquestadora, también llamada `data-engineering`, se invoque como `data-engineering:data-engineering` cuando se instala vía el flujo de plugin — el identificador de la skill orquestadora no cambió.
+**Estado (2026-07-29):** 2 de 8 skills de dominio entregadas (`python`, `sql`), más la orquestadora `data-engineering`. Quedan 6 skills de dominio por construir: `spark`, `data-modeling`, `pipelines-architecture`, `streaming`, `data-quality`, `iac-cloud` (ver sección 7, ítem 6, actualizado). El `name` del manifiesto `.claude-plugin/plugin.json` se renombró de `data-engineering` a `data-engineering-suite` (ver sección 2) para evitar que la skill orquestadora, también llamada `data-engineering`, se invoque como `data-engineering:data-engineering` cuando se instala vía el flujo de plugin — el identificador de la skill orquestadora no cambió.
 
 ---
 

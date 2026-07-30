@@ -22,7 +22,7 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
   - Modelado de esquemas/dimensional (star/snowflake, Kimball vs Data Vault) → `data-modeling`.
   - Arquitectura de proyecto dbt (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) → `pipelines-architecture`. Mismo tratamiento que ya reciben Airflow/Dagster/Prefect en `python/production-patterns.md` hoy: mención ilustrativa breve, con recorte/cross-link pendiente cuando `pipelines-architecture` exista (spec de la suite, §8). dbt es, en esencia, otro orquestador — especializado en la capa de transformación SQL — no un tema propio de lenguaje de consulta.
   - Extensiones procedimentales (PL/SQL, T-SQL con stored procedures, PL/pgSQL) → fuera de las 8 skills actuales, no se cubre.
-- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift, y (desde el cierre de 2026-07-29) Oracle — todos como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4).
+- **Motores en alcance**: PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift — como motores de primera clase, con divergencias explícitas por motor donde existan (ver sección 4). Oracle recibe cobertura dirigida y verificada (cerrado 2026-07-29) solo en dos frentes — CTEs recursivas y `MERGE` (§4.5, §4.6) — no paridad completa con los otros seis motores en el resto de los archivos de referencia; `SKILL.md` refleja este alcance acotado en vez de listar a Oracle junto a los demás.
 
 ## 3. Fuentes
 
