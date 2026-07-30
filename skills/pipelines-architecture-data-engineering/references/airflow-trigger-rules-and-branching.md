@@ -21,7 +21,7 @@ Airflow's official catalog has **13** trigger rules total. The seven below (acro
 | `one_success` / `one_failed` | Runs as soon as *one* parent reaches that state, without waiting for the rest — `one_failed` is the alert/fallback-path pattern |
 | `always` | Runs no matter what |
 
-The remaining six — `all_failed`, `all_skipped`, `one_done`, `all_done_min_one_success`, `all_done_setup_success`, and `none_skipped` — cover narrower cases; check Airflow's trigger-rule reference when one of the six above doesn't fit.
+The remaining six — `all_failed`, `all_skipped`, `one_done`, `all_done_min_one_success`, `all_done_setup_success`, and `none_skipped` — cover narrower cases; check Airflow's trigger-rule reference when one of the seven above doesn't fit.
 
 One rename worth knowing if you read older code or tutorials: `none_failed_min_one_success` was called `none_failed_or_skipped` before **Airflow 2.2.0** — the old name is fully gone as of 3.0.
 

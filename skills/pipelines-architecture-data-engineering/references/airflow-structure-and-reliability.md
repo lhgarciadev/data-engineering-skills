@@ -109,7 +109,7 @@ def test_my_custom_operator_execute_no_trigger(dag):
 
 `dag.test()` actually executes the DAG locally against a single run and returns a real `DagRun` you can inspect — closer to an integration test than a unit test, and the right tool when you need to know the task did the right thing, not just that the graph is shaped correctly.
 
-One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — (cycles are rejected when Airflow parses and bags the DAG, not something your test needs to assert separately), and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
+One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — cycles are rejected when Airflow parses and bags the DAG, not something your test needs to assert separately — and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
 
 ## Pools and reliability configuration
 

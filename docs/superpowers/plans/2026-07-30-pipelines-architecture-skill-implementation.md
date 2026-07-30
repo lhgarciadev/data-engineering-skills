@@ -23,7 +23,7 @@
 ## File Structure
 
 **Create, in `data-engineering-skills/skills/pipelines-architecture-data-engineering/`:**
-- `SKILL.md` — overview, when to use, quick reference table (16 rows across 8 reference files + 1 cross-skill link), common mistakes table (citing every reference file).
+- `SKILL.md` — overview, when to use, quick reference table (17 rows across 8 reference files + 1 cross-skill link), common mistakes table (citing every reference file).
 - `references/orchestration-fundamentals.md` — why an orchestrator exists, the DAG mental model, task design (atomic/idempotent/stateless), separating orchestration from execution, pointers not data.
 - `references/idempotency-and-backfills.md` — structural idempotency (window-parameterized tasks, partition overwrite), determinism, backfills (precondition, concurrency control, isolation, late-arriving data, `catchup`).
 - `references/scheduling-and-dependencies.md` — time-based vs. data-aware (Asset) scheduling, intra-DAG vs. inter-DAG dependencies, task granularity.

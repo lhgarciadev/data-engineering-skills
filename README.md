@@ -22,7 +22,7 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 | Skill | Covers |
 |---|---|
 | `data-engineering` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
-| `python-data-engineering` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
+| `python-data-engineering` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, external API consumption, production patterns |
 | `sql-data-engineering` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
 | `spark-data-engineering` | Spark/PySpark execution model, shuffle and partitioning, joins and data skew, caching and file formats, Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns |
 | `pipelines-architecture-data-engineering` | Pipeline orchestration architecture — orchestrator choice (Airflow, Dagster, Prefect), DAG design and task granularity, idempotency and backfills, data-aware scheduling, deployment topology, and Airflow-specific patterns (trigger rules, branching, sensors, dynamic task mapping) |
