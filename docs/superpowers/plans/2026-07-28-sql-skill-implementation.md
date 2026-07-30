@@ -978,6 +978,8 @@ See `docs/superpowers/specs/2026-07-28-sql-skill-design.md` (Estado line, and §
 
 **Fifth addendum, 2026-07-30:** this plan's Global Constraints (line 17) and Task 8's `SKILL.md` content excluded procedural extensions entirely — that exclusion was reversed. An 8th reference file, `procedural-extensions.md`, was added covering Oracle PL/SQL, SQL Server T-SQL, PostgreSQL PL/pgSQL, and MySQL stored routines, at the same fundamentals-to-senior depth as the rest of this skill. See `docs/superpowers/research/2026-07-30-sql-procedural-extensions-verification.md` and the design spec's §4.8. A pre-existing broken cross-link in `engineering-query-patterns.md` (pointed at `python/` instead of `dataeng-python/`, a leftover from the 2026-07-29 rename) was also fixed in the same pass.
 
+**Sixth addendum, 2026-07-30:** the skill identifier was renamed again, from `dataeng-sql` to `sql-data-engineering` (folder: `skills/sql-data-engineering/`) — part of switching every skill in the suite from a shared `dataeng-` prefix to a domain-first `-data-engineering` suffix, alongside renaming the plugin manifest to `dataforge`. This plan's tasks above and the addenda before this one still say `sql`/`dataeng-sql` — historical record of what was actually built under those names at the time. See the suite spec's Estado line for the full rename chronology and rationale. Not re-running Task 9's discoverability scenarios for this rename alone — pure identifier change, no behavior/content difference from the already-passing `dataeng-sql` run.
+
 ---
 
 ## Self-Review Notes

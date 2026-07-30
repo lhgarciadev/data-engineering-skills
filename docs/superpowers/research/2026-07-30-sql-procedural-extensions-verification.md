@@ -1,7 +1,7 @@
-# Research: extensiones procedurales (PL/SQL, T-SQL, PL/pgSQL, MySQL) para `dataeng-sql`
+# Research: extensiones procedurales (PL/SQL, T-SQL, PL/pgSQL, MySQL) para `sql-data-engineering`
 
 **Fecha:** 2026-07-30
-**Alcance:** el equipo confirmó uso real de stored procedures en Oracle (PL/SQL) y SQL Server (T-SQL); se agrega también PostgreSQL (PL/pgSQL) y MySQL por costo marginal bajo y para evitar la asimetría de cubrir SQL declarativo en los 4 pero procedural solo en 2. Mismo nivel de profundidad que `dataeng-python`/`dataeng-sql`/`dataeng-spark`: de lo fundamental a la señal senior. 4 investigaciones en paralelo, exclusivamente contra documentación oficial: docs.oracle.com (PL/SQL Language Reference, SQL Language Reference), learn.microsoft.com (vía el MCP oficial de Microsoft Learn), postgresql.org/docs, dev.mysql.com/doc/refman. Sin fuentes secundarias, salvo donde se marca explícitamente terminología de comunidad (RBAR).
+**Alcance:** el equipo confirmó uso real de stored procedures en Oracle (PL/SQL) y SQL Server (T-SQL); se agrega también PostgreSQL (PL/pgSQL) y MySQL por costo marginal bajo y para evitar la asimetría de cubrir SQL declarativo en los 4 pero procedural solo en 2. Mismo nivel de profundidad que `python-data-engineering`/`sql-data-engineering`/`spark-data-engineering`: de lo fundamental a la señal senior. 4 investigaciones en paralelo, exclusivamente contra documentación oficial: docs.oracle.com (PL/SQL Language Reference, SQL Language Reference), learn.microsoft.com (vía el MCP oficial de Microsoft Learn), postgresql.org/docs, dev.mysql.com/doc/refman. Sin fuentes secundarias, salvo donde se marca explícitamente terminología de comunidad (RBAR).
 
 ---
 
@@ -68,6 +68,6 @@ Todo lo anterior queda **confirmado contra documentación oficial**, sin necesid
 2. La distinción function-vs-procedure de Postgres para control transaccional — la razón más nítida y mejor verificada de todo el research, generalizable al patrón que Oracle/MySQL aplican a sus propias funciones/triggers.
 3. Parameter sniffing como el gotcha de performance más específico de T-SQL, sin concepto equivalente documentado en los otros 3.
 4. Packages de Oracle como concepto genuinamente sin par — no forzar una equivalencia con schemas/extensions.
-5. Cross-link a `dataeng-python/references/production-patterns.md` para la discusión de manejo de errores (mismo principio — no tragarse errores en silencio — expresado de forma distinta en cada capa).
+5. Cross-link a `python-data-engineering/references/production-patterns.md` para la discusión de manejo de errores (mismo principio — no tragarse errores en silencio — expresado de forma distinta en cada capa).
 
 **Nota de honestidad epistémica**: RBAR y la falta de guía oficial "evitar cursores" en PostgreSQL son sabiduría de comunidad/de motor específico, no vocabulario universal de vendor — presentarlos así, mismo criterio que "Catalyst" en Spark o el pitfall de cold/warm cache.

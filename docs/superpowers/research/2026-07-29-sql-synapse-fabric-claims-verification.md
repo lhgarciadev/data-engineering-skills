@@ -1,7 +1,7 @@
-# Research: cerrando el gap de Azure Synapse Analytics / Microsoft Fabric Warehouse en `dataeng-sql`
+# Research: cerrando el gap de Azure Synapse Analytics / Microsoft Fabric Warehouse en `sql-data-engineering`
 
 **Fecha:** 2026-07-29
-**Alcance:** `dataeng-sql` cubre PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift como motores primarios, más Oracle como cobertura dirigida (recursive CTEs, MERGE). Faltaba Azure Synapse Analytics y Microsoft Fabric Warehouse por completo — ni una mención en ningún archivo. Mismo tratamiento que Oracle: no full parity, cobertura dirigida y verificada donde estos dos productos realmente divergen. 3 investigaciones en paralelo contra Microsoft Learn (learn.microsoft.com) exclusivamente, vía el MCP oficial de Microsoft Learn.
+**Alcance:** `sql-data-engineering` cubre PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, Redshift como motores primarios, más Oracle como cobertura dirigida (recursive CTEs, MERGE). Faltaba Azure Synapse Analytics y Microsoft Fabric Warehouse por completo — ni una mención en ningún archivo. Mismo tratamiento que Oracle: no full parity, cobertura dirigida y verificada donde estos dos productos realmente divergen. 3 investigaciones en paralelo contra Microsoft Learn (learn.microsoft.com) exclusivamente, vía el MCP oficial de Microsoft Learn.
 
 **Alcance de producto:** Azure Synapse Analytics *dedicated SQL pools* (el motor MPP, no serverless SQL pools) y Microsoft Fabric *Warehouse* (no "SQL database in Fabric", que es un producto distinto con soporte diferente).
 

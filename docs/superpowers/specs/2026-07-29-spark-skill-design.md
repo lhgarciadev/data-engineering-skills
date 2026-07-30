@@ -1,4 +1,4 @@
-# Especificación de Diseño: Skill `dataeng-spark`
+# Especificación de Diseño: Skill `spark-data-engineering`
 ## Tercera skill de dominio de la suite `data-engineering-skills`
 
 **Fecha:** 2026-07-29
@@ -9,7 +9,7 @@
 
 ## 1. Contexto y objetivo
 
-Segunda de las skills de dominio definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (§4) en entregarse, después de `dataeng-sql` — ver Estado arriba: ya entregada, quedan 5 skills de dominio pendientes. Cubre arquitectura y tuning de Spark en general, más una sección propia para lo específico de PySpark — el mismo alcance que ya fijaba la spec de la suite, sin recortes: el usuario confirmó explícitamente incluir memoria de executor/driver y la sección PySpark-específica en esta misma tanda, en vez de diferirlas.
+Segunda de las skills de dominio definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (§4) en entregarse, después de `sql-data-engineering` — ver Estado arriba: ya entregada, quedan 5 skills de dominio pendientes. Cubre arquitectura y tuning de Spark en general, más una sección propia para lo específico de PySpark — el mismo alcance que ya fijaba la spec de la suite, sin recortes: el usuario confirmó explícitamente incluir memoria de executor/driver y la sección PySpark-específica en esta misma tanda, en vez de diferirlas.
 
 Insumo: borrador de contenido aportado por el usuario (11 tópicos, de fundamentos de ejecución a benchmarking en producción), verificado contra documentación oficial de Apache Spark (spark.apache.org/docs/latest/, versión "latest" = 4.2.0 al momento de esta verificación) y complementado con revisión de `wshobson/agents`' `spark-optimization` (MIT), según lo ya anticipado en la spec de la suite §4. Registro completo de la verificación: `docs/superpowers/research/2026-07-29-spark-claims-verification.md`.
 
@@ -19,22 +19,22 @@ Reafirma la frontera ya fijada en la spec de la suite (§4):
 
 - **Cubre**: modelo de ejecución (lazy evaluation, DAG, optimizador de queries, transformaciones vs. acciones, narrow vs. wide dependencies), shuffle y particionado (`repartition`/`coalesce`), joins (broadcast, skew — AQE y salting), caching/checkpointing, formatos columnares (Parquet, pushdown), particionado en escritura, Adaptive Query Execution, memoria de executor/driver, y una sección propia para lo específico de PySpark (overhead de UDFs, pandas UDFs con Arrow, riesgo de memoria de `.collect()`/`.toPandas()`).
 - **No cubre — frontera con otra skill**:
-  - Streaming estructurado (Structured Streaming, watermarks, exactly-once) → `dataeng-streaming` (spec de la suite, §4).
-  - Despliegue/infraestructura de clústers Spark (Terraform, Docker, dimensionamiento de clúster como decisión de infra) → `dataeng-iac-cloud`.
-  - Especificidad de formato de tabla Lakehouse (Delta Lake `OPTIMIZE`/`ZORDER`/`autoCompact`, Iceberg, Hudi) → fuera de las 8 skills actuales por ahora; el research (§7) encontró que `wshobson/agents` mezcla esto con Parquet/vanilla Spark y **no se adopta** esa mezcla — mismo criterio que excluyó el contenido OLTP de `database-design` al planear `dataeng-sql`.
-  - Modelado dimensional/esquemas → `dataeng-data-modeling`.
+  - Streaming estructurado (Structured Streaming, watermarks, exactly-once) → `streaming-data-engineering` (spec de la suite, §4).
+  - Despliegue/infraestructura de clústers Spark (Terraform, Docker, dimensionamiento de clúster como decisión de infra) → `iac-cloud-data-engineering`.
+  - Especificidad de formato de tabla Lakehouse (Delta Lake `OPTIMIZE`/`ZORDER`/`autoCompact`, Iceberg, Hudi) → fuera de las 8 skills actuales por ahora; el research (§7) encontró que `wshobson/agents` mezcla esto con Parquet/vanilla Spark y **no se adopta** esa mezcla — mismo criterio que excluyó el contenido OLTP de `database-design` al planear `sql-data-engineering`.
+  - Modelado dimensional/esquemas → `modeling-data-engineering`.
 - **Alcance de versión**: Apache Spark 3.x/4.x (comportamiento actual, `latest` = 4.2.0). Donde el comportamiento cambió entre versiones relevantes (AQE default-on desde 3.2.0, skew-join automático desde 3.0.0, Arrow-por-defecto en UDFs desde 4.2.0), se nombra la versión explícitamente en vez de generalizar "Spark reciente".
 
 ## 3. Fuentes
 
 - Borrador original del usuario (11 tópicos) — traducido y corregido, no adoptado verbatim (contenido final en inglés, convención ya fijada en la spec de la suite §3).
 - Verificación directa contra documentación oficial de Apache Spark: RDD Programming Guide, SQL Programming Guide, SQL Performance Tuning Guide, Tuning Guide, Cluster Mode Overview, PySpark API Reference (incluyendo Debugging PySpark y Apache Arrow in PySpark), y el wiki oficial "PySpark Internals" del propio proyecto Apache Spark.
-- `wshobson/agents` — `plugins/data-engineering/skills/spark-optimization/` (MIT) — revisado como insumo adicional, con atribución, sin adopción literal: aporta contenido nuevo (bucket joins, checkpointing, detección programática de skew, `approx_count_distinct`) a las secciones correspondientes (ver §4.3, §4.4). Su estilo (cheat-sheet de do's/don'ts) y su mezcla con específicos de Delta Lake difieren de los ya fijados acá y no se adoptan — mismo tratamiento que recibió `sql-optimization-patterns` al planear `dataeng-sql`.
+- `wshobson/agents` — `plugins/data-engineering/skills/spark-optimization/` (MIT) — revisado como insumo adicional, con atribución, sin adopción literal: aporta contenido nuevo (bucket joins, checkpointing, detección programática de skew, `approx_count_distinct`) a las secciones correspondientes (ver §4.3, §4.4). Su estilo (cheat-sheet de do's/don'ts) y su mezcla con específicos de Delta Lake difieren de los ya fijados acá y no se adoptan — mismo tratamiento que recibió `sql-optimization-patterns` al planear `sql-data-engineering`.
 
 ## 4. Estructura de archivos
 
 ```
-skills/dataeng-spark/
+skills/spark-data-engineering/
   SKILL.md
   references/
     execution-model.md
@@ -46,7 +46,7 @@ skills/dataeng-spark/
     pyspark-specifics.md
 ```
 
-Mismo formato que `dataeng-sql`/`dataeng-python`: overview, when to use, tabla de quick reference y tabla de common mistakes en `SKILL.md`; un archivo de reference por tema pesado. Contenido en inglés, ejemplos de código en PySpark (el lenguaje más relevante al tema, per spec de la suite §3).
+Mismo formato que `sql-data-engineering`/`python-data-engineering`: overview, when to use, tabla de quick reference y tabla de common mistakes en `SKILL.md`; un archivo de reference por tema pesado. Contenido en inglés, ejemplos de código en PySpark (el lenguaje más relevante al tema, per spec de la suite §3).
 
 ### 4.1 `execution-model.md`
 
@@ -106,11 +106,11 @@ Overhead de UDFs Python, pandas UDFs con Arrow, riesgo de memoria de `.collect()
 
 ## 5. Fuera de alcance (de esta fase)
 
-- Structured Streaming — pertenece a la futura skill `dataeng-streaming`.
-- Despliegue/infraestructura de clústers Spark (Terraform, Docker, dimensionamiento) — pertenece a `dataeng-iac-cloud`.
-- Especificidad de formato de tabla Lakehouse (Delta Lake, Iceberg, Hudi) — no encaja limpio en ninguna de las 8 skills actuales tal como están definidas hoy; queda anotado, igual que quedó anotado el contenido OLTP de `database-design` al planear `dataeng-sql`.
-- Modelado dimensional/esquemas — pertenece a `dataeng-data-modeling`.
+- Structured Streaming — pertenece a la futura skill `streaming-data-engineering`.
+- Despliegue/infraestructura de clústers Spark (Terraform, Docker, dimensionamiento) — pertenece a `iac-cloud-data-engineering`.
+- Especificidad de formato de tabla Lakehouse (Delta Lake, Iceberg, Hudi) — no encaja limpio en ninguna de las 8 skills actuales tal como están definidas hoy; queda anotado, igual que quedó anotado el contenido OLTP de `database-design` al planear `sql-data-engineering`.
+- Modelado dimensional/esquemas — pertenece a `modeling-data-engineering`.
 
 ## 6. Próximos pasos
 
-Transición a `superpowers:writing-plans` para el plan de implementación: redacción completa de `SKILL.md` + los 7 reference files, con el contenido final en inglés y las correcciones de la sección 4 incorporadas, siguiendo el mismo proceso de validación liviana de discoverability ya usado con `dataeng-python` y `dataeng-sql`.
+Transición a `superpowers:writing-plans` para el plan de implementación: redacción completa de `SKILL.md` + los 7 reference files, con el contenido final en inglés y las correcciones de la sección 4 incorporadas, siguiendo el mismo proceso de validación liviana de discoverability ya usado con `python-data-engineering` y `sql-data-engineering`.

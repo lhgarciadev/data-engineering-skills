@@ -1145,6 +1145,10 @@ If either scenario fails (skill doesn't fire, or the technical answer is wrong/v
 
 ---
 
+**Addendum, 2026-07-30:** the skill identifier was renamed from `dataeng-spark` to `spark-data-engineering` (folder: `skills/spark-data-engineering/`) — part of switching every skill in the suite from a shared `dataeng-` prefix to a domain-first `-data-engineering` suffix, alongside renaming the plugin manifest to `dataforge`. This plan's tasks above still say `dataeng-spark` throughout — historical record of what was actually built under that name at the time. See the suite spec's Estado line for the full rename chronology and rationale. Not re-running Task 10's discoverability scenarios for this rename alone — pure identifier change, no behavior/content difference from the already-passing `dataeng-spark` run.
+
+---
+
 ## Self-Review Notes
 
 - **Spec coverage**: Task 1 ↔ design spec §4.1; Task 2 ↔ §4.2; Task 3 ↔ §4.3; Task 4 ↔ §4.4; Task 5 ↔ §4.5; Task 6 ↔ §4.6; Task 7 ↔ §4.7; Task 8 ties them together per the design spec's file-structure diagram; Task 9 applies the `writing-great-skills` standard (added after the original plan review, matching the QA gate already used to audit the other 3 skills this session); Task 10 mirrors the discoverability validation already run for `dataeng-python`, `dataeng`, and `dataeng-sql`.

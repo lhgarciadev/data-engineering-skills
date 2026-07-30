@@ -27,7 +27,7 @@ with ProcessPoolExecutor() as ex:
 
 ## The senior answer
 
-"In practice, in data engineering I rarely fight the GIL directly, because the heavy computation doesn't live in pure-Python loops. It lives in NumPy/pandas (which drop to C and release the GIL for those operations), in Spark (distributed parallelism), or I push it down to the warehouse as SQL. The GIL mainly matters for knowing that I/O-bound orchestration goes with async/threads and pure-Python CPU-bound work goes with processes." That "I don't compute in Python, I delegate to the engine" framing is the actual senior data-engineer instinct. For what "distributed parallelism" actually means once you've delegated to Spark — lazy evaluation, shuffle, and the executor/driver split — see the `dataeng-spark` skill's [execution-model.md](../../dataeng-spark/references/execution-model.md).
+"In practice, in data engineering I rarely fight the GIL directly, because the heavy computation doesn't live in pure-Python loops. It lives in NumPy/pandas (which drop to C and release the GIL for those operations), in Spark (distributed parallelism), or I push it down to the warehouse as SQL. The GIL mainly matters for knowing that I/O-bound orchestration goes with async/threads and pure-Python CPU-bound work goes with processes." That "I don't compute in Python, I delegate to the engine" framing is the actual senior data-engineer instinct. For what "distributed parallelism" actually means once you've delegated to Spark — lazy evaluation, shuffle, and the executor/driver split — see the `spark-data-engineering` skill's [execution-model.md](../../spark-data-engineering/references/execution-model.md).
 
 ## Free-threaded Python — current status, don't overstate it
 

@@ -15,20 +15,20 @@ for skill in ~/data-engineering-skills/skills/*/; do
 done
 ```
 
-Claude Code users who prefer the plugin/marketplace flow instead of manual symlinks can install via `.claude-plugin/plugin.json` — see Claude Code's plugin docs for adding a local/git marketplace source.
+Claude Code users who prefer the plugin/marketplace flow instead of manual symlinks can install the `dataforge` plugin via `.claude-plugin/plugin.json` — see Claude Code's plugin docs for adding a local/git marketplace source.
 
 ## Skills
 
 | Skill | Covers |
 |---|---|
-| `dataeng` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
-| `dataeng-python` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
-| `dataeng-sql` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
-| `dataeng-spark` | Spark/PySpark execution model, shuffle and partitioning, joins and data skew, caching and file formats, Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns |
+| `data-engineering` | Orchestrator — routes cross-domain tasks to the relevant skill(s) below |
+| `python-data-engineering` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
+| `sql-data-engineering` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
+| `spark-data-engineering` | Spark/PySpark execution model, shuffle and partitioning, joins and data skew, caching and file formats, Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns |
 
-The remaining domain skills (`dataeng-data-modeling`, `dataeng-pipelines-architecture`, `dataeng-streaming`, `dataeng-data-quality`, `dataeng-iac-cloud`) ship incrementally — see `docs/` for the design spec.
+The remaining domain skills (`modeling-data-engineering`, `pipelines-architecture-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering`) ship incrementally — see `docs/` for the design spec.
 
-All skill identifiers share the `dataeng-` prefix (the orchestrator is just `dataeng`) so they don't collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces.
+Every domain skill's identifier ends in the `-data-engineering` suffix, leading with its domain word (the orchestrator is just `data-engineering`), so none of them collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces. The plugin itself is named `dataforge` — kept distinct from the orchestrator's `data-engineering` so a marketplace install never doubles up as `dataforge:data-engineering` colliding with anything.
 
 ## Updating
 

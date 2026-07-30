@@ -1,7 +1,7 @@
-# Research: re-verifying technical claims in `dataeng-sql` and `dataeng-python`
+# Research: re-verifying technical claims in `sql-data-engineering` and `python-data-engineering`
 
 **Fecha:** 2026-07-29
-**Alcance:** spot-check contra fuentes primarias de los claims técnicos con mayor riesgo de estar desactualizados (soporte por versión de motor, límites de features, pricing) en `skills/dataeng-sql/references/*.md` y `skills/dataeng-python/references/*.md`. Se excluyó a propósito el contenido de stdlib de Python muy estable (generators, decorators, OOP básico) — riesgo de haber cambiado prácticamente nulo.
+**Alcance:** spot-check contra fuentes primarias de los claims técnicos con mayor riesgo de estar desactualizados (soporte por versión de motor, límites de features, pricing) en `skills/sql-data-engineering/references/*.md` y `skills/python-data-engineering/references/*.md`. Se excluyó a propósito el contenido de stdlib de Python muy estable (generators, decorators, OOP básico) — riesgo de haber cambiado prácticamente nulo.
 
 5 investigaciones independientes en paralelo, cada una contra la documentación oficial del vendor correspondiente (no blogs ni write-ups de terceros, salvo donde se anota explícitamente lo contrario).
 

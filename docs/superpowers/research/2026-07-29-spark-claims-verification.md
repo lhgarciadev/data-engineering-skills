@@ -1,4 +1,4 @@
-# Research: verificando el borrador de `dataeng-spark` contra fuentes primarias
+# Research: verificando el borrador de `spark-data-engineering` contra fuentes primarias
 
 **Fecha:** 2026-07-29
 **Alcance:** el usuario aportó un borrador de temas (lazy evaluation/DAG/Catalyst, transformaciones vs. acciones, narrow vs. wide, shuffle, `repartition`/`coalesce`, broadcast joins, skew/salting, caching, Parquet pushdown, particionado en escritura, AQE, el pitfall de cold/warm cache benchmarking) más memoria de executor/driver y una sección PySpark-específica (UDFs vía py4j, pandas UDFs con Arrow, `.collect()`/`.toPandas()`) ya prevista en el spec de la suite (§4). 7 investigaciones en paralelo contra documentación oficial de Apache Spark (spark.apache.org/docs/latest/, versión actual "latest" = 4.2.0 al momento de esta verificación), más una revisión de `wshobson/agents`' `spark-optimization` (MIT) como insumo adicional, según lo ya anticipado en el spec de la suite §4.
@@ -68,7 +68,7 @@ Fuente: `plugins/data-engineering/skills/spark-optimization/` (SKILL.md + `refer
 - **Detección programática de skew** (`F.spark_partition_id()` agrupado/contado, heurística `max/avg > 2x`) — complemento de diagnóstico a la sección de skew/salting.
 - **`approx_count_distinct`** como ejemplo de evitar shuffle vía aproximación.
 
-**Qué NO se adopta:** su estilo es cheat-sheet puro (tablas, do's/don'ts, casi sin prosa explicativa) — opuesto al enfoque de prosa-con-ejemplos ya establecido en `dataeng-sql`/`dataeng-python`. Tampoco es Spark-agnóstico: su Pattern 6 se apoya en específicos de Delta Lake (`optimizeWrite`, `autoCompact`, `OPTIMIZE ... ZORDER BY`) — eso es una decisión de formato de tabla, no vanilla Spark/Parquet, y no se adopta (mismo criterio que se aplicó al descartar contenido fuera de frontera en la ronda de `sql`).
+**Qué NO se adopta:** su estilo es cheat-sheet puro (tablas, do's/don'ts, casi sin prosa explicativa) — opuesto al enfoque de prosa-con-ejemplos ya establecido en `sql-data-engineering`/`python-data-engineering`. Tampoco es Spark-agnóstico: su Pattern 6 se apoya en específicos de Delta Lake (`optimizeWrite`, `autoCompact`, `OPTIMIZE ... ZORDER BY`) — eso es una decisión de formato de tabla, no vanilla Spark/Parquet, y no se adopta (mismo criterio que se aplicó al descartar contenido fuera de frontera en la ronda de `sql`).
 
 ---
 

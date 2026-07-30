@@ -3,7 +3,11 @@
 
 **Fecha:** 2026-07-28
 **Responsable:** Leonardo H. García Díaz (Org)
-**Estado (2026-07-29):** 3 de 8 skills de dominio entregadas (`dataeng-python`, `dataeng-sql`, `dataeng-spark`), más la orquestadora `dataeng`. Quedan 5 skills de dominio por construir: `dataeng-data-modeling`, `dataeng-pipelines-architecture`, `dataeng-streaming`, `dataeng-data-quality`, `dataeng-iac-cloud` (ver sección 7, ítem 6, actualizado). El `name` del manifiesto `.claude-plugin/plugin.json` se renombró de `data-engineering` a `data-engineering-suite` (ver sección 2) para evitar que la skill orquestadora, también llamada `data-engineering`, se invocara como `data-engineering:data-engineering` cuando se instala vía el flujo de plugin. Ese mismo día se decidió además prefijar **todos** los identificadores de skill con `dataeng-` (la orquestadora queda como `dataeng`, sin repetir el sufijo): `~/.claude/skills/` y `~/.agents/skills/` son namespaces planos y compartidos con cualquier otra skill instalada, así que nombres genéricos como `python` o `sql` (los que tenía esta suite hasta hoy) son choques de symlink esperando a pasar, no solo un problema de invocación confusa como el que motivó el rename del plugin. Secciones 3, 4, 5 y 7 ya reflejan los nuevos identificadores; la sección 6 conserva la narrativa histórica del rename anterior (`python-data-engineering` → `python`) sin reescribirla.
+**Estado (2026-07-30):** 3 de 8 skills de dominio entregadas (`python-data-engineering`, `sql-data-engineering`, `spark-data-engineering`), más la orquestadora `data-engineering`. Quedan 5 skills de dominio por construir: `modeling-data-engineering`, `pipelines-architecture-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering` (ver sección 7, ítem 6, actualizado).
+
+El `name` del manifiesto `.claude-plugin/plugin.json` pasó por dos renombres: primero de `data-engineering` a `data-engineering-suite` (2026-07-29, para evitar que la skill orquestadora — también llamada `data-engineering` — se invocara como `data-engineering:data-engineering` al instalarse vía el flujo de plugin; ver sección 2), y luego de `data-engineering-suite` a `dataforge` (2026-07-30, por branding de cara a publicar en un marketplace).
+
+El esquema de nombres de skill también cambió dos veces. El 2026-07-29 se prefijaron **todos** los identificadores con `dataeng-` (la orquestadora quedaba como `dataeng` a secas), para evitar choques de symlink en los namespaces planos y compartidos `~/.claude/skills/`/`~/.agents/skills/` (nombres genéricos como `python` o `sql` son choques esperando a pasar). El 2026-07-30, ya con el plugin renombrado a `dataforge`, se revirtió ese esquema a uno domain-first: cada skill de dominio termina en el sufijo `-data-engineering` (`python-data-engineering`, `sql-data-engineering`, etc.) y la orquestadora es simplemente `data-engineering` — más legible en un listado de marketplace, sin reintroducir riesgo de colisión porque el plugin ya no comparte nombre con ningún skill. Secciones 3, 4, 5 y 7 ya reflejan los identificadores actuales; la sección 6 conserva la narrativa histórica del primer rename (`python-data-engineering` → `python`, 2026-07-28) sin reescribirla — ver su nota al pie para la cadena completa hasta el nombre actual.
 
 ---
 
@@ -36,11 +40,11 @@ Nombre propuesto del repo: `data-engineering-skills` (renombrable si el equipo p
 data-engineering-skills/
   README.md                     # instrucciones de instalación (symlinks) por runtime
   .claude-plugin/                # OPCIONAL — solo para instalar vía plugin de Claude Code
-    plugin.json                 # name: "data-engineering-suite" (renombrado 2026-07-29, ver Estado arriba), version, description, skills: "./skills/"
+    plugin.json                 # name: "dataforge" (2 renombres, ver Estado arriba), version, description, skills: "./skills/"
   skills/
-    dataeng/                     # orquestadora — punto de entrada para tareas amplias/cruzadas
+    data-engineering/                     # orquestadora — punto de entrada para tareas amplias/cruzadas
       SKILL.md
-    dataeng-python/              # ya construida y probada (migra desde legacy-repo)
+    python-data-engineering/              # ya construida y probada (migra desde legacy-repo)
       SKILL.md
       references/
         iterators-and-generators.md
@@ -50,40 +54,40 @@ data-engineering-skills/
         memory-and-performance.md
         data-validation.md
         production-patterns.md
-    dataeng-sql/
+    sql-data-engineering/
       SKILL.md
-    dataeng-spark/                # Spark en general; ejemplos de código en PySpark
+    spark-data-engineering/                # Spark en general; ejemplos de código en PySpark
       SKILL.md
-    dataeng-data-modeling/
+    modeling-data-engineering/
       SKILL.md
-    dataeng-pipelines-architecture/
+    pipelines-architecture-data-engineering/
       SKILL.md
-    dataeng-streaming/
+    streaming-data-engineering/
       SKILL.md
-    dataeng-data-quality/
+    quality-data-engineering/
       SKILL.md
-    dataeng-iac-cloud/
+    iac-cloud-data-engineering/
       SKILL.md
 ```
 
-Todo identificador de skill lleva el prefijo `dataeng-` (la orquestadora es la excepción: `dataeng` a secas) — ver Estado arriba para el porqué. Cada skill de dominio (todas menos la orquestadora) sigue el mismo formato que `dataeng-python`: overview, "when to use", tabla de quick reference, reference files por tema pesado, tabla de common mistakes. Contenido en inglés (convención técnica ya acordada), ejemplos de código en el lenguaje más relevante al tema.
+Todo identificador de skill de dominio termina en el sufijo `-data-engineering`, liderando con el nombre del dominio (la orquestadora es la excepción: `data-engineering` a secas) — ver Estado arriba para el porqué. Cada skill de dominio (todas menos la orquestadora) sigue el mismo formato que `python-data-engineering`: overview, "when to use", tabla de quick reference, reference files por tema pesado, tabla de common mistakes. Contenido en inglés (convención técnica ya acordada), ejemplos de código en el lenguaje más relevante al tema.
 
 ## 4. Las 8 skills de dominio — propósito de cada una
 
 | Skill | Cubre | No cubre (frontera con otra skill) |
 |---|---|---|
-| `dataeng-python` | Generators/streaming, decoradores, context managers, OOP para pipelines, GIL/concurrencia, memoria/performance (pandas/Polars/DuckDB), validación (Pydantic/Pandera), testing e idempotencia a nivel de código | Orquestadores (Airflow/Dagster/Prefect) como sistema — eso es `dataeng-pipelines-architecture` |
-| `dataeng-sql` | Optimización de queries, window functions, CTEs, planes de ejecución, indexación, modelado de queries analíticas | Modelado de esquemas/dimensional — eso es `dataeng-data-modeling` |
-| `dataeng-spark` | Arquitectura y tuning de Spark en general (particionamiento, shuffles, AQE, Catalyst, joins, cache/checkpointing, memoria de executor/driver) + una sección propia para lo específico de PySpark (overhead de UDFs Python vía py4j, pandas UDFs con Arrow, riesgo de memoria de `.collect()`/`.toPandas()`) | Streaming estructurado (Structured Streaming, watermarks) — eso es `dataeng-streaming` |
-| `dataeng-data-modeling` | Modelado dimensional (star/snowflake), Kimball vs Data Vault, SCDs, granularidad de hechos, normalización vs denormalización para analítica | Validación de esquema en tiempo de ejecución — eso es `dataeng-data-quality` |
-| `dataeng-pipelines-architecture` | Elección y patrones de orquestador (Airflow/Dagster/Prefect), diseño de DAGs, backfills, dependency management, topología de despliegue | Cómo escribir el código idempotente dentro de una tarea — eso ya está en `dataeng-python` |
-| `dataeng-streaming` | Kafka, Spark Structured Streaming, ventanas/watermarks, exactly-once vs at-least-once, particionamiento de tópicos | Arquitectura general de Spark batch — eso es `dataeng-spark` |
-| `dataeng-data-quality` | Dimensiones de calidad de datos, frameworks de gobierno de datos (Great Expectations a nivel organizacional), monitoreo/alertas de DQ | Qué librería usar para validar un dataframe puntual (Pydantic vs Pandera) — eso ya está en `dataeng-python` |
-| `dataeng-iac-cloud` | Terraform/IaC para infraestructura de datos, patrones de despliegue cloud-agnósticos, gestión de secretos, redes/permisos para plataformas de datos, **Docker/Compose** (stacks locales de desarrollo y containerización de jobs para despliegue — mismo modelo mental que Terraform: definir declarativamente un entorno) | Decisión de qué plataforma cloud/warehouse específica usar — eso es una decisión de proyecto, no de esta skill |
+| `python-data-engineering` | Generators/streaming, decoradores, context managers, OOP para pipelines, GIL/concurrencia, memoria/performance (pandas/Polars/DuckDB), validación (Pydantic/Pandera), testing e idempotencia a nivel de código | Orquestadores (Airflow/Dagster/Prefect) como sistema — eso es `pipelines-architecture-data-engineering` |
+| `sql-data-engineering` | Optimización de queries, window functions, CTEs, planes de ejecución, indexación, modelado de queries analíticas | Modelado de esquemas/dimensional — eso es `modeling-data-engineering` |
+| `spark-data-engineering` | Arquitectura y tuning de Spark en general (particionamiento, shuffles, AQE, Catalyst, joins, cache/checkpointing, memoria de executor/driver) + una sección propia para lo específico de PySpark (overhead de UDFs Python vía py4j, pandas UDFs con Arrow, riesgo de memoria de `.collect()`/`.toPandas()`) | Streaming estructurado (Structured Streaming, watermarks) — eso es `streaming-data-engineering` |
+| `modeling-data-engineering` | Modelado dimensional (star/snowflake), Kimball vs Data Vault, SCDs, granularidad de hechos, normalización vs denormalización para analítica | Validación de esquema en tiempo de ejecución — eso es `quality-data-engineering` |
+| `pipelines-architecture-data-engineering` | Elección y patrones de orquestador (Airflow/Dagster/Prefect), diseño de DAGs, backfills, dependency management, topología de despliegue | Cómo escribir el código idempotente dentro de una tarea — eso ya está en `python-data-engineering` |
+| `streaming-data-engineering` | Kafka, Spark Structured Streaming, ventanas/watermarks, exactly-once vs at-least-once, particionamiento de tópicos | Arquitectura general de Spark batch — eso es `spark-data-engineering` |
+| `quality-data-engineering` | Dimensiones de calidad de datos, frameworks de gobierno de datos (Great Expectations a nivel organizacional), monitoreo/alertas de DQ | Qué librería usar para validar un dataframe puntual (Pydantic vs Pandera) — eso ya está en `python-data-engineering` |
+| `iac-cloud-data-engineering` | Terraform/IaC para infraestructura de datos, patrones de despliegue cloud-agnósticos, gestión de secretos, redes/permisos para plataformas de datos, **Docker/Compose** (stacks locales de desarrollo y containerización de jobs para despliegue — mismo modelo mental que Terraform: definir declarativamente un entorno) | Decisión de qué plataforma cloud/warehouse específica usar — eso es una decisión de proyecto, no de esta skill |
 
-Los tópicos detallados de cada skill (más allá de este propósito de alto nivel) se definen en una siguiente fase, skill por skill, con el usuario aportando los temas y el asistente investigando para complementar — **dos fuentes**: búsqueda web (mismo proceso que se usó para `dataeng-python`) y revisión del plugin `data-engineering` de `wshobson/agents` (MIT — `spark-optimization`, `airflow-dag-patterns`, `dbt-transformation-patterns`, `data-quality-frameworks`) como insumo adicional para los tópicos de `dataeng-spark`, `dataeng-pipelines-architecture`, `dataeng-sql` y `dataeng-data-quality`, con atribución. No se adopta tal cual: su estilo (cheat-sheet de do's/don'ts + snippets) y sus límites de dominio (ej. `airflow-dag-patterns` es solo-Airflow, no agnóstico de orquestador como se definió `dataeng-pipelines-architecture` en la sección 4) difieren de los ya fijados acá.
+Los tópicos detallados de cada skill (más allá de este propósito de alto nivel) se definen en una siguiente fase, skill por skill, con el usuario aportando los temas y el asistente investigando para complementar — **dos fuentes**: búsqueda web (mismo proceso que se usó para `python-data-engineering`) y revisión del plugin `data-engineering` de `wshobson/agents` (MIT — `spark-optimization`, `airflow-dag-patterns`, `dbt-transformation-patterns`, `data-quality-frameworks`) como insumo adicional para los tópicos de `spark-data-engineering`, `pipelines-architecture-data-engineering`, `sql-data-engineering` y `quality-data-engineering`, con atribución. No se adopta tal cual: su estilo (cheat-sheet de do's/don'ts + snippets) y sus límites de dominio (ej. `airflow-dag-patterns` es solo-Airflow, no agnóstico de orquestador como se definió `pipelines-architecture-data-engineering` en la sección 4) difieren de los ya fijados acá.
 
-## 5. Mecánica de la skill orquestadora (`dataeng`)
+## 5. Mecánica de la skill orquestadora (`data-engineering`)
 
 - **Cuándo se activa**: tareas amplias o que cruzan varios dominios ("diseña este pipeline end-to-end", "revisa esta solución completa"). Una tarea de un solo dominio ("revisa este job de PySpark") activa directo la skill de dominio correspondiente por su propia descripción — la orquestadora no participa, sin overhead.
 - **Qué hace al activarse**:
@@ -98,6 +102,8 @@ La skill ya construida en `legacy-repo/.claude/skills/python-data-engineering/` 
 
 *(Nota 2026-07-29: ese identificador `python` se renombró de nuevo, a `dataeng-python` — ver Estado arriba. La narrativa de esta sección se deja intacta como registro histórico del primer rename.)*
 
+*(Nota 2026-07-30: `dataeng-python` se renombró una vez más, de vuelta a `python-data-engineering` — el nombre original de esta misma sección. No es un error de circularidad: el motivo del rename original (evitar `data-engineering:python-data-engineering` redundante) ya no aplica porque el plugin se llama `dataforge`, no `data-engineering` — ver Estado arriba.)*
+
 ## 7. Próximos pasos (fuera de esta especificación)
 
 1. Crear el repo `data-engineering-skills` con la estructura de la sección 3, incluyendo el `README.md` con instrucciones de symlink por runtime.
@@ -105,11 +111,11 @@ La skill ya construida en `legacy-repo/.claude/skills/python-data-engineering/` 
 3. Migrar `python` según la sección 6.
 4. Escribir `SKILL.md` de la orquestadora `data-engineering` según la sección 5.
 5. Validar la orquestadora con un escenario de prueba que cruce 3+ dominios (análogo al test de discoverability que ya se le hizo a `python` con el escenario de la API paginada) — confirmar que el fan-out y la síntesis funcionan antes de darla por lista.
-6. Por cada una de las 5 skills de dominio restantes (`dataeng-data-modeling`, `dataeng-pipelines-architecture`, `dataeng-streaming`, `dataeng-data-quality`, `dataeng-iac-cloud` — `dataeng-sql` y `dataeng-spark` ya se entregaron 2026-07-29, ver `docs/superpowers/specs/2026-07-28-sql-skill-design.md` y `docs/superpowers/specs/2026-07-29-spark-skill-design.md`): el usuario aporta tópicos → investigación web complementaria → redacción → validación de discoverability liviana (mismo proceso que `dataeng-python` y `dataeng-sql`).
+6. Por cada una de las 5 skills de dominio restantes (`modeling-data-engineering`, `pipelines-architecture-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering` — `sql-data-engineering` y `spark-data-engineering` ya se entregaron 2026-07-29, ver `docs/superpowers/specs/2026-07-28-sql-skill-design.md` y `docs/superpowers/specs/2026-07-29-spark-skill-design.md`): el usuario aporta tópicos → investigación web complementaria → redacción → validación de discoverability liviana (mismo proceso que `python-data-engineering` y `sql-data-engineering`).
 
 ## 8. Fuera de alcance (de esta fase)
 
-- Contenido detallado (reference files) de las skills de dominio pendientes — se define skill por skill en la fase siguiente. Eran 7 al escribir esta spec (2026-07-28); `dataeng-sql` y `dataeng-spark` ya se entregaron desde entonces, quedan 5 (ver Estado arriba y §7 ítem 6).
+- Contenido detallado (reference files) de las skills de dominio pendientes — se define skill por skill en la fase siguiente. Eran 7 al escribir esta spec (2026-07-28); `sql-data-engineering` y `spark-data-engineering` ya se entregaron desde entonces, quedan 5 (ver Estado arriba y §7 ítem 6).
 - Visibilidad del repo (privado del equipo vs. algo más amplio) y si se publica además en un marketplace de Claude Code — se resuelve al crear el repo; no afecta la vía universal de symlinks, que ya queda definida en la sección 2.
 - Cualquier convención o mandato específico de Org — la suite es agnóstica por decisión explícita (sección 1).
-- Recorte y cross-linking de contenido que hoy vive en `dataeng-python` pero en rigor pertenece a otra skill futura: las menciones a Airflow/Dagster/Prefect en `skills/dataeng-python/references/production-patterns.md` (territorio de `dataeng-pipelines-architecture`) y a Great Expectations en `skills/dataeng-python/references/data-validation.md` (territorio de `dataeng-data-quality`). Ambas se aplican recién cuando esas skills existan — hacerlo antes dejaría referencias rotas. El tercer cross-link de este ítem, desde `concurrency-and-the-gil.md` (que ya menciona "delego a Spark" en la respuesta senior sobre el GIL) hacia `dataeng-spark`, ya se cerró (2026-07-29) — esa skill entregó, ver Estado arriba.
+- Recorte y cross-linking de contenido que hoy vive en `python-data-engineering` pero en rigor pertenece a otra skill futura: las menciones a Airflow/Dagster/Prefect en `skills/python-data-engineering/references/production-patterns.md` (territorio de `pipelines-architecture-data-engineering`) y a Great Expectations en `skills/python-data-engineering/references/data-validation.md` (territorio de `quality-data-engineering`). Ambas se aplican recién cuando esas skills existan — hacerlo antes dejaría referencias rotas. El tercer cross-link de este ítem, desde `concurrency-and-the-gil.md` (que ya menciona "delego a Spark" en la respuesta senior sobre el GIL) hacia `spark-data-engineering`, ya se cerró (2026-07-29) — esa skill entregó, ver Estado arriba.

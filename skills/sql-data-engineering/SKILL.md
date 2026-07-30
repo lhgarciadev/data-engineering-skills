@@ -1,6 +1,6 @@
 ---
-name: dataeng-sql
-description: SQL query writing, review, and optimization guidance — joins, aggregations, window functions, CTEs, query optimization, and procedural extensions (PL/SQL, T-SQL, PL/pgSQL, MySQL stored routines). Use when writing, reviewing, or optimizing a query, or diagnosing one that's slow, wrong, or a misbehaving stored procedure. Primary engines — PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift — plus targeted Oracle, Azure Synapse Analytics, and Microsoft Fabric Warehouse notes; see Overview for exact scope. Does not cover schema/dimensional modeling (see dataeng-data-modeling).
+name: sql-data-engineering
+description: SQL query writing, review, and optimization guidance — joins, aggregations, window functions, CTEs, query optimization, and procedural extensions (PL/SQL, T-SQL, PL/pgSQL, MySQL stored routines). Use when writing, reviewing, or optimizing a query, or diagnosing one that's slow, wrong, or a misbehaving stored procedure. Primary engines — PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and Redshift — plus targeted Oracle, Azure Synapse Analytics, and Microsoft Fabric Warehouse notes; see Overview for exact scope. Does not cover schema/dimensional modeling (see modeling-data-engineering).
 ---
 
 # SQL for Data Engineering
@@ -17,7 +17,7 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 - A query is slow and the cause isn't obvious
 - Deciding how to index a table, or reading an execution plan
 - Checking whether a query pattern is portable across engines (Postgres, MySQL, SQL Server, Snowflake, BigQuery, Redshift)
-- Not for schema or dimensional modeling design (star schema, SCDs at the modeling level) — that's `dataeng-data-modeling`
+- Not for schema or dimensional modeling design (star schema, SCDs at the modeling level) — that's `modeling-data-engineering`
 - Writing or reviewing a stored procedure/function in Oracle PL/SQL, SQL Server T-SQL, PostgreSQL PL/pgSQL, or MySQL — cursors, exception handling, dynamic SQL, transaction control
 
 ## Quick reference
