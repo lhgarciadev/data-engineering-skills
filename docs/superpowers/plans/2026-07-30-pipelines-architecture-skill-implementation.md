@@ -1081,6 +1081,113 @@ Expected: the agent invokes `python-data-engineering` (via `external-api-integra
 
 ---
 
+### Task 14: Add "Testing a DAG" to `airflow-structure-and-reliability.md`
+
+**Added 2026-07-30, after Task 10 shipped** — Leonardo asked whether `wshobson/agents`' `airflow-dag-patterns` skill was checked as a secondary source for this domain (per the suite spec's established per-skill process). It had only been excluded on the strength of the suite-wide spec's 2026-07-28 characterization, written before this skill's actual content existed — not re-checked against it. Re-checking now (fetched `SKILL.md` + `references/details.md` directly) found: most of its content already has an equivalent (often more rigorous) treatment in this skill's 8 shipped files, and its branching example independently corroborates the join-after-branch `trigger_rule` fix already in `airflow-trigger-rules-and-branching.md`. It also confirmed the exclusion decision was right for the reason already on record (Airflow-only, not orchestrator-agnostic, cheap-cheat-sheet style) — plus new evidence: it has zero Airflow 3.0 awareness and one internal inconsistency (a test asserts the deprecated `dag.schedule_interval` attribute while its own DAG definitions already use `schedule=`).
+
+One real, undocumented gap surfaced: `wshobson`'s Pattern 6 (`test_dags.py`) covers testing a DAG via `DagBag` — a topic absent from every one of the 8 files shipped so far. Its specific code is NOT usable as-is (outdated 2.x import path, and a `dag.test_cycle()` method that doesn't exist in Airflow's current public API for user tests — confirmed by fetching Airflow's own current `best-practices.html` page and checking `apache/airflow`'s source directly, where `test_cycle` appears only inside Airflow's own internal test suite, never as a callable a user's test is meant to invoke). Verified, current-Airflow-3.x replacement content is below, sourced directly from Airflow's own "Testing a Dag" section of its Best Practices guide (fetched 2026-07-30) plus a source-code check of `task-sdk/src/airflow/sdk/definitions/dag.py` confirming `dag.test()` is real and current.
+
+**Execute this task between Task 11 and Task 12** — Task 12 (writing-great-skills review) and Task 13 (discoverability validation) must see this addition already in place, since they assess the fully-assembled skill.
+
+**Files:**
+- Modify: `data-engineering-skills/skills/pipelines-architecture-data-engineering/references/airflow-structure-and-reliability.md`
+
+**Interfaces:**
+- Consumes: the "Dynamic DAG generation" section already in this file (Task 7) — the new section is inserted immediately after it, since DAG-factory output is exactly what structural DAG tests are for.
+- Produces: an updated file with 7 `##` sections instead of 6; `SKILL.md`'s existing common-mistakes/quick-reference citations of this file remain valid (no rename), but Task 12's link-recount step must be re-run since the file changed after Task 9 shipped `SKILL.md`.
+
+- [ ] **Step 1: Insert the new section**
+
+In `data-engineering-skills/skills/pipelines-architecture-data-engineering/references/airflow-structure-and-reliability.md`, find this text (the end of the "Dynamic DAG generation" section, immediately before the "Pools and reliability configuration" heading):
+
+```markdown
+When you have 50 nearly-identical pipelines (one ingestion per source table), you don't write 50 files — you write a template that generates DAGs from configuration (a YAML per source). This cuts duplication and makes maintenance uniform. The senior caveat: this generator code runs on *every* parse (see the antipattern below), so it must be lightweight and deterministic — Airflow's own Best Practices guide connects this exact point directly to the top-level-code warning.
+
+## Pools and reliability configuration
+```
+
+Replace it with (inserts a new section between the two):
+
+````markdown
+When you have 50 nearly-identical pipelines (one ingestion per source table), you don't write 50 files — you write a template that generates DAGs from configuration (a YAML per source). This cuts duplication and makes maintenance uniform. The senior caveat: this generator code runs on *every* parse (see the antipattern below), so it must be lightweight and deterministic — Airflow's own Best Practices guide connects this exact point directly to the top-level-code warning.
+
+## Testing a DAG
+
+Airflow's own Best Practices guide treats a DAG as production code, not a script that either runs or doesn't — and prescribes tests at increasing levels of rigor.
+
+**DAG loader test** — the cheapest check: run `python your_dag_file.py` and confirm it exits without error. Catches missing dependencies, syntax errors, and import failures, no test framework required. Run it in an environment matching your scheduler's (same dependencies, env vars), so a pass here actually means something.
+
+**Unit test for loading**, via `DagBag` — note the import path, which changed from the `airflow.models` location some older examples still show:
+
+```python
+import pytest
+from airflow.dag_processing.dagbag import DagBag
+
+@pytest.fixture()
+def dagbag():
+    return DagBag()
+
+def test_dag_loaded(dagbag):
+    dag = dagbag.get_dag(dag_id="hello_world")
+    assert dagbag.import_errors == {}
+    assert dag is not None
+    assert len(dag.tasks) == 1
+```
+
+`dagbag.import_errors` catches the same failure class as the loader test, but across every DAG in the folder at once, in a normal CI run.
+
+**Unit test a DAG's structure** — useful for a factory-generated DAG (the pattern just above), to assert the shape matches its config instead of eyeballing it:
+
+```python
+def assert_dag_dict_equal(source, dag):
+    assert dag.task_dict.keys() == source.keys()
+    for task_id, downstream_list in source.items():
+        assert dag.has_task(task_id)
+        task = dag.get_task(task_id)
+        assert task.downstream_task_ids == set(downstream_list)
+```
+
+**Test a task's actual behavior** — the highest-rigor layer: run the DAG for real, against a single logical date, and assert on the result:
+
+```python
+import pendulum
+from airflow.sdk import DAG, TaskInstanceState
+
+def test_my_custom_operator_execute_no_trigger(dag):
+    TEST_TASK_ID = "my_custom_operator_task"
+    with DAG(
+        dag_id="my_custom_operator_dag",
+        schedule="@daily",
+        start_date=pendulum.datetime(2021, 9, 13, tz="UTC"),
+    ) as dag:
+        MyCustomOperator(task_id=TEST_TASK_ID, prefix="s3://bucket/some/prefix")
+
+    dagrun = dag.test()
+    ti = dagrun.get_task_instance(task_id=TEST_TASK_ID)
+    assert ti.state == TaskInstanceState.SUCCESS
+```
+
+`dag.test()` actually executes the DAG locally against a single run and returns a real `DagRun` you can inspect — closer to an integration test than a unit test, and the right tool when you need to know the task did the right thing, not just that the graph is shaped correctly.
+
+One thing not to reach for: a `dag.test_cycle()` public method. It shows up in older community examples, but it isn't part of Airflow's current public API for user DAG tests — cycle-freedom is enforced by construction (a DAG is acyclic because you build it with `>>`/`<<`, not because you separately assert it), and Airflow's own current test-writing guidance doesn't feature a standalone cycle check at all.
+
+## Pools and reliability configuration
+````
+
+- [ ] **Step 2: Verify the file**
+
+Run: `grep -c "^## " data-engineering-skills/skills/pipelines-architecture-data-engineering/references/airflow-structure-and-reliability.md`
+Expected: `7` (was 6 before this task).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add data-engineering-skills/skills/pipelines-architecture-data-engineering/references/airflow-structure-and-reliability.md
+git commit -m "feat(pipelines-architecture): add DAG testing patterns to structure and reliability reference"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:** every section of `docs/superpowers/specs/2026-07-30-pipelines-architecture-skill-design.md` §4 maps to a task above — §4.1→Task 1, §4.2→Task 2, §4.3→Task 3, §4.4→Task 4, §4.5→Task 5, §4.6→Task 6, §4.7→Task 7, §4.8→Task 8, §4.9→Tasks 10-11. The SKILL.md tasks (9, 11) and the validation/review tasks (12, 13) are the implicit "close out the skill" steps every prior skill in this suite has used. No spec section lacks a task.
