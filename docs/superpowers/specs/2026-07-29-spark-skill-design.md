@@ -9,7 +9,7 @@
 
 ## 1. Contexto y objetivo
 
-Segunda de las 6 skills de dominio pendientes definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (§4, `dataeng-sql` ya entregada). Cubre arquitectura y tuning de Spark en general, más una sección propia para lo específico de PySpark — el mismo alcance que ya fijaba la spec de la suite, sin recortes: el usuario confirmó explícitamente incluir memoria de executor/driver y la sección PySpark-específica en esta misma tanda, en vez de diferirlas.
+Segunda de las skills de dominio definidas en `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` (§4) en entregarse, después de `dataeng-sql` — ver Estado arriba: ya entregada, quedan 5 skills de dominio pendientes. Cubre arquitectura y tuning de Spark en general, más una sección propia para lo específico de PySpark — el mismo alcance que ya fijaba la spec de la suite, sin recortes: el usuario confirmó explícitamente incluir memoria de executor/driver y la sección PySpark-específica en esta misma tanda, en vez de diferirlas.
 
 Insumo: borrador de contenido aportado por el usuario (11 tópicos, de fundamentos de ejecución a benchmarking en producción), verificado contra documentación oficial de Apache Spark (spark.apache.org/docs/latest/, versión "latest" = 4.2.0 al momento de esta verificación) y complementado con revisión de `wshobson/agents`' `spark-optimization` (MIT), según lo ya anticipado en la spec de la suite §4. Registro completo de la verificación: `docs/superpowers/research/2026-07-29-spark-claims-verification.md`.
 
