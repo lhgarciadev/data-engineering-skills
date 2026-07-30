@@ -38,7 +38,7 @@ Con esto, la 9na skill "APIs para Ingeniería de Datos" queda descartada como pr
 - `Dataset` → renombrado a `Asset` (Airflow 3.0, AIP-74); `Dataset` queda como alias deprecado.
 - `SubDagOperator` → **removido** (no solo deprecado) en 3.0, reemplazado por TaskGroups/Assets/Data Aware Scheduling.
 - `sla`/`sla_miss_callback` → **removido** en 3.0, reemplazado por Deadline Alerts (experimental aún en 3.1).
-- Estado de tarea `shutdown` → removido en 2.7.2 (ya no existe ni en 2.x reciente ni en 3.x).
+- Estado de tarea `shutdown` → deprecado en 2.7.2, removido recién en 3.0.0 (existió deprecado durante el resto de la serie 2.x; ya no existe en 3.x).
 - `SqlSensor` y `ExternalTaskSensor` → movidos de `airflow.*` core a paquetes provider (`apache-airflow-providers-common-sql`, `apache-airflow-providers-standard`) en 3.x.
 - `catchup_by_default` → ya es `False` en Airflow actual; el comportamiento "catchup on por defecto" es histórico (1.x), no vigente.
 
@@ -108,7 +108,7 @@ Airflow vs. Dagster vs. Prefect (ejes de decisión, no ranking); topología de d
 Estados de tarea, `trigger_rule` (default `all_success`), branching (`@task.branch`, `ShortCircuitOperator`, `LatestOnlyOperator`), la trampa del join tras un branch.
 
 **Correcciones a incorporar:**
-- **Estado `shutdown`**: no existe en Airflow actual (3.3.0) — fue removido en **2.7.2** ("remove unused state - SHUTDOWN"). No listarlo como estado vigente. Mencionar opcionalmente el nuevo estado `awaiting_input` (Human-in-the-Loop, 3.3.0) si aporta valor pedagógico, sin profundizar (fuera del foco del tema).
+- **Estado `shutdown`**: no existe en Airflow actual (3.3.0) — fue marcado deprecado en **2.7.2** ("remove unused state - SHUTDOWN") pero permaneció presente durante el resto de la serie 2.x, y fue removido recién en **3.0.0**. No listarlo como estado vigente. Mencionar opcionalmente el nuevo estado `awaiting_input` (Human-in-the-Loop, 3.3.0) si aporta valor pedagógico, sin profundizar (fuera del foco del tema).
 - **Catálogo de trigger rules incompleto**: el borrador nombra 6 (`all_success`, `all_done`, `none_failed`, `none_failed_min_one_success`, `one_success`/`one_failed`, `always`) — todos correctamente escritos y vigentes, pero el catálogo oficial tiene **13 en total**. Agregar los 5 que faltan (`all_failed`, `all_skipped`, `one_done`, `all_done_min_one_success`, `all_done_setup_success`) al menos en una tabla de referencia completa, sin perder el foco pedagógico en los 6 que "hay que tener en la punta de los dedos". El rename `none_failed_or_skipped` → `none_failed_min_one_success` está confirmado, pinneado a **Airflow 2.2.0**, nombre viejo removido por completo en 3.0.
 - Branching (`@task.branch`/`BranchPythonOperator`, `ShortCircuitOperator`, `LatestOnlyOperator`): verificado.
 - **Trampa del join tras un branch**: verificada como patrón **documentado oficialmente por Airflow**, no folklore — la doc oficial usa un ejemplo textual `join`/`branch_a`/`follow_branch_a` y prescribe explícitamente `none_failed_min_one_success`. Se puede citar como ejemplo oficial, no solo como sabiduría de producción.

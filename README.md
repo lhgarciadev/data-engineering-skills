@@ -25,8 +25,9 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 | `python-data-engineering` | Generators/streaming, decorators, context managers, OOP for pipelines, GIL/concurrency, memory/performance, validation, production patterns |
 | `sql-data-engineering` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
 | `spark-data-engineering` | Spark/PySpark execution model, shuffle and partitioning, joins and data skew, caching and file formats, Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns |
+| `pipelines-architecture-data-engineering` | Pipeline orchestration architecture — orchestrator choice (Airflow, Dagster, Prefect), DAG design and task granularity, idempotency and backfills, data-aware scheduling, deployment topology, and Airflow-specific patterns (trigger rules, branching, sensors, dynamic task mapping) |
 
-The remaining domain skills (`modeling-data-engineering`, `pipelines-architecture-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering`) ship incrementally — see `docs/` for the design spec.
+The remaining domain skills (`modeling-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering`) ship incrementally — see `docs/` for the design spec.
 
 Every domain skill's identifier ends in the `-data-engineering` suffix, leading with its domain word (the orchestrator is just `data-engineering`), so none of them collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces. The plugin itself is named `dataforge` — kept distinct from the orchestrator's `data-engineering` so a marketplace install never doubles up as `dataforge:data-engineering` colliding with anything.
 
