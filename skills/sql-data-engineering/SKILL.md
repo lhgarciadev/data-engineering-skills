@@ -14,6 +14,7 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 - Writing or reviewing an analytical query: joins, aggregations, window functions, CTEs
 - A query returns the wrong row count or a suspiciously large/small aggregate result
 - Deduplicating records, finding gaps/streaks, sessionizing events, or writing an idempotent upsert
+- Deciding between full reload and incremental extraction for a load, or writing the watermark query for one
 - A query is slow and the cause isn't obvious
 - Deciding how to index a table, or reading an execution plan
 - Checking whether a query pattern is portable across engines (Postgres, MySQL, SQL Server, Snowflake, BigQuery, Redshift)
@@ -40,6 +41,8 @@ Senior-level judgment calls for writing, reviewing, and optimizing SQL — which
 | Consecutive streaks or gaps in a sequence | Gaps-and-islands (`ROW_NUMBER` subtraction trick) | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
 | Grouping events into sessions | `LAG` + running sum of session starts | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
 | A load needs to be safely re-runnable | `MERGE` (or `INSERT ... ON CONFLICT` pre-PG15) keyed by business key | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
+| Identifying which rows changed since the last run | Watermark pattern (`updated_at > :last_watermark`) | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
+| A small/infrequently-updated table doesn't need incremental machinery | Full load — `TRUNCATE`/CTAS-swap, mechanics vary sharply by engine | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
 | Preserving dimension history on change | SCD Type 2 (end-date, is_current flag, surrogate key) | [engineering-query-patterns.md](references/engineering-query-patterns.md) |
 | A query is slow and the cause isn't obvious | Read `EXPLAIN`/`EXPLAIN ANALYZE` before touching anything | [query-optimization-and-production.md](references/query-optimization-and-production.md) |
 | Deciding whether/how to index a column | B-tree cost, leftmost-prefix rule, GIN/GiST/BRIN | [query-optimization-and-production.md](references/query-optimization-and-production.md) |
@@ -80,6 +83,7 @@ SELECT * FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.custo
 | Assuming `FILTER (WHERE ...)` is universally portable | Fails outright on Snowflake, unavailable on current SQL Server/MySQL | Use `SUM(CASE WHEN ...)` unless the engine is confirmed; see [aggregation-patterns.md](references/aggregation-patterns.md) |
 | Relying on the implicit window frame default for a running total | Silently switches to peer-inclusive behavior on tied ORDER BY values | Always specify `ROWS BETWEEN ... AND CURRENT ROW`; see [window-functions.md](references/window-functions.md) |
 | Blind append-only writes on every load | Duplicates rows on any rerun/backfill | `MERGE` keyed by business key; see [engineering-query-patterns.md](references/engineering-query-patterns.md) |
+| Assuming Redshift's `TRUNCATE` is rollback-able "because Redshift is Postgres" | It commits the surrounding transaction immediately, the opposite of PostgreSQL | Verify TRUNCATE's transactional behavior per engine; see [engineering-query-patterns.md](references/engineering-query-patterns.md) |
 | Assuming a CTE is never an optimization barrier | On pre-12 PostgreSQL it always is | Know your engine's CTE inlining behavior; force materialization with `AS MATERIALIZED` on PG12+ if needed; see [ctes-and-recursion.md](references/ctes-and-recursion.md) |
 | Adding an index before reading the execution plan | Might not fix the actual bottleneck | Run `EXPLAIN ANALYZE` first; see [query-optimization-and-production.md](references/query-optimization-and-production.md) |
 | Reaching for a cursor loop instead of a set-based rewrite | RBAR — pays per-row overhead a single statement wouldn't | Rewrite as a query first; see [procedural-extensions.md](references/procedural-extensions.md) |

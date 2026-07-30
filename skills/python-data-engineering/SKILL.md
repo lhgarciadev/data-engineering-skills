@@ -17,6 +17,7 @@ Senior-level judgment calls for Python data pipelines — which tool or pattern 
 - Deciding pandas vs Polars vs DuckDB for a given data size or workload
 - Validating a dataframe's schema/content, or a single record/API payload
 - Writing retry logic, idempotent writes, or structured error handling for a pipeline
+- Deciding how a pipeline tracks what's new since its last run, or whether it even needs to (full pull vs incremental)
 - Not for general Python questions unrelated to data workloads
 
 ## Quick reference
@@ -33,6 +34,7 @@ Senior-level judgment calls for Python data pipelines — which tool or pattern 
 | Validating a dataframe's shape/content | Pandera | [data-validation.md](references/data-validation.md) |
 | Validating a single record/API payload | Pydantic | [data-validation.md](references/data-validation.md) |
 | Re-running a job safely after a partial failure | idempotent upsert-by-key | [production-patterns.md](references/production-patterns.md) |
+| Tracking which rows are new/changed since the last run | Watermark/cursor state — persisted outside a single DAG run | [production-patterns.md](references/production-patterns.md) |
 | Pipeline testing, error handling, config, logging | — | [production-patterns.md](references/production-patterns.md) |
 
 ## Two traps everyone hits first
@@ -70,5 +72,6 @@ def add(item, acc=None):      # correct
 | Reaching for `multiprocessing` on an I/O-bound pipeline | Pays process-startup cost for zero benefit; threads/asyncio already overlap I/O waits | See [concurrency-and-the-gil.md](references/concurrency-and-the-gil.md) |
 | Reaching for Great Expectations to validate a single pipeline's output | Org-wide governance overhead for a job that just needs a dataframe check | Use Pandera unless there's an actual org-wide data-quality requirement; see [data-validation.md](references/data-validation.md) |
 | Blind `append`-only writes on reruns | Duplicates data on retry/backfill | Upsert/merge by partition key; see [production-patterns.md](references/production-patterns.md) |
+| Storing extraction state (watermark) in Airflow XCom | XCom doesn't persist across DAG runs — silently resets each run | Use an Airflow `Variable` or an external control table instead; see [production-patterns.md](references/production-patterns.md) |
 | `try/except: pass` around pipeline steps | Silently corrupts or drops data, hides root cause | Separate retryable vs non-retryable errors, log structured context, dead-letter the rest; see [production-patterns.md](references/production-patterns.md) |
 | Optimizing before measuring | Fixes the wrong bottleneck | Profile first (`cProfile`, `memory_profiler`) — see [memory-and-performance.md](references/memory-and-performance.md) |
