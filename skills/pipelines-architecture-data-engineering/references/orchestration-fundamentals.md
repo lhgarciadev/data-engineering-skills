@@ -40,7 +40,7 @@ Between tasks, don't move large DataFrames — pass references: an S3 path, a pa
 
 In Airflow specifically, putting large data in XCom is a classic antipattern. Airflow's own documentation is explicit about XCom's intended size:
 
-> "XComs are principally used to communicate small amounts of data between tasks."
+> "They can have any serializable value..., but they are only designed for small amounts of data; do not use them to pass around large values, like dataframes."
 > — [XComs — Airflow Documentation](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html)
 
 XCom is for small metadata — a path, a watermark, a row count — not a DataFrame.
