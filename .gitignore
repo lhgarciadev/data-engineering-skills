@@ -1,4 +1,4 @@
-# Local-only tooling — never tracked in this repo (see chat 2026-07-30)
+# Local-only tooling — never tracked in this repo
 .agents/
 .claude/
 .superpowers/
