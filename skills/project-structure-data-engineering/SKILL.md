@@ -34,6 +34,7 @@ How to lay out a new data engineering package — from its directory structure t
 | Depending on a shared internal library | Pin by git tag, bump deliberately | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
 | Setting up linting and formatting | `ruff`, replacing flake8 + isort + black | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
 | Documenting what a data product actually contains | A minimal data contract YAML, versioned with the code | [data-contracts.md](references/data-contracts.md) |
+| Deciding what belongs in the contract vs. the code vs. the serving decision | Ownership/consumers here; schema in code; serving mechanism in `pipelines-architecture-data-engineering` | [data-contracts.md](references/data-contracts.md) |
 
 ## Common mistakes
 
