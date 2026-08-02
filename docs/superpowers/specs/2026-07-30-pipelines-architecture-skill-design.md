@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-07-30
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Implementado y shippeado (2026-07-30) — ver `docs/superpowers/plans/2026-07-30-pipelines-architecture-skill-implementation.md` para el registro de ejecución (14 tareas + Task 14 agregada mid-project + revisión final de rama con fix wave).
+**Estado:** Implementado y shippeado (2026-07-30) — ver `docs/superpowers/plans/2026-07-30-pipelines-architecture-skill-implementation.md` para el registro de ejecución (14 tareas + Task 14 agregada mid-project + revisión final de rama con fix wave). **Cierre adicional (2026-08-02):** se cerró el forward-pointer de arquitectura de proyecto dbt que esta spec dejó pendiente en §2.1 original (medallion, naming conventions, DAG de modelos, `dbt_project.yml`) — nuevo reference file `references/dbt-project-architecture.md`, agregado tras 3 investigaciones en paralelo contra `docs.getdbt.com` (estructura de proyecto, naming/entornos/packages) más revisión de `wshobson/agents`' `dbt-transformation-patterns` como fuente secundaria. Ver `docs/superpowers/research/2026-08-02-dbt-project-structure-verification.md`, `2026-08-02-dbt-models-naming-environments-verification.md` y `2026-08-02-dbt-wshobson-agents-review.md`. Hallazgo principal: **"medallion" NO es vocabulario propio de dbt** (es un término de Databricks/lakehouse que la comunidad mapea por analogía) — dbt Labs documenta oficialmente staging→intermediate→marts; esta imprecisión también existía en el contenido ya shippeado de `sql-data-engineering` (`query-optimization-and-production.md`) y se corrigió en el mismo pase. `SKILL.md` actualizado (frontmatter, quick reference, common mistakes).
 
 ---
 

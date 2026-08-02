@@ -1,6 +1,6 @@
 ---
 name: pipelines-architecture-data-engineering
-description: Pipeline orchestration architecture and DAG design guidance — orchestrator choice (Airflow, Dagster, Prefect), DAG design and task granularity, structural idempotency and backfills, data-aware scheduling and cross-pipeline dependencies, deployment topology (scheduler HA, executors, managed vs self-hosted), and Airflow-specific patterns (trigger rules, branching, sensors, dynamic task mapping, TaskGroups, pools). Use when designing or reviewing a pipeline's orchestration layer, choosing an orchestrator, diagnosing a broken backfill or a DAG that skips or hangs unexpectedly, or deciding how a pipeline should serve its output downstream. Does not cover writing idempotent code inside a task (see python-data-engineering) or building/hosting an API service (see references/serving-pipeline-output.md).
+description: Pipeline orchestration architecture and DAG design guidance — orchestrator choice (Airflow, Dagster, Prefect), DAG design and task granularity, structural idempotency and backfills, data-aware scheduling and cross-pipeline dependencies, deployment topology (scheduler HA, executors, managed vs self-hosted), dbt project architecture (layering, materialization config, environments), and Airflow-specific patterns (trigger rules, branching, sensors, dynamic task mapping, TaskGroups, pools). Use when designing or reviewing a pipeline's orchestration layer, choosing an orchestrator, structuring a dbt project, diagnosing a broken backfill or a DAG that skips or hangs unexpectedly, or deciding how a pipeline should serve its output downstream. Does not cover writing idempotent code inside a task (see python-data-engineering), dbt's SQL-level incremental mechanics (see sql-data-engineering), or building/hosting an API service (see references/serving-pipeline-output.md).
 ---
 
 # Pipeline Orchestration Architecture
@@ -17,7 +17,8 @@ Senior-level judgment calls for the orchestration layer of a data pipeline — w
 - A DAG task skips unexpectedly, hangs, or a sensor is eating worker capacity
 - Deciding how a pipeline should trigger downstream work, or how another pipeline should trigger off it
 - Deciding how a pipeline's output should reach its consumers (API, stream, export, share)
-- Not for writing the idempotent code inside a single task (see `python-data-engineering`) or building/hosting an API service (see [serving-pipeline-output.md](references/serving-pipeline-output.md))
+- Structuring a dbt project, deciding its model layering, or figuring out how dbt's model DAG fits inside the pipeline orchestrator's own DAG
+- Not for writing the idempotent code inside a single task (see `python-data-engineering`), dbt's SQL-level incremental mechanics (see `sql-data-engineering`), or building/hosting an API service (see [serving-pipeline-output.md](references/serving-pipeline-output.md))
 
 ## Quick reference
 
@@ -38,6 +39,9 @@ Senior-level judgment calls for the orchestration layer of a data pipeline — w
 | Modern DAG authoring style, reuse, ephemeral resources | TaskFlow API, TaskGroups, setup/teardown | [airflow-structure-and-reliability.md](references/airflow-structure-and-reliability.md) |
 | Protecting a shared resource, or alerting on failure | Pools, retries, `on_failure_callback` | [airflow-structure-and-reliability.md](references/airflow-structure-and-reliability.md) |
 | Serving a pipeline's output to a consumer | Serving layer vs. warehouse; API vs. stream vs. export vs. share | [serving-pipeline-output.md](references/serving-pipeline-output.md) |
+| Structuring a new dbt project, or naming its model layers | staging → intermediate → marts (dbt's own vocabulary, not "medallion") | [dbt-project-architecture.md](references/dbt-project-architecture.md) |
+| Deciding where a model's materialization is configured | `dbt_project.yml` (+folder default) → `.yml` properties → `config()` in the model, least to most specific | [dbt-project-architecture.md](references/dbt-project-architecture.md) |
+| One `dbt build` task, or several split by selector? | `--select`/`+model`/`model+`/`tag:` — the orchestration-granularity lever for dbt's own DAG | [dbt-project-architecture.md](references/dbt-project-architecture.md) |
 | Consuming an external API for ingestion | Auth, pagination, backoff/jitter, watermark | [python-data-engineering](../python-data-engineering/references/external-api-integration.md) |
 | Testing a DAG before it ships | DAG loader test, DagBag import check, `dag.test()` | [airflow-structure-and-reliability.md](references/airflow-structure-and-reliability.md) |
 
@@ -46,6 +50,8 @@ Senior-level judgment calls for the orchestration layer of a data pipeline — w
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | Heavy transformation logic written inline in the DAG file | Couples orchestration to compute, makes the DAG slow to parse and impossible to test in isolation | Task invokes external compute (Spark job, dbt model); orchestrator only sequences it. See [orchestration-fundamentals.md](references/orchestration-fundamentals.md) |
+| Recreating dbt's model dependency graph as separate orchestrator tasks | Duplicates a graph dbt already resolves via `ref()`/`source()`; two places for a dependency to drift out of sync | Let one `dbt build` task (or a few, split by selector/tag) own the model-level DAG. See [dbt-project-architecture.md](references/dbt-project-architecture.md) |
+| Presenting "medallion" (bronze/silver/gold) as dbt's own layering vocabulary | Misattributes a Databricks/lakehouse term to dbt Labs; dbt's own docs use staging/intermediate/marts exclusively | Use staging/intermediate/marts as dbt's documented terms; frame medallion as an optional community analogy at most. See [dbt-project-architecture.md](references/dbt-project-architecture.md) |
 | Passing a large DataFrame between tasks via XCom | XCom is for small metadata; large payloads bloat the metadata DB and can crash the scheduler | Pass a pointer (S3 path, partition ID). See [orchestration-fundamentals.md](references/orchestration-fundamentals.md) |
 | A task reads `datetime.now()` or "the last N rows" instead of its injected window | Reprocessing yesterday with today's date gives a different result — breaks backfills | Parameterize by `data_interval_start`/`data_interval_end`. See [idempotency-and-backfills.md](references/idempotency-and-backfills.md) |
 | Backfilling years of history with unlimited parallelism | Saturates the warehouse or blows through the source API's rate limit | Bound concurrency with pools/`max_active_runs`. See [idempotency-and-backfills.md](references/idempotency-and-backfills.md) |
