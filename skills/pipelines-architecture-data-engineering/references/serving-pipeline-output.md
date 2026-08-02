@@ -25,3 +25,5 @@ If the consumer is another data process that needs the *whole* dataset, a pagina
 Building or operating the API service itself — framework choice, REST vs. GraphQL vs. gRPC, endpoint implementation, request/response contracts, versioning, API-level auth — is out of scope for this skill and for the suite as a whole right now. It's general backend engineering, not something specific to data engineering, and there's no confirmed real use case driving it yet (see `docs/superpowers/specs/2026-07-30-pipelines-architecture-skill-design.md` §2.1 for the full reasoning). If you build one, everything above still applies to how it should be fed — the implementation itself just isn't taught here.
 
 Hosting and infrastructure for a serving API, if one gets built, belongs in `iac-cloud-data-engineering` once that skill exists. Contract and schema versioning for that API belongs in `quality-data-engineering` once that skill exists. Neither has content yet.
+
+For how to structure the package itself once this decision is made — directory layout, packaging, where a data contract lives — see `project-structure-data-engineering`.
