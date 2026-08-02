@@ -28,6 +28,8 @@ Where you find out whether someone has *operated* an orchestrator, not just writ
 - **Metadata database** — holds all state: what ran, when, with what result. Stateful, must be backed up; losing it is catastrophic.
 - **Webserver/UI** — observability, logs, manual triggers, DAG visualization.
 
+This is about the infrastructure components that run DAGs, not where DAG *source files* live in your repo before they reach the scheduler — see `project-structure-data-engineering` for that.
+
 ## Managed vs. self-hosted
 
 Managed offerings — Amazon MWAA, Google's managed Airflow service (documented under "Cloud Composer," with GCP's docs migrating toward the generic name "Managed Service for Apache Airflow"), Astronomer, Dagster+ (the current brand for what used to be called "Dagster Cloud"), and Prefect Cloud — take scheduler/DB/HA operations off your plate in exchange for cost and some flexibility. The senior framing: "do I want my team operating Airflow, or paying someone else to, so we can focus on the pipelines themselves?" For most teams, managed wins.

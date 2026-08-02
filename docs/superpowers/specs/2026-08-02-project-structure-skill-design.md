@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-08-02
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Implementado y shippeado (2026-08-02) — ver `docs/superpowers/plans/2026-08-02-project-structure-skill-implementation.md` para el registro de ejecución.
+**Estado:** Implementado y shippeado (2026-08-02) — ver `docs/superpowers/plans/2026-08-02-project-structure-skill-implementation.md` para el registro de ejecución. **Cierre adicional (2026-08-02):** se agregó una sección nueva a `package-layout.md`, "Where the orchestrator's DAG file lives" — hallazgo confirmado en ambos repos auditados (Repo A y Repo B, §3): ambos ubican los archivos de DAG de Airflow en una carpeta `airflow/dags/` de nivel superior, hermana del paquete del job, y ambos lo sincronizan vía un parámetro `dags_directory` de su pipeline CI/CD — verificado por grep sobre las copias locales de ambos repos en esta misma sesión. Contenido agregado deja explícito que el nombre de esa carpeta es una convención de repo/CI, no un requisito del propio Airflow (que lee de su `dags_folder` configurado, `airflow.cfg`/`AIRFLOW__CORE__DAGS_FOLDER`, por defecto `$AIRFLOW_HOME/dags`). Cross-link liviano agregado en `pipelines-architecture-data-engineering/references/orchestrator-selection-and-topology.md` (sección "Deployment topology") distinguiendo esa sección (componentes de infraestructura) de esta nueva (dónde vive el archivo fuente del DAG en el repo). `SKILL.md` actualizado con una fila de quick reference y una de common mistakes. Verificado: conteo de headers, balance de code fences, todos los reference files enlazados, y re-escaneo de confidencialidad en todo el repo — limpio.
 
 ---
 

@@ -27,6 +27,30 @@ Put `tests/` at the repo root, as a sibling of `my_ingestion_package/` — not n
 
 The entrypoint script should do one thing: call each layer in order, then commit/return. If the entrypoint contains business logic — a conditional based on data content, a calculation, a filter — that logic has leaked out of `transform/` and belongs back inside it.
 
+## Where the orchestrator's DAG file lives
+
+If the same repo also holds the orchestrator's DAG source file for this job (common in a monorepo that keeps ingestion code and its scheduling together), keep it in its own top-level directory, a sibling of the job package — not nested inside it:
+
+```
+my_ingestion_package/          # the job itself — see above
+├── config/
+├── extract/
+├── transform/
+├── load/
+└── my_ingestion_package.py
+airflow/
+└── dags/
+    └── my_ingestion_package_dag.py   # imports and schedules the job — no business logic
+tests/
+```
+
+Two things worth being deliberate about:
+
+- **The repo-level folder name is a CI/deployment convention, not something the orchestrator itself requires.** Airflow reads DAGs from whatever its own `dags_folder` is configured to (`[core] dags_folder` in `airflow.cfg`, or the `AIRFLOW__CORE__DAGS_FOLDER` environment variable — default `$AIRFLOW_HOME/dags`) — it has no opinion about what your source repo calls the directory your CI pipeline syncs from. `airflow/dags/` is a common, readable convention, not a hard requirement.
+- **The DAG file itself should stay as thin as the job's own entrypoint.** It imports the job, wires task dependencies, and sets schedule/retries/alerting — the same "wiring only, no business logic" discipline as the entrypoint script above. If a DAG file starts branching on data content or doing real work inside a task callable, that logic belongs in the job package's `transform/`, not the DAG.
+
+For the DAG's own internal design — task granularity, trigger rules, idempotent backfills, dynamic task mapping — as opposed to where its file lives, see `pipelines-architecture-data-engineering`.
+
 ## Pattern: thin job over a shared library
 
 Extract/load mechanics repeat almost verbatim across many similar jobs on the same team: reading a specific source format, writing to a specific destination format, adding standard metadata columns. Duplicating that mechanics into every job package is how ten near-identical copies of loader code end up drifting out of sync.
