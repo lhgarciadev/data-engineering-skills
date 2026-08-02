@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Skill content in English; code examples in the language most relevant to the topic (per `docs/superpowers/specs/2026-07-28-suite-skills-ingenieria-datos-design.md` §3).
-- Content is agnostic/generalist — no Org-specific vocabulary or infra (spec §1).
+- Content is agnostic/generalist — no institution-specific vocabulary or infra (spec §1).
 - `SKILL.md` frontmatter is limited to `name` + `description` — no Claude-specific fields (e.g. `allowed-tools`) — so every skill stays portable across Claude Code, Codex CLI, Gemini CLI, Copilot CLI (spec §2).
 - Skill folder/identifier names are lowercase-hyphen (spec §3, §6).
 - The orchestrator's dispatch instructions are written in runtime-neutral language with an explicit sequential fallback — never hard-code a Claude-only tool name (spec §5).
@@ -21,7 +21,7 @@
 
 ## File Structure
 
-**In `legacy-repo` (this repo):**
+**In `legacy-team-repo` (this repo):**
 - Modify: `.claude/skills/python-data-engineering/` — commit as-is (Task 1), then remove once migration is confirmed (Task 7).
 
 **In the new `data-engineering-skills` repo:**
@@ -52,10 +52,10 @@ data-engineering-skills/
 **Owner:** Claude (inline, this repo).
 
 **Files:**
-- Modify (stage untracked): `legacy-repo/.claude/skills/python-data-engineering/**`
+- Modify (stage untracked): `legacy-team-repo/.claude/skills/python-data-engineering/**`
 
 **Interfaces:**
-- Produces: a commit hash in `legacy-repo` that protects the already-built skill content before it's touched by the migration in Task 4.
+- Produces: a commit hash in `legacy-team-repo` that protects the already-built skill content before it's touched by the migration in Task 4.
 
 - [ ] **Step 1: Confirm the folder is still untracked and unchanged**
 
@@ -96,7 +96,7 @@ Expected: shows the commit from Step 2.
 gh repo create <owner>/data-engineering-skills --private --clone
 ```
 
-Replace `<owner>` with your personal GitHub account or the team's org — whichever should hold this for team-wide access. `--clone` clones it to `./data-engineering-skills` in your current directory; move/clone it into `~/dev/data-engineering-skills` to match the sibling convention of your other repos (`repo-a`, `repo-b`, etc.).
+Replace `<owner>` with your personal GitHub account or the team's org — whichever should hold this for team-wide access. `--clone` clones it to `./data-engineering-skills` in your current directory; move/clone it into `~/dev/data-engineering-skills` to match the sibling convention of your other project repos.
 
 - [ ] **Step 2: Confirm the clone is empty and ready**
 
@@ -194,17 +194,17 @@ git commit -m "Scaffold repo: README with install instructions, optional Claude 
 ### Task 4: Migrate `python-data-engineering` into `skills/python/`
 
 **Files:**
-- Create: `data-engineering-skills/skills/python/SKILL.md` (copied + renamed from `legacy-repo/.claude/skills/python-data-engineering/SKILL.md`)
+- Create: `data-engineering-skills/skills/python/SKILL.md` (copied + renamed from `legacy-team-repo/.claude/skills/python-data-engineering/SKILL.md`)
 - Create: `data-engineering-skills/skills/python/references/*.md` (copied verbatim, 7 files)
 
 **Interfaces:**
-- Consumes: `legacy-repo/.claude/skills/python-data-engineering/` (committed in Task 1).
+- Consumes: `legacy-team-repo/.claude/skills/python-data-engineering/` (committed in Task 1).
 - Produces: `skills/python/` — the first domain skill Task 5's orchestrator and Task 6's validation will reference.
 
 - [ ] **Step 1: Copy the skill folder**
 
 ```bash
-cp -R /Users/leonardogarcia/dev/legacy-repo/.claude/skills/python-data-engineering \
+cp -R /Users/leonardogarcia/dev/legacy-team-repo/.claude/skills/python-data-engineering \
       data-engineering-skills/skills/python
 ```
 
@@ -231,7 +231,7 @@ Expected: no output (only the renamed frontmatter line existed, and it's now fix
 
 - [ ] **Step 4: Verify the 7 reference files copied intact**
 
-Run: `diff -rq /Users/leonardogarcia/dev/legacy-repo/.claude/skills/python-data-engineering/references data-engineering-skills/skills/python/references`
+Run: `diff -rq /Users/leonardogarcia/dev/legacy-team-repo/.claude/skills/python-data-engineering/references data-engineering-skills/skills/python/references`
 Expected: no output (identical).
 
 - [ ] **Step 5: Commit**
@@ -352,12 +352,12 @@ Both scenarios passed on the first run — no `SKILL.md` changes needed.
 
 ---
 
-### Task 7: Remove the backup from `legacy-repo`
+### Task 7: Remove the backup from `legacy-team-repo`
 
 **Owner:** Claude (inline, this repo) — only after Task 6 passes.
 
 **Files:**
-- Delete: `legacy-repo/.claude/skills/python-data-engineering/`
+- Delete: `legacy-team-repo/.claude/skills/python-data-engineering/`
 
 - [x] **Step 1: Confirm the new repo has the migrated skill committed**
 
@@ -369,12 +369,12 @@ Expected: shows Task 4's commit.
 - [x] **Step 2: Remove the backup from this repo**
 
 ```bash
-cd /Users/leonardogarcia/dev/legacy-repo
+cd /Users/leonardogarcia/dev/legacy-team-repo
 git rm -r .claude/skills/python-data-engineering/
 git commit -m "Remove python-data-engineering: migrated to data-engineering-skills repo"
 ```
 
-**Result (2026-07-28): no-op — nothing to remove.** Checked `legacy-repo`: `.claude/skills/python-data-engineering/` doesn't exist there (not tracked, not untracked, no commit in its history touches that path). Task 1's backup commit — which this task assumed as a precondition — never actually landed in that repo; the skill's original content only exists as of Task 4's commit here. Since the folder is already absent, there's nothing left to delete.
+**Result (2026-07-28): no-op — nothing to remove.** Checked `legacy-team-repo`: `.claude/skills/python-data-engineering/` doesn't exist there (not tracked, not untracked, no commit in its history touches that path). Task 1's backup commit — which this task assumed as a precondition — never actually landed in that repo; the skill's original content only exists as of Task 4's commit here. Since the folder is already absent, there's nothing left to delete.
 
 - [x] **Step 3: Verify**
 

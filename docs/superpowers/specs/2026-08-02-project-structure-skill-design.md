@@ -1,5 +1,5 @@
 # Especificación de Diseño: Skill `project-structure-data-engineering`
-## Novena skill de la suite `data-engineering-skills` (fuera del roadmap original de 8 dominios)
+## Novena skill de dominio de la suite `data-engineering-skills` (entregada fuera del roadmap original de 8 el 2026-08-02, incorporada a él ese mismo día — ver Estado de la spec de la suite)
 
 **Fecha:** 2026-08-02
 **Responsable:** Leonardo H. García Díaz
