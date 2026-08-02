@@ -58,7 +58,7 @@ Not `try/except: pass`. Distinguish:
 
 - Nothing hardcoded: externalize config via environment variables, config files, or `pydantic-settings`.
 - Type hints on every signature, checked in CI. In practice teams run both **Pyright** (fast local/editor feedback) and **mypy** (better plugin support for things like SQLAlchemy/ORM-heavy code) — Pyright locally, one or both in CI. Type hints catch schema/shape bugs before the job runs, not just document intent.
-- Packaging: `uv` + `pyproject.toml` is the current default for dependency/environment management (single lockfile, notably faster than Poetry); Poetry remains reasonable for publishing a library to PyPI.
+- Packaging: pick one tool (Poetry or `uv`) for the whole package and commit to it — see [project-structure-data-engineering](../../project-structure-data-engineering/references/packaging-and-tooling.md) for the tradeoff and `pyproject.toml` conventions.
 
 ```python
 def transform(rows: list[dict], config: PipelineConfig) -> Iterator[dict]:

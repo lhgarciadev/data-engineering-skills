@@ -12,16 +12,16 @@ my_ingestion_package/
 │   └── __init__.py
 ├── transform/         # the package's actual business logic — the only layer genuinely unique to this job
 │   └── __init__.py
-├── load/               # where the transformed data goes, or a thin wrapper around a shared loader (see below)
+├── load/              # where the transformed data goes, or a thin wrapper around a shared loader (see below)
 │   └── __init__.py
-├── my_ingestion_package.py   # entrypoint: wires the layers together, nothing else
-└── tests/
-    ├── test_extract.py
-    ├── test_transform.py
-    └── test_load.py
+└── my_ingestion_package.py   # entrypoint: wires the layers together, nothing else
+tests/
+├── test_extract.py
+├── test_transform.py
+└── test_load.py
 ```
 
-Mirror `tests/` to the source layout 1:1. When `transform/business_rules.py` exists, `tests/test_business_rules.py` should exist next to it — not a single `tests/test_main.py` exercising everything through the entrypoint and nothing else.
+Put `tests/` at the repo root, as a sibling of `my_ingestion_package/` — not nested inside the importable package — so pytest's `testpaths = ["tests"]` (see `packaging-and-tooling.md`) resolves it correctly from the project root. Mirror it to the source layout: one test file per module at minimum (`test_extract.py` for `extract/`), and a matching subdirectory once a layer itself splits into multiple files (`transform/business_rules.py` → `tests/transform/test_business_rules.py`) — not a single `tests/test_main.py` exercising everything through the entrypoint and nothing else.
 
 **Why layer by responsibility, not by file type.** A `utils.py`/`helpers.py` file with unrelated functions is a magnet for unrelated growth, hard to test in isolation, and gives a reviewer no signal about what actually changed. `extract/`, `transform/`, and `load/` each answer one question — where does it come from, what do we do to it, where does it go — so a diff to `transform/` alone tells a reviewer exactly what changed about the job's behavior.
 
@@ -64,27 +64,27 @@ A job that only runs correctly inside its cloud runtime (a managed Spark context
 from abc import ABC, abstractmethod
 
 
-class Catalog(ABC):
+class CatalogReader(ABC):
     @abstractmethod
     def read_table(self, database: str, table: str):
         ...
 
 
-class ProductionCatalog(Catalog):
+class ProductionCatalog(CatalogReader):
     """Reads through the real managed catalog service."""
 
     def read_table(self, database: str, table: str):
         ...  # real cloud client call
 
 
-class LocalDevCatalog(Catalog):
+class LocalDevCatalog(CatalogReader):
     """Reads the same tables through a local/dev-reachable path — real data, local execution."""
 
     def read_table(self, database: str, table: str):
         ...  # e.g. a local query engine against the same underlying storage
 
 
-def build_catalog(is_local: bool) -> Catalog:
+def build_catalog(is_local: bool) -> CatalogReader:
     return LocalDevCatalog() if is_local else ProductionCatalog()
 ```
 
@@ -97,7 +97,7 @@ If a layer checks "does this table already exist" more than once for the same ta
 ```python
 from functools import cache
 
-# risky: cached for the whole process, keyed only on (database, table)
+# risky: cached for the whole process — functools.cache keys on every argument (including catalog), and holds a strong reference to it for the process lifetime
 @cache
 def table_exists(catalog, database: str, table: str) -> bool:
     return catalog.exists(database, table)

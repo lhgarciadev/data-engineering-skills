@@ -63,9 +63,15 @@ If the repo ships more than one package (a transform job and a separate report/e
 
 ## Private or shared dependencies
 
-A shared library used by more than one job package (see `package-layout.md`'s "thin job over a shared library" pattern) is usually not published to a public index. Pin it by tag, not by branch, so a job's dependency doesn't shift underneath it when the shared library changes:
+A shared library used by more than one job package (see `package-layout.md`'s "thin job over a shared library" pattern) is usually not published to a public index. Declare it in `dependencies` like any other package, then pin its actual source by tag, not by branch, so a job's dependency doesn't shift underneath it when the shared library changes:
 
 ```toml
+[project]
+dependencies = [
+    "boto3",
+    "shared-etl-library",
+]
+
 [tool.uv.sources]
 shared-etl-library = { git = "https://github.com/your-org/shared-etl-library", tag = "v1.2.0" }
 ```

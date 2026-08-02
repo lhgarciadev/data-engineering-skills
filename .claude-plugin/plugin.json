@@ -1,6 +1,6 @@
 {
   "name": "dataforge",
   "version": "0.1.0",
-  "description": "Agnostic, generalist reference skills for data engineering: Python, SQL, Spark, data modeling, pipeline architecture, streaming, data quality, and IaC/cloud, plus a cross-domain orchestrator.",
+  "description": "Agnostic, generalist reference skills for data engineering: Python, SQL, Spark, data modeling, pipeline architecture, streaming, data quality, IaC/cloud, and project/package structure, plus a cross-domain orchestrator.",
   "skills": "./skills/"
 }

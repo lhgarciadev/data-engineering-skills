@@ -1,6 +1,6 @@
 # data-engineering-skills
 
-Agnostic, generalist reference skills for data engineering — Python, SQL, Spark, data modeling, pipeline architecture, streaming, data quality, and IaC/cloud — plus an orchestrator that fans out to the relevant domain(s) for cross-cutting tasks. Works across Claude Code, Codex CLI, Gemini CLI, and GitHub Copilot CLI.
+Agnostic, generalist reference skills for data engineering — Python, SQL, Spark, data modeling, pipeline architecture, streaming, data quality, IaC/cloud, and project/package structure — plus an orchestrator that fans out to the relevant domain(s) for cross-cutting tasks. Works across Claude Code, Codex CLI, Gemini CLI, and GitHub Copilot CLI.
 
 ## Install
 
@@ -26,8 +26,9 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 | `sql-data-engineering` | Query optimization, window functions, CTEs, joins, aggregation, execution plans, and indexing across major SQL engines |
 | `spark-data-engineering` | Spark/PySpark execution model, shuffle and partitioning, joins and data skew, caching and file formats, Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns |
 | `pipelines-architecture-data-engineering` | Pipeline orchestration architecture — orchestrator choice (Airflow, Dagster, Prefect), DAG design and task granularity, idempotency and backfills, data-aware scheduling, deployment topology, and Airflow-specific patterns (trigger rules, branching, sensors, dynamic task mapping) |
+| `project-structure-data-engineering` | Project/package layout for ingestion and exposition packages, Poetry vs `uv` and packaging conventions, and data contracts |
 
-The remaining domain skills (`modeling-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering`) ship incrementally — see `docs/` for the design spec.
+The remaining domain skills (`modeling-data-engineering`, `streaming-data-engineering`, `quality-data-engineering`, `iac-cloud-data-engineering`) ship incrementally — see `docs/` for the design spec. `project-structure-data-engineering` shipped outside that original 8-domain roadmap; see its own design spec (`docs/superpowers/specs/2026-08-02-project-structure-skill-design.md`) for why.
 
 Every domain skill's identifier ends in the `-data-engineering` suffix, leading with its domain word (the orchestrator is just `data-engineering`), so none of them collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces. The plugin itself is named `dataforge` — kept distinct from the orchestrator's `data-engineering` so a marketplace install never doubles up as `dataforge:data-engineering` colliding with anything.
 

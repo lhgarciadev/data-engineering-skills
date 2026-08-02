@@ -3,7 +3,7 @@
 
 **Fecha:** 2026-08-02
 **Responsable:** Leonardo H. García Díaz
-**Estado:** Diseño aprobado (2026-08-02), pendiente de plan de implementación.
+**Estado:** Implementado y shippeado (2026-08-02) — ver `docs/superpowers/plans/2026-08-02-project-structure-skill-implementation.md` para el registro de ejecución.
 
 ---
 
