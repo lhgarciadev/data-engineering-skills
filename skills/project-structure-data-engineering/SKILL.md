@@ -32,6 +32,7 @@ How to lay out a new data engineering package — from its directory structure t
 | Pinning the Python version | Match the exact deployment runtime, not just a floor | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
 | A repo ships more than one package | List every package in `[tool.coverage.run] source` | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
 | Depending on a shared internal library | Pin by git tag, bump deliberately | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
+| Setting up linting and formatting | `ruff`, replacing flake8 + isort + black | [packaging-and-tooling.md](references/packaging-and-tooling.md) |
 | Documenting what a data product actually contains | A minimal data contract YAML, versioned with the code | [data-contracts.md](references/data-contracts.md) |
 
 ## Common mistakes
