@@ -53,7 +53,7 @@ This is the real lever for an orchestration decision: run the whole project as o
 
 ## Packages, briefly
 
-`packages.yml` + `dbt deps` pulls in reusable dbt projects (models, macros, tests) — most commonly `dbt-utils` (dbt Labs-maintained: generic tests, introspection macros, SQL generators like `date_spine`). If you reach for `dbt_expectations` (a community package inspired by Great Expectations) for GE-style tests, know that its own README states it's no longer actively maintained — functional and widely used, but check before betting new work on it.
+`packages.yml` + `dbt deps` pulls in reusable dbt projects (models, macros, tests) — most commonly `dbt-utils` (dbt Labs-maintained: generic tests, introspection macros, SQL generators like `date_spine`). If you reach for `dbt_expectations` (a community package inspired by Great Expectations) for GE-style tests, know that its own README states it's no longer actively maintained — confirmed 2026-08-03: last release `0.10.4` (September 2024), last commit December 2024, over 19 months without new code. Functional and widely used, but check before betting new work on it. For the broader policy layer around dbt's own tests — severity, thresholds, quarantining failed rows — see `quality-data-engineering`.
 
 ## Version note
 
