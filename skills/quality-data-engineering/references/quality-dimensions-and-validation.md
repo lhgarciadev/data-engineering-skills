@@ -43,6 +43,8 @@ models:
               field: customer_id
 ```
 
+These same four tests are also the concrete example behind [sql-data-engineering's query-optimization-and-production.md](../../sql-data-engineering/references/query-optimization-and-production.md), which frames them as SQL assertions and covers the adapter-dependent incremental-strategy angle; this file's angle is which quality dimension each one maps to.
+
 Freshness is checked the same way, against a source's `loaded_at_field` compared to a threshold:
 
 ```yaml

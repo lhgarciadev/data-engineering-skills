@@ -66,7 +66,7 @@ For streaming data specifically, Confluent Schema Registry enforces compatibilit
 | `BACKWARD` (default) | New-schema consumers can still read data written with the previous schema | ✔ | ✔ | | |
 | `FORWARD` | Old-schema consumers can still read data written with the new schema | ✔ | ✔ | ✔ | ✔ |
 | `FULL` | Both directions, against the immediately previous schema only | ✔ | ✔ | | |
-| `*_TRANSITIVE` variants | Same guarantee, checked against *every* previous version, not just the last one | | | | |
+| `*_TRANSITIVE` variants | Same guarantee, checked against *every* previous version, not just the last one | same as base mode | same as base mode | same as base mode | same as base mode |
 | `NONE` | Nothing — compatibility checks disabled | — | — | — | — |
 
 Widening or narrowing a scalar type is **not** compatible under `FULL` — it's one-directional (`FORWARD` for widening, `BACKWARD` for narrowing), which contradicts the common assumption that widening a type is always safe on both sides.

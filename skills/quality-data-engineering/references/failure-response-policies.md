@@ -32,11 +32,12 @@ The number `error_if`/`warn_if` compares against is controlled by `fail_calc`, w
 
 ## Quarantine: mark, don't silently drop
 
-None of the three systems below — dbt, AWS Glue Data Quality, Databricks — quarantine data with a single automatic click. All three use the same underlying skeleton: compute a boolean flag per row, then separate based on that flag.
+None of the three systems below — dbt, AWS Glue Data Quality, Databricks — quarantine data with a single automatic click; each requires you to build the separation yourself. AWS Glue and Databricks do it with a per-row boolean flag column, filtered explicitly downstream. dbt does it by materializing failing rows into a separate audit relation instead of filtering the model itself.
 
 dbt's version stores the failing rows from a test, for inspection:
 
 ```yaml
+# dbt_project.yml
 data_tests:
   +store_failures: true
   +store_failures_as: table   # or `view`, or `ephemeral` (default — nothing persisted)
@@ -116,5 +117,5 @@ The right policy for a given check depends on which mistake costs more: aborting
 |---|---|---|
 | Writing `error_if: ">5"` expecting it to mean "5% of rows" | `fail_calc` defaults to `count(*)` — an absolute count, not a percentage | Write an explicit `fail_calc` expression that computes the percentage, or phrase the threshold as an absolute count |
 | Assuming `store_failures` removes bad rows from the model | It stores a copy of what failed, in an audit table — the model itself still builds with all rows unless it filters on the condition itself | Read `store_failures` as "evidence," not "cleanup"; filter explicitly if the model needs to exclude bad rows |
-| Expecting a one-click "quarantine table" feature from any vendor | AWS Glue, Databricks, and dbt all quarantine via a flag column plus explicit filtering — none does it automatically | Plan for writing the flag + filter logic yourself, in whichever of these three systems you're using |
+| Expecting a one-click "quarantine table" feature from any vendor | AWS Glue and Databricks quarantine via a flag column plus explicit filtering; dbt does it by materializing failures into a separate audit relation — none does it automatically | Plan for writing the flag + filter logic yourself (AWS Glue/Databricks), or reading `store_failures` output as evidence, not cleanup (dbt) |
 | Using `StoreValidationResultAction` from an old Great Expectations example | Removed from the current (1.x) API, not just deprecated | Use the 7 current Actions (`UpdateDataDocsAction`, `SlackNotificationAction`, `EmailAction`, `PagerdutyAlertAction`, `MicrosoftTeamsNotificationAction`, `OpsgenieAlertAction`, `SNSNotificationAction`, `APINotificationAction`) |
