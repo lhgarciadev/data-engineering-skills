@@ -6,7 +6,7 @@ These three get reached for interchangeably by people who haven't hit the differ
 
 - **Pydantic** validates individual records/objects: one API payload, one config file, one row treated as a Python object. It's a record-at-a-time boundary check, not built for a dataframe as a whole.
 - **Pandera** validates the dataframe itself: schema, dtypes, cross-column constraints, statistical constraints (value ranges, uniqueness, nullability) — and the same schema definition works across pandas, Polars, Dask, and PySpark. This is the standard choice for "validate this dataframe mid-pipeline."
-- **Great Expectations** is a heavier, org-wide data-quality and documentation platform (expectation suites, data docs, validation checkpoints across many datasets/teams). Usually overkill for validating a single pipeline's output — reach for it when the requirement is organization-wide data quality governance, not a single job's correctness.
+- **Great Expectations** is a heavier, org-wide data-quality and documentation platform (expectation suites, data docs, validation checkpoints across many datasets/teams). Usually overkill for validating a single pipeline's output — reach for it when the requirement is organization-wide data quality governance, not a single job's correctness. Once that requirement is real, `quality-data-engineering` covers Great Expectations' operational mechanics (Checkpoints, Actions) and how it fits into a broader policy of thresholds and quarantine — this file only tells you when to reach for it.
 
 **Rule of thumb**: Pydantic at ingestion boundaries (validate the payload/record as it enters your system), Pandera inside the pipeline (validate the dataframe after transformation, before it's written downstream).
 
