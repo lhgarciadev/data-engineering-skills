@@ -45,7 +45,7 @@ This is genuinely first-class in **Dagster**: it reserves a `dagster/backfill` t
 
 ## Late-arriving data
 
-Backfilling is also the mechanism for absorbing late-arriving data: reprocessing the affected window once delayed data shows up, which connects directly to the late-arriving-fact patterns covered in dimensional modeling.
+Backfilling is also the mechanism for absorbing late-arriving data: reprocessing the affected window once delayed data shows up, which connects directly to the late-arriving-fact patterns covered in [modeling-data-engineering's scd-and-dimension-patterns.md](../../modeling-data-engineering/references/scd-and-dimension-patterns.md#late-arriving-dimensions-and-facts) — reprocessing that window only produces correct numbers if the reprocessing logic looks up the dimension row that was effective at the time, not the dimension's current state at backfill time.
 
 ## The `catchup` "scare" — corrected for current Airflow
 

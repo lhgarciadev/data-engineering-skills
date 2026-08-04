@@ -174,6 +174,8 @@ WHEN NOT MATCHED THEN
 
 Note the `MERGE` form above only closes the old row — it does **not** insert the new version in the same statement (a single `MERGE` can't both update an existing row and insert a fresh row for the same match), so it still needs the `INSERT` from Step 2 run afterward. This is why SCD Type 2 is usually written as the explicit two-statement `UPDATE` + `INSERT` pattern rather than forced into one `MERGE`. Being able to produce this SQL from memory — not just describe validity dates and a current-row flag conceptually — is what separates someone who has built a warehouse from someone who has only queried one.
 
+This is the *implementation* side of SCD Type 2. For the *conceptual* side — when Type 2 is the right call versus Types 0/1/3/4/6, how surrogate keys and late-arriving facts/dimensions fit around it, and how a Type-2 dimension is used elsewhere in a star schema — see the `modeling-data-engineering` skill's [scd-and-dimension-patterns.md](../../modeling-data-engineering/references/scd-and-dimension-patterns.md).
+
 ## Common mistakes
 
 | Mistake | Why it hurts | Fix |
