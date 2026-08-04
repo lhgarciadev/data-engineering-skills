@@ -24,6 +24,8 @@ Write pipelines that can run twice without duplicating or corrupting data. The p
 
 Dagster's partitioned assets (backfill by partition) are the clearest embodiment of this; Airflow relies on `catchup`/backfill plus disciplined idempotent task design; Prefect adds retries with cache-key short-circuiting on top of the same idea. When an interviewer asks "what happens if the job fails halfway and you rerun it?" — this is the answer.
 
+This is the *task* side of idempotency — the code you write inside one task. For the complementary *DAG* side — how the orchestration layer itself (data intervals, partition-parameterized runs, backfill triggering) has to be designed so reprocessing is safe regardless of what's inside any single task — see the `pipelines-architecture-data-engineering` skill's [idempotency-and-backfills.md](../../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md).
+
 ## Incremental extraction: tracking what's new
 
 Idempotent upserts above solve the *write* side of a safe rerun — once you have the changed rows, applying them twice is harmless. They don't solve a different problem: how does the pipeline know *which* rows to pull on this run in the first place? That's the watermark (a.k.a. high-water-mark, or "cursor" in ELT-tool vocabulary) pattern — track the last-seen value of an ever-increasing column (usually `updated_at`, sometimes a monotonic ID/version) from the previous run, and pull only rows past it. The query mechanics live in [sql's engineering-query-patterns.md](../../sql-data-engineering/references/engineering-query-patterns.md); this section is about where that state lives in the pipeline itself, since getting *that* wrong is what actually causes silent data loss.

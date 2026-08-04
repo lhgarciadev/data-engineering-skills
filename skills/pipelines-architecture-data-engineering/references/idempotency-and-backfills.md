@@ -1,6 +1,6 @@
 # Idempotency and Backfills: The Structural Layer
 
-`python-data-engineering` already covers *how* to write idempotent code inside a task — upsert-by-key, partition overwrite. This file covers a different layer: how the *design of the DAG itself*, independent of what's inside any single task, makes reprocessing safe.
+[python-data-engineering's production-patterns.md](../../python-data-engineering/references/production-patterns.md) already covers *how* to write idempotent code inside a task — upsert-by-key, partition overwrite. This file covers a different layer: how the *design of the DAG itself*, independent of what's inside any single task, makes reprocessing safe.
 
 ## Structural idempotency: the window-parameterized task
 
