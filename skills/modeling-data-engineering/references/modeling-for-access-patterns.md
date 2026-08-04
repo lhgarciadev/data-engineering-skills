@@ -1,0 +1,62 @@
+# Modeling for Access Patterns
+
+Every other file in this skill starts from a shape already chosen — a star schema's grain, an SCD type, a Data Vault satellite's history — and works out its consequences. This file asks the question that comes before any of that: what is this data actually for, and how will it be read? The answer can push the model somewhere none of the other files cover at all.
+
+## Model for the access pattern, not just the entity
+
+The same information can legitimately need different shapes for different consumers, and none of them is "more correct" in the abstract — each is correct for the access pattern it serves:
+
+- A **normalized OLTP schema**, for the transactional system taking the order, where write integrity matters more than read convenience (see [star-schema-and-grain.md](star-schema-and-grain.md)'s OLTP-vs-OLAP trade-off).
+- A **dimensional warehouse schema**, for the analyst asking how orders trend by region and quarter, where historical analysis and read performance matter more than write cost.
+- A **denormalized, single-purpose serving store**, for the checkout page that needs one order's full detail back in single-digit milliseconds at storefront concurrency.
+
+Getting this wrong in either direction is the real failure mode: modeling a serving store as if it were a normalized OLTP schema blows its latency budget; modeling an OLTP system as if it were a denormalized serving store reopens the write anomalies normalization exists to prevent. The rest of this file covers shapes access patterns can demand beyond the star schema — a NoSQL serving store, an event-based model, and a time-based model — each justified by what its consumer needs, not by entity structure alone.
+
+## DynamoDB single-table design: the antithesis of normalization, on purpose
+
+AWS's own DynamoDB Developer Guide states the design order as a first principle, not a suggestion: "The first step in designing your DynamoDB application is to identify the specific query patterns that the system must satisfy" — before the schema exists at all. The same page contrasts this directly with relational design: "In RDBMS, you design for flexibility without worrying about implementation details or performance... In DynamoDB, you design your schema specifically to make the most common and important queries as fast and as inexpensive as possible." ([NoSQL design for DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-general-nosql-design.html))
+
+That inversion is deliberate, and AWS names it as such in its own guide on modeling relational data in DynamoDB: normalization's purpose is "to support referential integrity and reduce data anomalies," while "Eliminating the need for JOINs is at the heart of NoSQL data modeling... This is why we built DynamoDB to support Amazon.com, and why DynamoDB can deliver consistent performance at any scale," giving "single-digit, millisecond performance at any scale." ([Best practices for modeling relational data in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-relational-modeling.html)) This isn't a workaround imposed on a weaker engine — it's DynamoDB's stated design goal, framed by AWS itself as the antithesis of the relational model's goal, correct specifically because the access pattern (point lookups, high concurrency, single-digit-millisecond latency) demands it.
+
+Mechanically: keep as few tables as possible ("You should maintain as few tables as possible in a DynamoDB application"), denormalize related entities into that one table, and key every item with a composite primary key — a partition key plus a sort key ([Core components of Amazon DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html)). A Global Secondary Index adds a second access pattern — its own partition/sort key pair, independent of the base table's — without a second table. There is no server-side `JOIN`: every access pattern not served by an existing key structure needs a GSI decided in advance, or it isn't a supported query at all.
+
+(One naming nuance worth flagging: the literal attribute names `PK`/`SK` are common in single-table design examples, but that convention comes from AWS's own Compute Blog, not the Developer Guide, which prefers descriptive attribute names like `PersonID` or `Artist` to explain the same concept.)
+
+## Event modeling and stream-table duality
+
+Kafka's own documentation names this relationship directly: "The stream-table duality describes the close relationship between streams and tables." A stream is "a changelog of a table, where each data record in the stream captures a state change of the table," and is "thus a table in disguise" — replay the changelog from the beginning and you reconstruct the table. Symmetrically, "a table can be considered a snapshot, at a point in time, of the latest value for each key in a stream" — iterate over the table's entries and you get the equivalent stream. ([Kafka Streams core concepts](https://kafka.apache.org/41/streams/core-concepts/), kafka.apache.org)
+
+For modeling purposes, this means an event schema (an immutable record — "order placed," "price changed") and a table schema (the current row for that order or price) are two convertible views of the same underlying data, not two competing designs. The modeling decision is which view a given consumer needs, and which one is the projection.
+
+The concrete mechanism for turning a stream of change events into "current state per key" — keep only the latest record per key, ordered by an event or arrival timestamp — is the same `ROW_NUMBER()`-over-a-CTE dedup pattern already covered in [window-functions.md](../../sql-data-engineering/references/window-functions.md); it isn't re-derived here, only cited as one concrete example of a stream-to-table projection.
+
+Where that stream of change events actually comes from — reading a source database's own transaction log, e.g. Debezium or a vendor binlog/WAL reader — is a capture mechanism, not a modeling concept, and it's out of scope here: it's deferred to a future `streaming-data-engineering` skill. This section stops at the point a change event already exists and needs a schema.
+
+## Event sourcing
+
+Martin Fowler's own definition: event sourcing means you "capture all changes to an application state as a sequence of events." The distinguishing choice, in his own words: "The official system of record can either be the event logs or the current application state" — and once the event log is that system of record, "an application state is purely derivable from the event log, you can cache it anywhere you like." Current state stops being something you maintain and becomes something you compute — a disposable, rebuildable projection over the log, the stream-table duality above applied to an entire application's history rather than one table. ([Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html), martinfowler.com)
+
+Cite it carefully: Fowler's own page is dated December 2005, and he flags it himself as never having left draft form — the material "is very much in draft form." He's also explicit that the pattern has a real cost: "Packaging up every change to an application as an event is an interface style that not everyone is comfortable with, and many find to be awkward." Reach for event sourcing when the full audit trail of state changes is the point, not as a default architecture.
+
+## Bitemporal modeling
+
+Bitemporal modeling tracks two independent time axes per fact — a distinction that comes directly from Christian Jensen and Richard Snodgrass's own paper, "Temporal Data Management" (TimeCenter TR-17, 1997); Snodgrass, a foundational authority in temporal-database research, co-authored it himself. Their own definitions: **valid time** is "the collected times ... when the fact is true in the mini-world" — when something was actually true in the real world being modeled — while **transaction time** is "the time when the fact is current in the database," and "applications with demands for accountability or traceability rely on databases that record transaction time." ([Jensen & Snodgrass, "Temporal Data Management," TR-17](https://timecenter.cs.aau.dk/wp-content/uploads/2022/12/TR-17.pdf))
+
+A table tracking both axes on the same row is bitemporal, and its practical payoff is answering "what did we believe was true, as of a given point in the past" — not just what was true, but what the system itself recorded as true at a given moment, which is exactly the accountability case auditors and regulators ask for. The paper's own worked example (a video-rental record, `CheckedOut`) shows this directly: a row's valid-time span is revised across several transaction-time snapshots as new information arrives, and each earlier transaction-time snapshot still shows precisely what was believed true at that moment, even after later corrections.
+
+This is related to, but distinct from, late-arriving facts, covered in [scd-and-dimension-patterns.md](scd-and-dimension-patterns.md#late-arriving-dimensions-and-facts): a late-arriving fact is about looking up the one dimension row that was effective at a fact's own business date when that fact shows up late. Bitemporal modeling is the more general structure — valid time and transaction time as two independent axes on every row of a table, so any past system belief can be reconstructed, not just the single dimension lookup a late fact needs.
+
+## Data mesh and domain ownership
+
+Modeling isn't decided centrally once access patterns become domain-specific: each domain models and owns its own data product to fit its own consumers — the orders domain might need an OLTP schema plus a dimensional mart, the catalog domain might need a DynamoDB single-table store, and neither needs the other's schema to agree beforehand. [quality-culture-and-governance.md](../../quality-data-engineering/references/quality-culture-and-governance.md) covers Data Mesh's data-as-a-product framing in depth — Dehghani's six qualities and the SLO-not-SLA citation discipline — and that ground isn't repeated here. The angle this file adds is the modeling-specific one: domain ownership means the domain, not a central team, decides which of the shapes in this skill actually fits its own product.
+
+## Common mistakes
+
+| Mistake | Why it hurts | Fix |
+|---|---|---|
+| Normalizing a DynamoDB table like an OLTP schema | Defeats single-table design entirely — there's no server-side `JOIN` to fall back on, so normalization reintroduces the multi-request cost DynamoDB exists to eliminate | Design the composite key around the known query patterns first, entity relationships second |
+| Citing `PK`/`SK` as if they were the Developer Guide's own terminology | The Developer Guide itself uses descriptive attribute names (`PersonID`, `Artist`); `PK`/`SK` as literal attribute names is AWS Compute Blog convention, not the Developer Guide | Use descriptive attribute names, or note the blog-level provenance if using `PK`/`SK` |
+| Teaching CDC capture mechanics (Debezium, WAL/binlog tailing) in an event-modeling discussion | That's ingestion/streaming infrastructure, not modeling, and is explicitly out of scope for this skill | Stay at the modeling layer — event schemas, stream-table duality, projections — and defer capture mechanics to `streaming-data-engineering` |
+| Treating event sourcing as just "publishing events out of a database" | Fowler's own definition requires the event log itself to be the system of record, with state as a derived, disposable projection — not a notification side-channel next to a separately authoritative database | Confirm which store is actually authoritative; if a relational table remains the source of truth, it isn't event sourcing |
+| Conflating bitemporal modeling with late-arriving facts | Related but distinct: bitemporal tracks two independent time axes on every row; late-arriving facts is one dimension lookup at a fact's business date | Reach for bitemporal modeling for "what did we believe was true as of date X" across a table's full history; use the late-arriving-fact pattern for a single delayed fact row |
+| Re-explaining Data Mesh's six qualities or the SLO citation here | Already covered in depth in `quality-culture-and-governance.md` | Cross-link there; add only the modeling-specific angle — domains own their models |
