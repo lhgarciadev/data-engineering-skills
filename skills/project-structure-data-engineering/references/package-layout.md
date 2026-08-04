@@ -14,16 +14,24 @@ my_ingestion_package/
 │   └── __init__.py
 ├── load/              # where the transformed data goes, or a thin wrapper around a shared loader (see below)
 │   └── __init__.py
+├── schemas/           # optional: the source/target contract shape, in code (see data-contracts.md)
+│   ├── source_schema.py    # what extract/ expects to receive
+│   └── target_schema.py    # what load/ expects to write
 └── my_ingestion_package.py   # entrypoint: wires the layers together, nothing else
 tests/
-├── test_extract.py
-├── test_transform.py
-└── test_load.py
+├── conftest.py
+├── unit/              # transform/ — pure logic, static input, no I/O
+│   └── test_transform.py
+└── integration/        # extract/ and load/ — real or mocked connections
+    ├── test_extract.py
+    └── test_load.py
 ```
 
-Put `tests/` at the repo root, as a sibling of `my_ingestion_package/` — not nested inside the importable package — so pytest's `testpaths = ["tests"]` (see `packaging-and-tooling.md`) resolves it correctly from the project root. Mirror it to the source layout: one test file per module at minimum (`test_extract.py` for `extract/`), and a matching subdirectory once a layer itself splits into multiple files (`transform/business_rules.py` → `tests/transform/test_business_rules.py`) — not a single `tests/test_main.py` exercising everything through the entrypoint and nothing else.
+Put `tests/` at the repo root, as a sibling of `my_ingestion_package/` — not nested inside the importable package — so pytest's `testpaths = ["tests"]` (see `packaging-and-tooling.md`) resolves it correctly from the project root. Mirror it to the source layout: one test file per module at minimum (`test_extract.py` for `extract/`), and a matching subdirectory once a layer itself splits into multiple files (`transform/business_rules.py` → `tests/unit/test_business_rules.py`) — not a single `tests/test_main.py` exercising everything through the entrypoint and nothing else. Splitting `tests/` into `unit/` and `integration/` on top of that per-module mirroring is worth it once the distinction is real: `transform/` is pure logic that takes static input and needs no I/O, so it belongs in `unit/`; `extract/` and `load/` cross a real boundary (a database, an API, a bucket) and belong in `integration/`, whether that boundary is mocked or hit for real.
 
-**Why layer by responsibility, not by file type.** A `utils.py`/`helpers.py` file with unrelated functions is a magnet for unrelated growth, hard to test in isolation, and gives a reviewer no signal about what actually changed. `extract/`, `transform/`, and `load/` each answer one question — where does it come from, what do we do to it, where does it go — so a diff to `transform/` alone tells a reviewer exactly what changed about the job's behavior.
+**`schemas/` is optional** — add it once the job actually validates shape at its boundaries (a Pydantic model, a Pandera schema) rather than trusting the source or the transform output blindly. It's the in-code half of a data contract: `source_schema.py` documents and enforces what `extract/` expects to receive, `target_schema.py` does the same for what `load/` produces. See `data-contracts.md` for how this relates to the ownership/consumers metadata that lives in a separate contract YAML, not here.
+
+**Why layer by responsibility, not by file type.** A `utils.py`/`helpers.py` file with unrelated functions is a magnet for unrelated growth, hard to test in isolation, and gives a reviewer no signal about what actually changed. `extract/`, `transform/`, and `load/` each answer one question — where does it come from, what do we do to it, where does it go — so a diff to `transform/` alone tells a reviewer exactly what changed about the job's behavior. The same trap reappears one level up as a generically-named top-level directory — `utils/`, `addons/`, `common/` — sitting as a sibling of `extract/`/`transform`/`load/`. Even if the files inside are individually well-scoped today (a `connectors.py`, a `logger.py`), the directory's vague name is what invites the next unrelated addition, because it's always technically "transversal enough" to belong there. Assign each file to the layer it actually serves instead: a source connector is part of `extract/`'s contract with the source, a destination connector is part of `load/`'s contract with the destination, and job-wide config (like logging setup) belongs in `config/`. Reach for a real shared module only once a second or third job needs the exact same mechanics — see "Pattern: thin job over a shared library" below.
 
 The entrypoint script should do one thing: call each layer in order, then commit/return. If the entrypoint contains business logic — a conditional based on data content, a calculation, a filter — that logic has leaked out of `transform/` and belongs back inside it.
 
@@ -152,6 +160,7 @@ Once the decision is "yes, build an API," structure the service itself with rout
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | A `utils.py`/`helpers.py` grab-bag instead of `extract`/`transform`/`load` | Hard to test in isolation, no signal in a diff about what actually changed | Layer by responsibility — see above |
+| A top-level `utils/` or `addons/` directory holding well-named files (`connectors.py`, `logger.py`) | The directory's vague name — not its current contents — invites the next unrelated file to land there | Move each file to the layer it serves (`extract/`, `load/`, `config/`), or extract a real shared library once reused |
 | Business logic living in the entrypoint script | Untestable without running the whole job; hidden from anyone reading `transform/` | Keep the entrypoint to wiring only; move logic into `transform/` |
 | Copying extract/load mechanics into every new job package | Ten near-identical copies drift out of sync over time | Extract a shared, versioned library once a second job needs the same mechanics |
 | Caching a table-existence check for the whole process | A table created earlier in the same run still reads as "doesn't exist," causing a duplicate-create attempt | Track what this run has created and let it override the cache |

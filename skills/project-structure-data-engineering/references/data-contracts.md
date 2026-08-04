@@ -27,7 +27,7 @@ A contract that starts with most fields as empty lists is still worth creating, 
 ## What belongs here vs. elsewhere
 
 - **Ownership and dependency metadata** (this file): who owns it, who consumes it, what it depends on.
-- **The actual schema** (in code, not here): keep column-level types and descriptions next to the transformation code that produces them — see `package-layout.md`. Reference the schema from the contract once it's stable, don't duplicate it field-by-field in YAML.
+- **The actual schema** (in code, not here): keep column-level types and descriptions next to the transformation code that produces them — a `schemas/` directory with `source_schema.py`/`target_schema.py`, see `package-layout.md`. Reference the schema from the contract once it's stable, don't duplicate it field-by-field in YAML.
 - **The architectural decision of how this data is served** (warehouse table, API, stream, export): [pipelines-architecture-data-engineering's serving-pipeline-output.md](../../pipelines-architecture-data-engineering/references/serving-pipeline-output.md), not this file.
 
 ## Common mistakes

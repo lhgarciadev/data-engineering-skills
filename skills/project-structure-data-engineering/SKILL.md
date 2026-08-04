@@ -24,6 +24,7 @@ How to lay out a new data engineering package — from its directory structure t
 | Concern | Reach for | Reference |
 |---|---|---|
 | Laying out a new ingestion/transformation package | `config`/`extract`/`transform`/`load` layers, tests mirrored 1:1 | [package-layout.md](references/package-layout.md) |
+| Validating shape at the package's source/target boundaries | An optional `schemas/` layer (`source_schema.py`/`target_schema.py`) — the in-code half of a data contract | [package-layout.md](references/package-layout.md) |
 | Deciding where the orchestrator's DAG file lives relative to the job | Sibling top-level folder (e.g. `airflow/dags/`), not nested inside the job package | [package-layout.md](references/package-layout.md) |
 | Reusing ETL mechanics across many similar jobs | A thin job package over a shared, versioned library | [package-layout.md](references/package-layout.md) |
 | Running the same job against production and a local/dev environment | Strategy pattern behind one entrypoint switch | [package-layout.md](references/package-layout.md) |
@@ -42,6 +43,7 @@ How to lay out a new data engineering package — from its directory structure t
 | Mistake | Why it hurts | Fix |
 |---|---|---|
 | A `utils.py`/`helpers.py` grab-bag instead of `extract`/`transform`/`load` | Hard to test in isolation, no signal in a diff about what actually changed | Layer by responsibility; see [package-layout.md](references/package-layout.md) |
+| A top-level `utils/` or `addons/` directory, even with well-named files inside | The directory's vague name invites the next unrelated file, regardless of today's contents | Move each file to the layer it serves; see [package-layout.md](references/package-layout.md) |
 | Nesting the DAG file inside the job package, or putting business logic in it | Blurs the job/orchestration boundary; a DAG with real logic is hard to test outside Airflow | Keep DAGs in their own sibling folder, wiring-only; see [package-layout.md](references/package-layout.md) |
 | Caching a table-existence check for the whole process | A table created earlier in the same run still reads as "doesn't exist," causing a duplicate-create attempt | Track what this run has created and let it override the cache; see [package-layout.md](references/package-layout.md) |
 | Committing both a `poetry.lock` and a `uv.lock` in the same package | Two sources of truth for resolved versions, silently drifting apart | Pick one tool for the whole package; see [packaging-and-tooling.md](references/packaging-and-tooling.md) |
