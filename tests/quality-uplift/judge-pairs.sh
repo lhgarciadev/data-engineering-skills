@@ -51,10 +51,19 @@ for with_txt in "$RUN"/*.with.rep*.txt; do
     else first="with"; a="$with_txt"; b="$without_txt"; fi
 
     raw="$(judge_once "$a" "$b")"
-    [[ -n "$raw" ]] || { echo "  judge failed $id rep$rep jr$jr" >&2; continue; }
+    [[ -n "$raw" ]] || { echo "  judge empty $id rep$rep jr$jr" >&2
+                         printf '%s\t%s\t%s\tempty reply\n' "$id" "$rep" "$jr" \
+                           >> "$RUN/judge-failures.tsv"; continue; }
 
     # Map the blind A/B labels back to arms.
-    echo "$raw" | jq -c --arg id "$id" --arg rep "$rep" --arg jr "$jr" --arg first "$first" '
+    #
+    # The jq result is captured and checked rather than appended straight to the
+    # file. A judge reply that is truncated but non-empty — a timeout mid-JSON —
+    # passes the emptiness check above and then parses to nothing. Without this
+    # guard the row vanishes from judgments.jsonl while the success line below
+    # still prints, and the analysis cannot tell a lost row from a legitimate
+    # skip. `set -uo pipefail` has no -e, so the failure would not stop the loop.
+    row="$(echo "$raw" | jq -c --arg id "$id" --arg rep "$rep" --arg jr "$jr" --arg first "$first" '
       if $first == "with"
       then {id:$id, rep:($rep|tonumber), judge_rep:($jr|tonumber), first:$first,
             with:.a, without:.b,
@@ -64,9 +73,21 @@ for with_txt in "$RUN"/*.with.rep*.txt; do
             with:.b, without:.a,
             more_useful:(if .more_useful=="B" then "with" elif .more_useful=="A" then "without" else "tie" end),
             reason:.reason}
-      end' >> "$RUN/judgments.jsonl"
+      end')" || row=""
+
+    if [[ -z "$row" ]]; then
+      printf '%s\t%s\t%s\tunparseable reply\n' "$id" "$rep" "$jr" \
+        >> "$RUN/judge-failures.tsv"
+      echo "  judge unparseable $id rep$rep jr$jr — recorded, row dropped" >&2
+      continue
+    fi
+
+    printf '%s\n' "$row" >> "$RUN/judgments.jsonl"
     echo "  judged $id rep$rep jr$jr first=$first" >&2
   done
 done
 
 wc -l < "$RUN/judgments.jsonl" | xargs -I{} echo "judgments: {}" >&2
+if [[ -s "$RUN/judge-failures.tsv" ]]; then
+  wc -l < "$RUN/judge-failures.tsv" | xargs -I{} echo "judge failures: {}" >&2
+fi
