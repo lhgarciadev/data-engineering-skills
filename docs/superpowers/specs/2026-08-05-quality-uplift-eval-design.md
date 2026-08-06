@@ -81,9 +81,17 @@ contra ruido. Esos samples se descartan y se vuelven a tirar, hasta un máximo d
 reintentos por sample. Si un caso no logra 3 samples válidos, se reporta como
 **no medible** en lugar de rellenarse con samples inválidos.
 
-Al brazo SIN no se le aplica ningún filtro: su comportamiento natural — incluyendo que
+Al brazo SIN no se le aplica **gate de ruteo**: su comportamiento natural — incluyendo que
 una skill de proceso de superpowers responda por él — es precisamente el contrafáctico
-que interesa medir.
+que interesa medir, y descartar una respuesta por no haber cargado una skill destruiría
+esa medición.
+
+Lo que sí aplica a **ambos** brazos es un piso de no-vacío. Una respuesta de 0 bytes no es
+un contrafáctico: es un fallo de infraestructura — un `timeout` que mató el proceso, o un
+log sin evento `result`. Aceptarla produciría una muestra indistinguible de una válida que
+el análisis promediaría. Los samples vacíos se descartan y se reintentan bajo el mismo
+límite de 3 intentos, y quedan registrados en `discards.tsv` con `EMPTY` en la columna de
+cadena.
 
 ### 4.3 Repeticiones
 
