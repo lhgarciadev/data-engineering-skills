@@ -30,3 +30,14 @@ pipelines-architecture and stopping there. The trigger added to that skill —
 blurred the python/pipelines boundary it is supposed to respect. Not a clean
 comparison (pre-edit D5 was 3/3 on sonnet, this is opus), so re-run D5 with more
 reps on both models before acting.
+
+## Frontmatter cap trim, opus, 3 reps
+
+modeling-data-engineering went 1132 -> 997 characters by dropping
+coverage-inventory prose. Regression check, including the boundary clause that
+was shortened (D3 must still route SCD Type 2 SQL to sql-data-engineering):
+
+ID    HITS     VERDICT  POSITIONS    CHAINS
+D3    3/3      PASS     1,1,1        sql-data-engineering sql-data-engineering sql-data-engineeri
+D7    3/3      PASS     1,1,1        modeling-data-engineering modeling-data-engineering modeling
+P4    3/3      PASS     1,1,1        modeling-data-engineering modeling-data-engineering modeling
