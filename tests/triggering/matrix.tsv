@@ -1,0 +1,20 @@
+ID	CATEGORY	EXPECTED	PROMPT
+P1	positive	python-data-engineering	Mi pipeline de ETL en Python se come toda la RAM cuando proceso un CSV de 40GB. ¿Cómo lo arreglo?
+P2	positive	sql-data-engineering	This Postgres query with three window functions takes 8 minutes. Help me optimize it.
+P3	positive	spark-data-engineering	My PySpark job has one task that takes 40x longer than all the others. The rest finish fast.
+P4	positive	modeling-data-engineering	Tengo una fact table de ventas y no sé si declarar el grano a nivel de línea de pedido o de pedido completo. ¿Cómo lo decido?
+P5	positive	pipelines-architecture-data-engineering	Necesito decidir entre Airflow y Dagster para orquestar unos 200 DAGs. ¿Cuál elijo y por qué?
+P6	positive	quality-data-engineering	¿Qué hago cuando un check de calidad falla en producción: tumbo el pipeline o mando los registros a cuarentena?
+P7	positive	project-structure-data-engineering	Voy a arrancar un paquete nuevo de ingesta en Python. ¿Poetry o uv, y cómo organizo las carpetas?
+P8	positive	data-engineering	Quiero diseñar de cero una plataforma de datos end-to-end: ingesta, modelado, calidad y orquestación. ¿Por dónde arranco?
+D1	discriminator	pipelines-architecture-data-engineering	¿Cómo estructuro las carpetas de mi proyecto dbt entre staging, intermediate y marts?
+D2	discriminator	quality-data-engineering|project-structure-data-engineering	Necesito escribir un data contract para el feed de pagos. ¿Qué debe llevar?
+D3	discriminator	sql-data-engineering	Dame el MERGE de SQL para implementar SCD Type 2 sobre una tabla de clientes en Snowflake.
+D4	discriminator	python-data-engineering	¿Uso Pydantic o Pandera para validar este dataframe antes de escribirlo?
+D5	discriminator	python-data-engineering	¿Cómo hago que la función que escribe en S3 dentro de mi task sea idempotente si se reintenta?
+D6	discriminator	NONE	Tengo un job de Spark Structured Streaming y el micro-batch se está atrasando con backpressure.
+D7	discriminator	modeling-data-engineering	¿Star schema o una tabla ancha denormalizada para la capa de consumo en BigQuery?
+N1	negative	NONE	Arregla el CSS grid de mi componente React de dashboard, las cards se desbordan en móvil.
+N2	negative	NONE	Escribime un Dockerfile multi-stage para una API de Node.
+N3	negative	NONE	¿Cómo hago un rebase interactivo en git para aplastar los últimos 5 commits?
+N4	negative	NONE	Necesito un decorador en Python que cachee los resultados de una función de fibonacci.

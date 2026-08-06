@@ -1,0 +1,13 @@
+ID	CATEGORY	EXPECTED	PROMPT
+A1	no-vocab	quality-data-engineering	Los números del reporte de ventas no cuadran con el sistema origen y nadie se dio cuenta hasta que el cliente reclamó. ¿Cómo evito que vuelva a pasar?
+A2	no-vocab	pipelines-architecture-data-engineering	Relancé el proceso de ayer y ahora hay registros duplicados. ¿Qué hice mal?
+A3	no-vocab	modeling-data-engineering	El equipo de negocio pide ver las ventas por vendedor, pero los vendedores cambian de zona cada trimestre y quieren ver la historia como era en su momento.
+A4	no-vocab	spark-data-engineering	Tengo un job que procesa una tabla de 2 mil millones de filas en un clúster. Arranca rápido, y al final se queda pegado horas en una sola tarea mientras el resto ya terminó.
+A5	lure	spark-data-engineering|sql-data-engineering	Mi query de Spark SQL con varias window functions se demora muchísimo. ¿Cómo la acelero?
+A6	lure	python-data-engineering|sql-data-engineering	Estoy escribiendo un script de Python que corre un UPDATE masivo en Postgres y se cae por timeout.
+A7	lure	modeling-data-engineering|pipelines-architecture-data-engineering	¿En qué capa del medallion pongo las dimensiones conformadas y cómo las materializo en dbt?
+A8	gap-streaming	NONE	Necesito consumir un topic de Kafka con exactly-once y escribir en Delta. ¿Cómo lo monto?
+A9	gap-iac	NONE	Necesito el Terraform para levantar un warehouse en Snowflake con sus roles y warehouses de cómputo.
+A10	multi-domain	data-engineering	Heredé un pipeline que nadie documentó: mueve datos de Oracle a S3, hay unos scripts de Spark, un dbt a medias y cero tests. Necesito ponerlo presentable.
+A11	adjacent-trap	NONE|pipelines-architecture-data-engineering	Necesito exponer los datos del warehouse como una API REST para que la app móvil los consuma.
+A12	adjacent-trap	NONE	¿Cómo entreno un modelo de forecasting de demanda con los datos históricos de ventas?
