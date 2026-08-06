@@ -30,6 +30,7 @@
 | `tests/quality-uplift/cases.tsv` | 7 cases: ID, SKILL, PROMPT |
 | `tests/quality-uplift/rubric.md` | Judge instructions + rubric. Fed verbatim into the judge prompt. |
 | `tests/quality-uplift/generate-answers.sh` | Both arms, n reps, validity gate, per-answer metadata |
+| `tests/quality-uplift/check-generate.sh` | Acceptance check for the above: outputs, gate, ablation, leaks |
 | `tests/quality-uplift/judge-pairs.sh` | Blind pairwise judging, fixed order schedule, JSON out |
 | `tests/quality-uplift/analyze.sh` | Per-skill deltas, length correlation, judge agreement |
 | `tests/quality-uplift/README.md` | Methodology, how to run, what invalidates a run |
