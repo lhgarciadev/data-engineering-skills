@@ -587,13 +587,25 @@ CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 # confident average over the partial data, and the agreement section renders
 # blank. A report whose job is to say when the numbers cannot be trusted must not
 # have a silent truncation path of its own.
+# The check is schema completeness, not just parseability. A line that parses but
+# lacks `.with` makes `.with|add` yield null: the coherence section renders blank
+# and the case's whole row disappears from the uplift table — while a
+# parseability-only validator counts zero rejections and vouches for the data.
+JUDGMENT_SCHEMA='
+  def scores_ok:
+    type == "object"
+    and has("mechanism") and has("actionable") and has("specific") and has("tradeoff")
+    and ([.mechanism, .actionable, .specific, .tradeoff] | all(type == "number"));
+  has("id") and has("rep") and has("judge_rep") and has("more_useful")
+  and (.with | scores_ok) and (.without | scores_ok)
+'
 JUDGMENTS="$RUN/.judgments.valid.jsonl"
 malformed=0
 : > "$JUDGMENTS"
 if [[ -f "$RUN/judgments.jsonl" ]]; then
   while IFS= read -r line; do
     [[ -z "${line// }" ]] && continue
-    if printf '%s\n' "$line" | jq -e . >/dev/null 2>&1; then
+    if printf '%s\n' "$line" | jq -e "$JUDGMENT_SCHEMA" >/dev/null 2>&1; then
       printf '%s\n' "$line" >> "$JUDGMENTS"
     else
       malformed=$((malformed + 1))
@@ -754,6 +766,22 @@ printf 'Y\twith\t1\tonly\tfour\tfields\n' > /tmp/qa-meta/Y.with.rep1.meta
 ./analyze.sh /tmp/qa-meta | grep -A3 "Malformed input"
 ```
 Expected: the first reports 1 unparseable judgments line, and the per-skill row for `CAL`'s case is still computed from the surviving valid rows rather than vanishing. The second reports 2 rejected `.meta` files. If either count comes back `0`, the counter is being incremented in a subshell and is lost — that is the failure this restructuring exists to prevent.
+
+Then prove the validator rejects on schema, not only on syntax. This line is valid
+JSON and would pass a parseability-only check:
+
+```bash
+cd tests/quality-uplift
+rm -rf /tmp/qa-schema && cp -r results/smoke /tmp/qa-schema
+printf '{"id":"P4","rep":1,"judge_rep":4,"first":"with","without":{"mechanism":2,"actionable":2,"specific":2,"tradeoff":2},"more_useful":"with"}\n' \
+  >> /tmp/qa-schema/judgments.jsonl
+./analyze.sh /tmp/qa-schema | sed -n '/Uplift per skill/,/^## Score/p;/Malformed input/,$p'
+```
+Expected: `unparseable judgments.jsonl lines: 1`, and the `P4` row still present with its
+numbers computed from the valid rows. The line above is missing `.with`, so a
+parseability-only validator would admit it, `.with|add` would yield null, and the P4 row
+would silently vanish from the table while the counter still read `0` — a report claiming
+the data is clean while having dropped a row.
 
 Finally, prove the agreement grouping separates answer samples:
 
