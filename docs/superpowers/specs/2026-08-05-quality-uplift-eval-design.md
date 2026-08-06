@@ -150,8 +150,11 @@ contexto.
 
 - Score por caso, brazo y rep, más el delta por skill.
 - Correlación score↔longitud sobre todos los pares.
-- Tasa de descarte por §4.2, por caso.
+- Tasa de descarte por §4.2, por caso, distinguiendo miss de ruteo de respuesta vacía.
 - Concordancia entre reps de juicio, como medida de confiabilidad del juez.
+- Juicios perdidos porque la respuesta del juez llegó vacía o no parseable. Una fila
+  perdida significa que un caso se promedió sobre menos reps de los que la tabla
+  sugiere, así que tiene que quedar contabilizada y no desaparecer.
 
 El digest para commitear va a `tests/quality-uplift/baselines/`, siguiendo la convención
 de `tests/triggering/`: los logs crudos quedan gitignorados por volumen y son

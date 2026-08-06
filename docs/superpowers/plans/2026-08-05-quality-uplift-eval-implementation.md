@@ -383,6 +383,10 @@ git commit -m "test(quality-uplift): generate answers in both arms with a validi
   `rep` is the answer-sample number; `judge_rep` is which of the three judging
   passes produced this row. The `A`/`B` labels the judge sees are mapped back to
   arms before writing. Task 4 reads this file.
+- Also produces `judge-failures.tsv` when a judge reply is empty or unparseable:
+  one tab-separated line of `ID`, `rep`, `judge_rep`, reason. A dropped row must be
+  accounted for somewhere, or the analysis silently averages over fewer reps than it
+  reports. Task 4 surfaces the count.
 
 - [ ] **Step 1: Write the script**
 
@@ -442,10 +446,19 @@ for with_txt in "$RUN"/*.with.rep*.txt; do
     else first="with"; a="$with_txt"; b="$without_txt"; fi
 
     raw="$(judge_once "$a" "$b")"
-    [[ -n "$raw" ]] || { echo "  judge failed $id rep$rep jr$jr" >&2; continue; }
+    [[ -n "$raw" ]] || { echo "  judge empty $id rep$rep jr$jr" >&2
+                         printf '%s\t%s\t%s\tempty reply\n' "$id" "$rep" "$jr" \
+                           >> "$RUN/judge-failures.tsv"; continue; }
 
     # Map the blind A/B labels back to arms.
-    echo "$raw" | jq -c --arg id "$id" --arg rep "$rep" --arg jr "$jr" --arg first "$first" '
+    #
+    # The jq result is captured and checked rather than appended straight to the
+    # file. A judge reply that is truncated but non-empty — a timeout mid-JSON —
+    # passes the emptiness check above and then parses to nothing. Without this
+    # guard the row vanishes from judgments.jsonl while the success line below
+    # still prints, and the analysis cannot tell a lost row from a legitimate
+    # skip. `set -uo pipefail` has no -e, so the failure would not stop the loop.
+    row="$(echo "$raw" | jq -c --arg id "$id" --arg rep "$rep" --arg jr "$jr" --arg first "$first" '
       if $first == "with"
       then {id:$id, rep:($rep|tonumber), judge_rep:($jr|tonumber), first:$first,
             with:.a, without:.b,
@@ -455,12 +468,24 @@ for with_txt in "$RUN"/*.with.rep*.txt; do
             with:.b, without:.a,
             more_useful:(if .more_useful=="B" then "with" elif .more_useful=="A" then "without" else "tie" end),
             reason:.reason}
-      end' >> "$RUN/judgments.jsonl"
+      end')" || row=""
+
+    if [[ -z "$row" ]]; then
+      printf '%s\t%s\t%s\tunparseable reply\n' "$id" "$rep" "$jr" \
+        >> "$RUN/judge-failures.tsv"
+      echo "  judge unparseable $id rep$rep jr$jr — recorded, row dropped" >&2
+      continue
+    fi
+
+    printf '%s\n' "$row" >> "$RUN/judgments.jsonl"
     echo "  judged $id rep$rep jr$jr first=$first" >&2
   done
 done
 
 wc -l < "$RUN/judgments.jsonl" | xargs -I{} echo "judgments: {}" >&2
+if [[ -s "$RUN/judge-failures.tsv" ]]; then
+  wc -l < "$RUN/judge-failures.tsv" | xargs -I{} echo "judge failures: {}" >&2
+fi
 ```
 
 - [ ] **Step 2: Calibration test — does the judge discriminate at all?**
@@ -540,8 +565,8 @@ git commit -m "test(quality-uplift): add blind pairwise judging with calibration
 - Create: `tests/quality-uplift/analyze.sh`
 
 **Interfaces:**
-- Consumes: `judgments.jsonl` and `*.meta` from the run directory.
-- Produces: a markdown report on stdout with five sections — per-skill uplift, score-vs-length correlation, judge agreement, judge coherence, and discard rate.
+- Consumes: `judgments.jsonl`, `*.meta`, `discards.tsv`, and `judge-failures.tsv` from the run directory.
+- Produces: a markdown report on stdout with six sections — per-skill uplift, score-vs-length correlation, judge agreement, judge coherence, discards, and judge failures.
 
 - [ ] **Step 1: Write the script**
 
@@ -630,9 +655,21 @@ echo
 
 echo "## Discards"
 echo
-echo "with-arm samples rejected because the expected skill never fired:"
+echo "Samples rejected — with-arm routing misses, plus empty answers in either arm:"
 if [[ -s "$RUN/discards.tsv" ]]; then
-  awk -F'\t' '{c[$1]++} END{for (k in c) printf "  %s: %d\n", k, c[k]}' "$RUN/discards.tsv"
+  awk -F'\t' '{c[$1"\t"$5]++} END{for (k in c) {split(k,p,"\t"); printf "  %s (%s): %d\n", p[1], p[2], c[k]}}' \
+    "$RUN/discards.tsv"
+else
+  echo "  none"
+fi
+echo
+
+echo "## Judge failures"
+echo
+echo "Judgments dropped because the judge reply was empty or unparseable. A dropped"
+echo "row means a case was averaged over fewer reps than the table implies."
+if [[ -s "$RUN/judge-failures.tsv" ]]; then
+  awk -F'\t' '{printf "  %s rep%s jr%s: %s\n", $1, $2, $3, $4}' "$RUN/judge-failures.tsv"
 else
   echo "  none"
 fi
