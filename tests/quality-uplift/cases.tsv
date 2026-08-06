@@ -1,0 +1,8 @@
+ID	SKILL	PROMPT
+P1	python-data-engineering	Mi pipeline de ETL en Python se come toda la RAM cuando proceso un CSV de 40GB. ¿Cómo lo arreglo?
+P2	sql-data-engineering	This Postgres query with three window functions takes 8 minutes. Help me optimize it.
+A4	spark-data-engineering	Tengo un job que procesa una tabla de 2 mil millones de filas en un clúster. Arranca rápido, y al final se queda pegado horas en una sola tarea mientras el resto ya terminó.
+P4	modeling-data-engineering	Tengo una fact table de ventas y no sé si declarar el grano a nivel de línea de pedido o de pedido completo. ¿Cómo lo decido?
+A2	pipelines-architecture-data-engineering	Relancé el proceso de ayer y ahora hay registros duplicados. ¿Qué hice mal?
+A1	quality-data-engineering	Los números del reporte de ventas no cuadran con el sistema origen y nadie se dio cuenta hasta que el cliente reclamó. ¿Cómo evito que vuelva a pasar?
+P7	project-structure-data-engineering	Voy a arrancar un paquete nuevo de ingesta en Python. ¿Poetry o uv, y cómo organizo las carpetas?
