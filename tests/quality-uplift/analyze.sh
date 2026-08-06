@@ -14,13 +14,25 @@ CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 # confident average over the partial data, and the agreement section renders
 # blank. A report whose job is to say when the numbers cannot be trusted must not
 # have a silent truncation path of its own.
+# The check is schema completeness, not just parseability. A line that parses but
+# lacks `.with` makes `.with|add` yield null: the coherence section renders blank
+# and the case's whole row disappears from the uplift table — while a
+# parseability-only validator counts zero rejections and vouches for the data.
+JUDGMENT_SCHEMA='
+  def scores_ok:
+    type == "object"
+    and has("mechanism") and has("actionable") and has("specific") and has("tradeoff")
+    and ([.mechanism, .actionable, .specific, .tradeoff] | all(type == "number"));
+  has("id") and has("rep") and has("judge_rep") and has("more_useful")
+  and (.with | scores_ok) and (.without | scores_ok)
+'
 JUDGMENTS="$RUN/.judgments.valid.jsonl"
 malformed=0
 : > "$JUDGMENTS"
 if [[ -f "$RUN/judgments.jsonl" ]]; then
   while IFS= read -r line; do
     [[ -z "${line// }" ]] && continue
-    if printf '%s\n' "$line" | jq -e . >/dev/null 2>&1; then
+    if printf '%s\n' "$line" | jq -e "$JUDGMENT_SCHEMA" >/dev/null 2>&1; then
       printf '%s\n' "$line" >> "$JUDGMENTS"
     else
       malformed=$((malformed + 1))
