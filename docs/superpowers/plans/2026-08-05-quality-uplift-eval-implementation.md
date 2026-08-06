@@ -137,7 +137,62 @@ git commit -m "test(quality-uplift): add case set and judging rubric"
 
   Task 3 reads the `.txt` files. Task 4 reads the `.meta` and `discards.tsv` files.
 
-- [ ] **Step 1: Write the script**
+- [ ] **Step 1: Write the acceptance check**
+
+The deliverable here is a script, so the failing test is an acceptance check that
+asserts on its observable outputs. Write it first, at
+`tests/quality-uplift/check-generate.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Acceptance check for generate-answers.sh. Asserts on observable outputs only.
+set -uo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")"
+RUN="results/acceptance"
+fail=0
+note() { printf '%s %s\n' "$1" "$2"; [[ "$1" == "FAIL" ]] && fail=1; }
+
+rm -rf "$RUN"
+./generate-answers.sh -c P4 -r 1 -o "$RUN" >/dev/null 2>&1
+
+[[ -s "$RUN/P4.with.rep1.txt" ]] \
+  && note PASS "with-arm answer is non-empty" \
+  || note FAIL "with-arm answer missing or empty"
+
+[[ -s "$RUN/P4.without.rep1.txt" ]] \
+  && note PASS "without-arm answer is non-empty" \
+  || note FAIL "without-arm answer missing or empty"
+
+if [[ -f "$RUN/P4.with.rep1.meta" ]]; then
+  IFS=$'\t' read -r _id _arm _rep chain chars _t _c _a < "$RUN/P4.with.rep1.meta"
+  [[ ",$chain," == *",modeling-data-engineering,"* ]] \
+    && note PASS "validity gate accepted: expected skill in chain ($chain)" \
+    || note FAIL "expected skill not in chain ($chain)"
+  [[ "$chars" -gt 200 ]] \
+    && note PASS "answer length recorded ($chars chars)" \
+    || note FAIL "answer length implausible ($chars)"
+else
+  note FAIL "with-arm meta missing"
+fi
+
+cut -f4 "$RUN/P4.without.rep1.meta" 2>/dev/null | grep -q "data-engineering" \
+  && note FAIL "without-arm loaded a suite skill — ablation broken" \
+  || note PASS "without-arm loaded no suite skill"
+
+grep -l "qprobe-\|cases.tsv\|EXPECTED" "$RUN"/*.txt >/dev/null 2>&1 \
+  && note FAIL "scaffolding leaked into an answer" \
+  || note PASS "no scaffolding leak"
+
+exit $fail
+```
+
+- [ ] **Step 2: Run the acceptance check and watch it fail**
+
+Run: `cd tests/quality-uplift && chmod +x check-generate.sh && ./check-generate.sh`
+Expected: exits non-zero with `FAIL` lines — `generate-answers.sh` does not exist yet,
+so no answers, no meta files.
+
+- [ ] **Step 3: Write the script**
 
 ```bash
 #!/usr/bin/env bash
@@ -150,7 +205,7 @@ git commit -m "test(quality-uplift): add case set and judging rubric"
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CASES="$SCRIPT_DIR/cases.tsv"
+CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"   # overridable so the gate test can inject a fixture
 PLUGIN_ID="dataforge@skills-dir"
 ANSWER_MODEL="opus"
 REPS=3
@@ -254,31 +309,30 @@ echo "run=$RUN" >&2
 ls "$RUN"/*.meta 2>/dev/null | wc -l | xargs -I{} echo "accepted samples: {}" >&2
 ```
 
-- [ ] **Step 2: Verify it fails before the script exists**
-
-Run: `cd tests/quality-uplift && ./generate-answers.sh -c P4 -r 1`
-Expected before Step 1 is applied: `bash: ./generate-answers.sh: No such file or directory`.
-
-- [ ] **Step 3: Smoke-test one case, one rep, both arms**
+- [ ] **Step 4: Run the acceptance check and watch it pass**
 
 ```bash
 cd tests/quality-uplift && chmod +x generate-answers.sh
-./generate-answers.sh -c P4 -r 1 -o results/smoke
+./check-generate.sh; echo "exit=$?"
 ```
-Expected: two `ok` lines. `results/smoke/P4.with.rep1.meta` chain contains `modeling-data-engineering`; `results/smoke/P4.without.rep1.meta` exists with any chain.
+Expected: every line `PASS`, `exit=0`. This one run covers the answer extraction, the
+validity gate accepting, the length metadata, the ablation holding in the without-arm,
+and the absence of scaffolding leaks.
 
-- [ ] **Step 4: Verify the three contamination guards actually hold**
+If the with-arm assertion fails because `modeling-data-engineering` did not fire, that is
+a real routing miss, not a harness bug — re-run once. P4 is 5/5 in
+`tests/triggering/baselines/GREEN-crowd-out.md`, so a repeated miss means something
+changed in the suite and must be reported, not worked around.
+
+- [ ] **Step 5: Produce the smoke run that Task 3 and Task 4 consume**
 
 ```bash
 cd tests/quality-uplift
-# The answer must not mention the sandbox path or the case file.
-grep -l "qprobe-\|cases.tsv\|EXPECTED" results/smoke/*.txt || echo "no scaffolding leak"
-# The without-arm must not have loaded any dataforge skill.
-cut -f4 results/smoke/P4.without.rep1.meta
+./generate-answers.sh -c P4 -r 1 -o results/smoke
 ```
-Expected: `no scaffolding leak`, and the without-arm chain contains no `dataforge`/domain skill name.
+Expected: two `ok` lines, and four files — `P4.{with,without}.rep1.{txt,meta}`.
 
-- [ ] **Step 5: Verify the validity gate rejects, not just accepts**
+- [ ] **Step 6: Verify the validity gate rejects, not just accepts**
 
 Force a rejection by asking for a skill the case can never trigger:
 ```bash
@@ -289,12 +343,14 @@ CASES=/tmp/gate-test.tsv ./generate-answers.sh -c GATE -r 1 -n 1 -o results/gate
 ```
 Expected: a `discard` line and an `UNMEASURABLE` line, and `results/gate/GATE.with.rep1.meta` must not exist.
 
-Note: the script reads `$CASES` from its own directory, so this step requires `CASES` to be overridable. If it is not, add `CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"` to the script and re-run.
+This step is the one that matters most in this task. A gate that only ever accepts is not
+a gate, and an eval that silently averages in samples where the skill never fired would
+understate exactly what it is trying to measure.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add tests/quality-uplift/generate-answers.sh
+git add tests/quality-uplift/generate-answers.sh tests/quality-uplift/check-generate.sh
 git commit -m "test(quality-uplift): generate answers in both arms with a validity gate"
 ```
 
