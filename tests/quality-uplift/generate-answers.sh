@@ -85,8 +85,20 @@ while IFS=$'\t' read -r id skill prompt; do
       for (( att=1; att<=MAX_ATTEMPTS; att++ )); do
         read -r chain chars toks cost < <(probe "$prompt" "$arm" "$tag" "$RUN/$tag.txt")
 
-        # The without-arm has no validity gate: its natural behaviour, including a
-        # superpowers process skill answering instead, is the counterfactual.
+        # Non-emptiness floor, both arms. An empty answer is an infrastructure
+        # failure, not a measurement: a timeout kill or a log with no result
+        # event leaves a 0-byte file that would otherwise be written up as a
+        # well-formed sample and averaged in as if it were a real answer.
+        if [[ ! -s "$RUN/$tag.txt" ]]; then
+          printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$arm" "$rep" "$att" "EMPTY" \
+            >> "$RUN/discards.tsv"
+          echo "  discard $tag attempt $att: empty answer" >&2
+          continue
+        fi
+
+        # The without-arm has no ROUTING gate: its natural behaviour, including a
+        # superpowers process skill answering instead, is the counterfactual, and
+        # rejecting a sample for not loading a skill would destroy it.
         if [[ "$arm" == "without" ]]; then accepted=1; break; fi
 
         if [[ ",$chain," == *",$skill,"* ]]; then accepted=1; break; fi
