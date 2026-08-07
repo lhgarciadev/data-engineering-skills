@@ -7,6 +7,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_ID="dataforge@skills-dir"
 JUDGE_MODEL="sonnet"
 JUDGE_REPS=3
 RUN=""
@@ -21,6 +22,16 @@ while getopts "o:m:r:" opt; do
 done
 [[ -n "$RUN" ]] || { echo "usage: judge-pairs.sh -o <run-dir>" >&2; exit 64; }
 
+# One writer per run directory, enforced here rather than by an operator check.
+# `mkdir` on an existing directory fails atomically, so two concurrent judging
+# runs cannot both proceed — during the 2026-08-05 campaign they did, and both
+# appended to the same judgments.jsonl.
+mkdir "$RUN/.lock" 2>/dev/null || {
+  echo "refusing to start: $RUN/.lock exists — another writer holds this run directory" >&2
+  echo "(if no writer is running, remove it: rmdir $RUN/.lock)" >&2
+  exit 69; }
+trap 'rmdir "$RUN/.lock" 2>/dev/null' EXIT
+
 SCHEMA='{"type":"object","properties":{
 "a":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"]},
 "b":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"]},
@@ -28,15 +39,30 @@ SCHEMA='{"type":"object","properties":{
 "reason":{"type":"string"}},
 "required":["a","b","more_useful","reason"]}'
 
+# Blinding is structural, not just a matter of what the prompt says.
+#
+# The rubric and both answers arrive on stdin — the one deliberate stdin use in
+# either harness — so the judge needs nothing from the filesystem. It therefore
+# gets nothing: no Read/Glob/Grep/Bash, a fresh cwd outside the repo, and the
+# suite plugin disabled. Run from the operator's cwd with those tools, a judge
+# sitting in tests/quality-uplift could read cases.tsv (which names the expected
+# skill per case), the answer logs, or the `with`/`without` filenames under
+# results/ — and could load the very skills it is scoring. No judge session log
+# is kept, so "it probably didn't look" is not verifiable after the fact; the
+# only defence that can be audited is the one in the invocation.
 judge_once() {
-  local a_file="$1" b_file="$2"
+  local a_file="$1" b_file="$2" sandbox
+  sandbox="$(mktemp -d "${TMPDIR:-/tmp}/qjudge-XXXXXX")"
   { cat "$SCRIPT_DIR/rubric.md"
     echo; echo "=== ANSWER A ==="; echo; cat "$a_file"
     echo; echo "=== ANSWER B ==="; echo; cat "$b_file"
-  } | timeout 600 claude --model "$JUDGE_MODEL" --strict-mcp-config \
+  } | ( cd "$sandbox" && timeout 600 claude --model "$JUDGE_MODEL" --strict-mcp-config \
+        --disallowedTools "Bash" "Read" "Write" "Edit" "Task" "Glob" "Grep" \
+        --settings "{\"enabledPlugins\":{\"$PLUGIN_ID\":false}}" \
         --json-schema "$SCHEMA" \
         -p "Score both answers per the rubric above and return only the JSON object." \
-        2>/dev/null
+        2>/dev/null )
+  rm -rf "$sandbox"
 }
 
 : > "$RUN/judgments.jsonl"
