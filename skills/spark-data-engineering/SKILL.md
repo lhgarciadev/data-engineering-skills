@@ -1,6 +1,6 @@
 ---
 name: spark-data-engineering
-description: Spark and PySpark architecture, tuning, and code-review guidance — lazy evaluation and the execution model (DAG, Catalyst), shuffle and partitioning (repartition vs coalesce), joins and data skew (broadcast, AQE skew-join, salting, bucketing), caching and file formats (persist, checkpoint, Parquet pushdown), Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns (UDF overhead, pandas UDFs/Arrow, collect()/toPandas() memory risk). Use when designing, reviewing, or optimizing a Spark or PySpark job, or diagnosing why one is slow, skewed, or running out of memory. Does not cover Structured Streaming, or Spark cluster deployment and infrastructure — neither has a skill in this suite yet, so answer those directly rather than looking for one.
+description: Spark and PySpark architecture, tuning, and code-review guidance — lazy evaluation and the execution model (DAG, Catalyst), shuffle and partitioning (repartition vs coalesce), joins and data skew (broadcast, AQE skew-join, salting, bucketing), caching and file formats (persist, checkpoint, Parquet pushdown), Adaptive Query Execution, executor/driver memory, and PySpark-specific concerns (UDF overhead, pandas UDFs/Arrow, collect()/toPandas() memory risk). Use when designing, reviewing, or optimizing a Spark or PySpark job, or diagnosing why one is slow, skewed, or running out of memory. Does not cover Structured Streaming (see streaming-data-engineering) or Spark cluster deployment and infrastructure, which has no skill in this suite yet.
 ---
 
 # Spark for Data Engineering
@@ -17,7 +17,7 @@ Senior-level judgment calls for designing, reviewing, and tuning Spark and PySpa
 - Diagnosing or fixing data skew in a join or an aggregation
 - Deciding whether to cache, persist, or checkpoint a DataFrame
 - A PySpark UDF is slow, or `.collect()`/`.toPandas()` is risking driver OOM
-- Not for Structured Streaming (watermarks, exactly-once semantics) — a streaming skill is planned for this suite but does not exist yet, so answer directly rather than looking for one
+- Not for Structured Streaming (watermarks, exactly-once semantics) — see `streaming-data-engineering`
 - Not for cluster deployment or infrastructure decisions (Terraform, Docker, cluster sizing) — an IaC/cloud skill is planned but does not exist yet
 
 ## Quick reference

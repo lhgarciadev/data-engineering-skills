@@ -18,7 +18,7 @@ Senior-level judgment calls for the orchestration layer of a data pipeline — w
 - Deciding how a pipeline should trigger downstream work, or how another pipeline should trigger off it
 - Deciding how a pipeline's output should reach its consumers (API, stream, export, share)
 - Structuring a dbt project, deciding its model layering, or figuring out how dbt's model DAG fits inside the pipeline orchestrator's own DAG
-- Not for writing the idempotent code inside a single task (see `python-data-engineering`), dbt's SQL-level incremental mechanics (see `sql-data-engineering`), or building/hosting an API service (see [serving-pipeline-output.md](references/serving-pipeline-output.md))
+- Not for writing the idempotent code inside a single task (see `python-data-engineering`), dbt's SQL-level incremental mechanics (see `sql-data-engineering`), building/hosting an API service (see [serving-pipeline-output.md](references/serving-pipeline-output.md)), or replaying a log from an earlier offset to reprocess history (see `streaming-data-engineering`) — this skill's backfill mechanics cover partition-level batch reprocessing only, not stream replay
 
 ## Quick reference
 
