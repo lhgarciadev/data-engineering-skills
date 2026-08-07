@@ -19,7 +19,11 @@
   - jargon-free triggers alongside technical ones — real diagnostic prompts do not use domain vocabulary;
   - boundaries as conditionals on an observable predicate, not prohibitions;
   - the co-invocation clause verbatim: `Still applies when a general debugging or design skill also fits — that one supplies the method, this one the streaming-domain knowledge.`
-- Reference files: 1.6k–3.5k words. Cross-link with relative paths that resolve; `[text](references/file.md)` from `SKILL.md`, `[text](../other-skill/references/file.md)` across skills.
+- Reference files: 1.6k–3.5k words. Cross-links must resolve **from the linking file's own directory**, which means the depth differs by where the link lives:
+  - from `SKILL.md` to its own references: `[text](references/file.md)`
+  - from `SKILL.md` to another skill: `[text](../other-skill/references/file.md)`
+  - from a file inside `references/` to another skill: `[text](../../other-skill/references/file.md)` — two levels, because you climb out of `references/` first
+  Verify every link by resolving it, never by eye. An earlier draft of this plan wrote the two-level case with one level in fourteen places.
 - Every reference file linked from `SKILL.md` must exist, and every file under `references/` must be linked from `SKILL.md`.
 - Research verification docs go to `docs/superpowers/research/2026-08-07-<topic>-verification.md`, matching the 28 already there.
 - Commit per task. Conventional commits, no AI attribution.
@@ -157,7 +161,7 @@ Cover, in this order:
 4. **When NOT to stream.** For anything latency-tolerant — daily reports, analytics read in the morning, loads that can wait an hour — batch is the correct default. Streaming earns its place only when low latency is a real business requirement: fraud detection, alerting, live personalisation. Defaulting to streaming without a latency requirement is the same error as defaulting to One Big Table.
 5. **A worked decision**, showing the question to ask first: what is the actual latency requirement, and does event-time correctness matter. Include a concrete example where the answer is "a 15-minute batch meets the SLA at a fraction of the cost".
 
-Cross-link the OBT default-avoidance in `../modeling-data-engineering/references/modern-lakehouse-modeling.md` and the freshness/latency trade in `../pipelines-architecture-data-engineering/references/serving-pipeline-output.md`.
+Cross-link the OBT default-avoidance in `../../modeling-data-engineering/references/modern-lakehouse-modeling.md` and the freshness/latency trade in `../../pipelines-architecture-data-engineering/references/serving-pipeline-output.md`.
 
 - [ ] **Step 2: Verify size, links and sourcing**
 
@@ -191,9 +195,9 @@ git commit -m "docs(streaming): add unbounded-data framing and the criterion for
 
 Cover:
 
-1. **The append-only log** as the central abstraction, and its identity with the event log in `../modeling-data-engineering/references/modeling-for-access-patterns.md`: an immutable ordered record of facts, where current state is a derived projection.
+1. **The append-only log** as the central abstraction, and its identity with the event log in `../../modeling-data-engineering/references/modeling-for-access-patterns.md`: an immutable ordered record of facts, where current state is a derived projection.
 2. **Topic, partition, offset.** The partition as the atom of **two** things: parallelism and order. State the ordering guarantee exactly as the verification recorded it — order holds within a partition, never across a topic. Say plainly that a whole class of streaming bugs is assuming a total order Kafka never promised.
-3. **Partition key as a design decision.** Same key routes to the same partition, which is how per-entity ordering is obtained. A hot key produces skew — the same skew as in `../spark-data-engineering/references/joins-and-skew.md`, now at ingest.
+3. **Partition key as a design decision.** Same key routes to the same partition, which is how per-entity ordering is obtained. A hot key produces skew — the same skew as in `../../spark-data-engineering/references/joins-and-skew.md`, now at ingest.
 4. **Consumer groups and rebalance**, including why a rebalance is an operational fragility worth knowing about.
 5. **Durability: `acks` and ISR**, with the trade stated per the verification. This lives here rather than in an infrastructure skill because it is chosen in producer configuration, as a correctness and durability decision.
 6. **Retention vs compaction**, with compaction described exactly as the source states it. Then the point that matters: a compacted topic *is* a table — the current state per key, materialised from a stream of changes. That is the stream-table duality made concrete, and `stream-processing-patterns.md` builds the KTable on it.
@@ -237,11 +241,11 @@ Cover:
 1. **Three times** — event, processing, ingestion — and that they do not coincide.
 2. **Skew between event time and processing time is the normal condition**, not an anomaly: a phone with no signal, a rebalance, network congestion. Events arrive out of order and late.
 3. **Why event-time is almost always what you want**: counting by processing time makes the result depend on your system's speed rather than reality, and the same input replayed gives a different answer. Event-time is correct and reproducible; the cost is waiting and handling stragglers.
-4. Link this to late-arriving facts in `../modeling-data-engineering/references/scd-and-dimension-patterns.md` and to the watermark-plus-lookback pattern in `../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`: both are the batch-shaped version of the same problem.
-5. **Window types** — tumbling, sliding/hopping, session — with what each is for. Note that session windows are the sessionisation that `../sql-data-engineering/references/engineering-query-patterns.md` builds with `LAG` and a running sum, here native to the engine.
+4. Link this to late-arriving facts in `../../modeling-data-engineering/references/scd-and-dimension-patterns.md` and to the watermark-plus-lookback pattern in `../../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`: both are the batch-shaped version of the same problem.
+5. **Window types** — tumbling, sliding/hopping, session — with what each is for. Note that session windows are the sessionisation that `../../sql-data-engineering/references/engineering-query-patterns.md` builds with `LAG` and a running sum, here native to the engine.
 6. **The watermark** as an estimate of completeness, derived from the maximum event time seen minus a tolerance. State the guarantee exactly as the Flink verification recorded it.
 7. **The watermark trade**, which is the senior question of the topic: aggressive closes early, lower latency, drops more late data; conservative waits, more complete, higher latency and more retained state. There is no universal answer — it is calibrated against the business requirement.
-8. **What happens to data later than the watermark**: drop, allowed lateness with an updated result, or a side output. Connect the side output to the quarantine pattern in `../quality-data-engineering/references/failure-response-policies.md`.
+8. **What happens to data later than the watermark**: drop, allowed lateness with an updated result, or a side output. Connect the side output to the quarantine pattern in `../../quality-data-engineering/references/failure-response-policies.md`.
 9. **Spark's behaviour specifically**, per the verification: what `withWatermark` does and how late data is treated **per output mode**. Do not repeat the "late data is simply dropped" simplification if the source contradicts it.
 10. **Triggers and the what/where/when/how frame**, as the model that ties the file together.
 
@@ -280,10 +284,10 @@ Cover:
 1. **Stateful vs stateless**, and why state is the hard part: in batch it dies with the job, in streaming it is long-lived, must survive failures, and cannot grow without bound over an infinite stream — hence windows and TTLs.
 2. **State backends**, including the embedded-RocksDB option per the Flink verification.
 3. **Checkpointing** as fault tolerance for state: distributed snapshots with barriers, restore, and resume from the corresponding source offset. Make explicit that this is why the replayable log of `the-log-and-partitioning.md` is a precondition — without rewinding the source there is no consistent recovery.
-4. **The three delivery semantics**, at-most-once, at-least-once, exactly-once, with at-least-once identified as the common default and the same guarantee webhooks give in `../python-data-engineering/references/external-api-integration.md`.
+4. **The three delivery semantics**, at-most-once, at-least-once, exactly-once, with at-least-once identified as the common default and the same guarantee webhooks give in `../../python-data-engineering/references/external-api-integration.md`.
 5. **What exactly-once actually means**, using the verification's wording including any hedging the sources use. The thesis: it is not a switch, it is an end-to-end property requiring a replayable source, checkpointed state, and an idempotent or transactional sink, and it breaks at the weakest link — usually the sink. If the sink is an external API with no idempotency key, or a blind append, there is no end-to-end exactly-once no matter what the engine promises.
-6. **How the sink achieves it**: transactional two-phase commit, or idempotency by key — the same `MERGE`/upsert and `ROW_NUMBER` dedup taught in `../sql-data-engineering/references/engineering-query-patterns.md`, which remains that skill's material.
-7. Close the idempotency thread explicitly: it starts in `../python-data-engineering/references/production-patterns.md`, passes through partition overwrite in `../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`, and here becomes the central correctness condition.
+6. **How the sink achieves it**: transactional two-phase commit, or idempotency by key — the same `MERGE`/upsert and `ROW_NUMBER` dedup taught in `../../sql-data-engineering/references/engineering-query-patterns.md`, which remains that skill's material.
+7. Close the idempotency thread explicitly: it starts in `../../python-data-engineering/references/production-patterns.md`, passes through partition overwrite in `../../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`, and here becomes the central correctness condition.
 
 - [ ] **Step 2: Verify size, links and hedging fidelity**
 
@@ -320,10 +324,10 @@ git commit -m "docs(streaming): add state, checkpointing and end-to-end delivery
 
 Cover:
 
-1. **Stateless vs stateful transformations**, with per-event schema validation named as the edge validation that `../quality-data-engineering/references/data-contracts-and-schema-compatibility.md` governs as a contract.
+1. **Stateless vs stateful transformations**, with per-event schema validation named as the edge validation that `../../quality-data-engineering/references/data-contracts-and-schema-compatibility.md` governs as a contract.
 2. **Stream-stream join must be time-bounded.** Matching an event from A against one from B would require retaining all of both — infinite state. A window bound is what makes the state finite. State the supported join types and required bounds per the Spark verification.
-3. **Stream-table join** as the workhorse: enriching an event stream with reference data. The KTable as a compacted topic materialised as current state per key, built on `the-log-and-partitioning.md`. This is a dimensional lookup in real time, and if the dimension is an SCD Type 2, enrichment is as-of the event time — the as-of history from `../modeling-data-engineering/references/scd-and-dimension-patterns.md`, live.
-4. **CDC as a stream**, per the verification: reading the transaction log rather than polling, one event per committed change, snapshot then stream, and at-least-once delivery meaning the consumer must dedupe. Say explicitly that this closes the pointer from `modeling` and `quality`, and that the SQL that projects a change stream into a current-state table stays in `../sql-data-engineering/references/engineering-query-patterns.md`.
+3. **Stream-table join** as the workhorse: enriching an event stream with reference data. The KTable as a compacted topic materialised as current state per key, built on `the-log-and-partitioning.md`. This is a dimensional lookup in real time, and if the dimension is an SCD Type 2, enrichment is as-of the event time — the as-of history from `../../modeling-data-engineering/references/scd-and-dimension-patterns.md`, live.
+4. **CDC as a stream**, per the verification: reading the transaction log rather than polling, one event per committed change, snapshot then stream, and at-least-once delivery meaning the consumer must dedupe. Say explicitly that this closes the pointer from `modeling` and `quality`, and that the SQL that projects a change stream into a current-state table stays in `../../sql-data-engineering/references/engineering-query-patterns.md`.
 5. **Deduplication with state and watermark**: keys seen within a bounded window, which is why the watermark bounds it. This is the defence against at-least-once from `state-and-delivery-guarantees.md`.
 6. **How this is expressed** — Kafka Streams, ksqlDB, Flink SQL, Spark Structured Streaming with SQL — and the observation that a windowed aggregation over a stream is written almost the same as over a warehouse table, which is the unification from `unbounded-data-and-when-not-to-stream.md`.
 7. Close with the unifying idea: a streaming table is a materialised view that keeps itself current. Stream-table join, KTable, projected CDC and compacted topic are the same idea — the stream is the change record, the table is its current state, and they convert into each other.
@@ -361,9 +365,9 @@ Cover:
 
 1. **Lambda**: batch layer plus speed layer plus serving layer, and its real cost — two code paths and two logics that must agree. State the original claim per the verification rather than the caricature.
 2. **Kappa**: one streaming pipeline, reprocessing by replaying the log from an offset. Say explicitly what the verification found about whether "replaces the batch layer entirely" is the original claim or a later simplification.
-3. **Replay is the streaming form of backfill.** This is the boundary the spec settled: replay over a log lives here, partition backfill stays in `../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`. Link there and describe the relationship rather than re-teaching partition backfill.
+3. **Replay is the streaming form of backfill.** This is the boundary the spec settled: replay over a log lives here, partition backfill stays in `../../pipelines-architecture-data-engineering/references/idempotency-and-backfills.md`. Link there and describe the relationship rather than re-teaching partition backfill.
 4. **Engine selection** across Kafka Streams (a JVM library, not a cluster), Flink (event-at-a-time, strong event-time and large state), Spark Structured Streaming (micro-batch, unified with an existing Spark batch estate — state the Continuous Processing status per the verification, including the version checked), and Beam (the portable model the What/Where/When/How frame comes from). Decision axes: latency tolerance, state and event-time complexity, existing ecosystem, and what the team can actually operate.
-5. **Operations**: consumer lag as the vital sign, backpressure, and partitions as the ceiling on consumer-group parallelism. Schema evolution governed by a registry with backward compatibility, pointing at `../quality-data-engineering/references/data-contracts-and-schema-compatibility.md` as the owner of the contract material.
+5. **Operations**: consumer lag as the vital sign, backpressure, and partitions as the ceiling on consumer-group parallelism. Schema evolution governed by a registry with backward compatibility, pointing at `../../quality-data-engineering/references/data-contracts-and-schema-compatibility.md` as the owner of the contract material.
 6. Close by pointing back at `unbounded-data-and-when-not-to-stream.md`: the architecture choice only arises once streaming has been justified at all.
 
 - [ ] **Step 2: Verify size, links and the Continuous Processing claim**
