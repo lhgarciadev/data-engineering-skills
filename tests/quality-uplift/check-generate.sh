@@ -18,13 +18,13 @@ rm -rf "$RUN"
   || note FAIL "without-arm answer missing or empty"
 
 if [[ -f "$RUN/P4.with.rep1.meta" ]]; then
-  IFS=$'\t' read -r _id _arm _rep chain chars _t _c _a < "$RUN/P4.with.rep1.meta"
+  IFS=$'\t' read -r _id _arm _rep chain bytes _t _c _a < "$RUN/P4.with.rep1.meta"
   [[ ",$chain," == *",modeling-data-engineering,"* ]] \
     && note PASS "validity gate accepted: expected skill in chain ($chain)" \
     || note FAIL "expected skill not in chain ($chain)"
-  [[ "$chars" -gt 200 ]] \
-    && note PASS "answer length recorded ($chars chars)" \
-    || note FAIL "answer length implausible ($chars)"
+  [[ "$bytes" -gt 200 ]] \
+    && note PASS "answer length recorded ($bytes bytes)" \
+    || note FAIL "answer length implausible ($bytes)"
 else
   note FAIL "with-arm meta missing"
 fi

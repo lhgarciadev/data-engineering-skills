@@ -29,6 +29,16 @@ done
 ONLY_CASE="${ONLY_CASE:-}"
 [[ -n "$RUN" ]] || RUN="$SCRIPT_DIR/results/run"
 mkdir -p "$RUN"
+
+# One writer per run directory, enforced here rather than by an operator check.
+# `mkdir` on an existing directory fails atomically, so a second run against the
+# same directory cannot interleave its appends with this one's.
+mkdir "$RUN/.lock" 2>/dev/null || {
+  echo "refusing to start: $RUN/.lock exists — another writer holds this run directory" >&2
+  echo "(if no writer is running, remove it: rmdir $RUN/.lock)" >&2
+  exit 69; }
+trap 'rmdir "$RUN/.lock" 2>/dev/null' EXIT
+
 : > "$RUN/discards.tsv"
 
 await_memory() {
@@ -41,8 +51,13 @@ await_memory() {
   done
 }
 
-# Runs one probe. Echoes: <chain>\t<chars>\t<out_tokens>\t<cost>
+# Runs one probe. Echoes: <chain>\t<bytes>\t<out_tokens>\t<cost>
 # Writes the answer text to $4.
+#
+# `bytes` is `wc -c`: bytes, not characters. The prompts and answers are Spanish
+# and contain accented characters, so the two counts differ by a couple of
+# percent. Bytes is the right locale-independent proxy for answer length — it
+# just has to be named for what it measures.
 probe() {
   local prompt="$1" arm="$2" tag="$3" out_txt="$4"
   local log="$RUN/$tag.jsonl" sandbox
@@ -63,15 +78,15 @@ probe() {
 
   jq -r 'select(.type=="result") | .result // ""' "$log" > "$out_txt" 2>/dev/null
 
-  local chain chars toks cost
+  local chain bytes toks cost
   chain=$(jq -r 'select(.type=="assistant") | .message.content[]?
                  | select(.type=="tool_use" and .name=="Skill") | .input.skill' \
           "$log" 2>/dev/null | sed 's/^dataforge://' | paste -sd, -)
   [[ -n "$chain" ]] || chain="NONE"
-  chars=$(wc -c < "$out_txt" | tr -d ' ')
+  bytes=$(wc -c < "$out_txt" | tr -d ' ')
   toks=$(jq -r 'select(.type=="result") | .usage.output_tokens // 0' "$log" 2>/dev/null | head -1)
   cost=$(jq -r 'select(.type=="result") | .total_cost_usd // 0' "$log" 2>/dev/null | head -1)
-  printf '%s\t%s\t%s\t%s\n' "$chain" "$chars" "$toks" "$cost"
+  printf '%s\t%s\t%s\t%s\n' "$chain" "$bytes" "$toks" "$cost"
 }
 
 while IFS=$'\t' read -r id skill prompt; do
@@ -83,7 +98,7 @@ while IFS=$'\t' read -r id skill prompt; do
       tag="$id.$arm.rep$rep"
       accepted=0
       for (( att=1; att<=MAX_ATTEMPTS; att++ )); do
-        read -r chain chars toks cost < <(probe "$prompt" "$arm" "$tag" "$RUN/$tag.txt")
+        read -r chain bytes toks cost < <(probe "$prompt" "$arm" "$tag" "$RUN/$tag.txt")
 
         # Non-emptiness floor, both arms. An empty answer is an infrastructure
         # failure, not a measurement: a timeout kill or a log with no result
@@ -109,9 +124,9 @@ while IFS=$'\t' read -r id skill prompt; do
 
       if (( accepted )); then
         printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-          "$id" "$arm" "$rep" "$chain" "$chars" "$toks" "$cost" "$att" \
+          "$id" "$arm" "$rep" "$chain" "$bytes" "$toks" "$cost" "$att" \
           > "$RUN/$tag.meta"
-        echo "  ok $tag chain=$chain chars=$chars" >&2
+        echo "  ok $tag chain=$chain bytes=$bytes" >&2
       else
         rm -f "$RUN/$tag.txt"
         echo "  UNMEASURABLE $tag after $MAX_ATTEMPTS attempts" >&2
