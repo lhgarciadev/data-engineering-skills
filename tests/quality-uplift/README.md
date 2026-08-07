@@ -153,11 +153,19 @@ State these plainly in every report of the numbers, not just here:
 
 - Either calibration gate failing.
 - Pearson r above 0.5 between answer length and rubric total (`analyze.sh`'s "Score vs
-  length" section). If scores track verbosity, the delta is not measuring the skill.
-  Read the per-arm lines too, not just the pooled one: a pooled r is high both when the
-  judge rewards length and when the with-arm is simply longer *and* better. Correlation
-  that survives *within* an arm — where the arm label is constant — is judge
-  length-bias, and it is not fixed by narrowing the gap between the arms.
+  length" section). Read the per-arm lines too, not just the pooled one: a pooled r is
+  high both when the judge rewards length and when the with-arm is simply longer *and*
+  better, and only the per-arm decomposition separates them.
+
+  **What a high r means is unresolved.** The original rationale was that correlation
+  surviving within an arm is judge length-bias. `experiments/length-causality.sh` tested
+  that directly — compress an answer, preserving every technical claim, and score both
+  versions — and did not support it: 8 of 12 scored identically, including the longest
+  answers. But it did not establish the opposite either, since one verified case scored
+  two points lower for being shorter with its substance intact. The threshold still voids
+  a campaign, because a metric whose relationship to length is not understood is not a
+  metric you publish. Do not cite "judge length-bias" as the established cause. See
+  `experiments/README.md`.
 - A case whose with-arm never passed the validity gate in 3 attempts — report as **not
   measurable**, never filled in.
 - Fewer than 3 accepted samples per arm for a case.
