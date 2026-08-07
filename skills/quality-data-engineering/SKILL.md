@@ -1,6 +1,6 @@
 ---
 name: quality-data-engineering
-description: Data quality guidance — dimensions and validation checks, failure-response policies (fail/quarantine/drop/repair), data contracts and schema compatibility, data observability (freshness/volume/distribution/schema/lineage), and quality as culture (ownership, shift-left, CI/CD gates, circuit breakers). Use when designing quality checks for a pipeline, deciding what to do when a check fails, writing or reviewing a data contract, setting up alerting for schema/volume/freshness anomalies, or arguing for organization-wide data quality governance. Not for choosing which library validates a single dataframe or payload (see python-data-engineering), CDC/change-data-capture (see streaming-data-engineering), or implementing/hosting an API (out of scope for the whole suite).
+description: Data quality guidance — dimensions and validation checks, failure-response policies (fail/quarantine/drop/repair), data contracts and schema compatibility, data observability (freshness/volume/distribution/schema/lineage), and quality as culture (ownership, shift-left, CI/CD gates, circuit breakers). Use when designing quality checks for a pipeline, deciding what to do when a check fails, writing or reviewing a data contract, setting up alerting for schema/volume/freshness anomalies, or arguing for organization-wide data quality governance. Not for choosing which library validates a single dataframe or payload (see python-data-engineering), CDC/change-data-capture, which has no skill in this suite yet, or implementing/hosting an API, out of scope for the whole suite.
 ---
 
 # Quality Data Engineering
@@ -18,7 +18,7 @@ A pipeline that finishes green isn't the same thing as a pipeline whose output i
 - Arguing for (or scoping) organization-wide data quality governance — Great Expectations, Soda, Monte Carlo
 - Explaining the difference between data testing and data observability
 - Not for choosing which library validates one dataframe or payload — see `python-data-engineering`
-- Not for CDC/log-based change capture — see `streaming-data-engineering`
+- Not for CDC/log-based change capture — a streaming skill is planned for this suite but does not exist yet
 - Not for implementing or hosting an API service — out of scope for the whole suite until a confirmed real use case exists
 
 ## Quick reference

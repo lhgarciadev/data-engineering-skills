@@ -1,6 +1,6 @@
 ---
 name: modeling-data-engineering
-description: Data modeling guidance — dimensional modeling (star/snowflake schemas, grain, additivity, fact tables), Slowly Changing Dimensions and other dimension patterns (conformed, bridge, junk, role-playing, degenerate, late-arriving), modeling methodology choice (Inmon vs. Kimball vs. Data Vault), Data Vault 2.0 (hubs/links/satellites, hash keys), modern lakehouse modeling (medallion, One Big Table), and modeling for access patterns (NoSQL single-table design, event/stream, bitemporal). Use when designing a warehouse schema, declaring the grain of a fact table, choosing an SCD type, deciding between a star schema and a wide denormalized table, or modeling a NoSQL serving store or an event stream. Not for SQL implementing SCD Type 2 (see sql-data-engineering), runtime schema validation (see quality-data-engineering), CDC/log-based change capture (see streaming-data-engineering), or NoSQL infrastructure/hosting (see iac-cloud-data-engineering).
+description: Data modeling guidance — dimensional modeling (star/snowflake schemas, grain, additivity, fact tables), Slowly Changing Dimensions and other dimension patterns (conformed, bridge, junk, role-playing, degenerate, late-arriving), modeling methodology choice (Inmon vs. Kimball vs. Data Vault), Data Vault 2.0 (hubs/links/satellites, hash keys), modern lakehouse modeling (medallion, One Big Table), and modeling for access patterns (NoSQL single-table design, event/stream, bitemporal). Use when designing a warehouse schema, declaring the grain of a fact table, choosing an SCD type, deciding between a star schema and a wide denormalized table, or modeling a NoSQL serving store or an event stream. Not for SQL implementing SCD Type 2 (see sql-data-engineering), runtime schema validation (see quality-data-engineering), CDC/log-based change capture, or NoSQL infrastructure and hosting — the last two have no skill in this suite yet.
 ---
 
 # Modeling Data Engineering
@@ -19,8 +19,8 @@ The atom of data modeling is the grain — what one row of a table actually repr
 - Modeling a NoSQL serving store (e.g. DynamoDB single-table design), an event stream, or a bitemporal history
 - Not for the SQL that implements SCD Type 2 — see `sql-data-engineering`
 - Not for runtime schema validation — see `quality-data-engineering`
-- Not for CDC/log-based change capture mechanics — see `streaming-data-engineering`
-- Not for NoSQL infrastructure or hosting decisions — see `iac-cloud-data-engineering`
+- Not for CDC/log-based change capture mechanics — a streaming skill is planned for this suite but does not exist yet, so answer directly rather than looking for one
+- Not for NoSQL infrastructure or hosting decisions — an IaC/cloud skill is planned but does not exist yet
 
 ## Quick reference
 
@@ -56,4 +56,4 @@ The atom of data modeling is the grain — what one row of a table actually repr
 | Presenting "medallion" (bronze/silver/gold) as dbt's own vocabulary | dbt Labs' published guidance uses staging/intermediate/marts and never uses "medallion" | Cite Databricks for medallion, cross-link `pipelines-architecture-data-engineering` for dbt's real terms; see [modern-lakehouse-modeling.md](references/modern-lakehouse-modeling.md) |
 | Defaulting to One Big Table to avoid writing joins | Its storage and SCD-update costs are a deliberate trade for one fixed, known access pattern, not a shortcut | Default to star schema; reach for OBT only when the query pattern is genuinely fixed; see [modern-lakehouse-modeling.md](references/modern-lakehouse-modeling.md) |
 | Normalizing a DynamoDB table like an OLTP schema | There's no server-side `JOIN` to fall back on — normalization reintroduces the multi-request cost DynamoDB exists to eliminate | Design the composite key around known query patterns first; see [modeling-for-access-patterns.md](references/modeling-for-access-patterns.md) |
-| Teaching CDC capture mechanics (Debezium, WAL/binlog tailing) inside an event-modeling discussion | That's ingestion/streaming infrastructure, not modeling, and is out of scope for this skill | Stay at the modeling layer — event schemas, stream-table duality, projections; defer capture mechanics to `streaming-data-engineering`; see [modeling-for-access-patterns.md](references/modeling-for-access-patterns.md) |
+| Teaching CDC capture mechanics (Debezium, WAL/binlog tailing) inside an event-modeling discussion | That's ingestion/streaming infrastructure, not modeling, and is out of scope for this skill | Stay at the modeling layer — event schemas, stream-table duality, projections; defer capture mechanics to a streaming discussion, which this suite does not cover yet; see [modeling-for-access-patterns.md](references/modeling-for-access-patterns.md) |
