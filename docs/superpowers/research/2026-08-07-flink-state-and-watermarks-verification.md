@@ -91,6 +91,22 @@ Fuente: sección "The EmbeddedRocksDBStateBackend", verbatim (ambas citas).
 
 ---
 
+## 6. En modo STREAMING, Flink procesa registros continuamente a través del pipeline en vez de dividir el trabajo en etapas discretas — a diferencia de su propio modo BATCH
+
+**VEREDICTO: SUPPORTED**, verbatim. Agregado durante la redacción de `streaming-architecture-and-engines.md` (Paso 7 del plan), para dar verdict propio a la caracterización de Flink como motor "event-at-a-time" usada en la comparación de motores de ese archivo — no cubierta por los claims 1–5 de este research, que se centran en checkpointing/watermarks/state backends, no en el modelo de ejecución en sí.
+
+> "In STREAMING execution mode, all tasks need to be online/running all the time. This allows Flink to immediately process new records through the whole pipeline, which we need for continuous and low-latency stream processing... Network shuffles are pipelined, meaning that records are immediately sent to downstream tasks, with some buffering on the network layer. Again, this is required because when processing a continuous stream of data there are no natural points (in time) where data could be materialized between tasks (or pipelines of tasks). This contrasts with BATCH execution mode where intermediate results can be materialized, as explained below."
+
+Y sobre el modo BATCH, por contraste directo en la misma página:
+
+> "In BATCH execution mode, the tasks of a job can be separated into stages that can be executed one after another. We can do this because the input is bounded and Flink can therefore fully process one stage of the pipeline before moving on to the next... Instead of sending records immediately to downstream tasks, as explained above for STREAMING mode, processing in stages requires Flink to materialize intermediate results of tasks to some non-ephemeral storage."
+
+Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/execution_mode/`, secciones "STREAMING Execution Mode" y "BATCH Execution Mode", Flink v2.3.0 (misma versión "stable" que el resto de este research), verbatim (descargado con `curl -A "Mozilla/5.0"` y extraído con el mismo script de strip de tags).
+
+**Confirma exactamente la claim**: el propio Flink documenta, por contraste con su propio modo BATCH, que su modo STREAMING envía cada registro inmediatamente al siguiente operador ("immediately sent to downstream tasks") porque no hay puntos naturales para materializar resultados intermedios en un stream continuo — es decir, procesamiento continuo registro por registro, no por lotes discretos. Esto es lo que sostiene la caracterización de Flink como motor "event-at-a-time" en la comparación con el motor de micro-batch de Spark (ver research de Spark, claim 1).
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -100,6 +116,7 @@ Fuente: sección "The EmbeddedRocksDBStateBackend", verbatim (ambas citas).
 | 3 | RocksDB embebido para estado mayor que memoria | **SUPPORTED** — verbatim; límite pasa a ser espacio en disco, no RAM |
 | 4 | Allowed lateness permite emitir resultado actualizado tras pasar el watermark | **SUPPORTED** — verbatim, incluyendo que el default es 0 (drop) y que el disparo tardío depende del trigger (`EventTimeTrigger`) |
 | 5 | `HashMapStateBackend` es el default y no serializa en operación normal, a diferencia de RocksDB | **SUPPORTED** — verbatim en ambas mitades (default + ausencia de serialización por contraste con RocksDB) |
+| 6 | Modo STREAMING procesa registro por registro, continuo, sin etapas discretas — a diferencia del propio modo BATCH de Flink | **SUPPORTED** — verbatim, fuente: `dev/datastream/execution_mode` v2.3.0, contraste directo STREAMING vs. BATCH en la misma página |
 
 ## Implicación para el skill
 
@@ -107,3 +124,4 @@ Fuente: sección "The EmbeddedRocksDBStateBackend", verbatim (ambas citas).
 - Si el skill cita la definición de watermark, preservar el `<=` (no simplificar a `<`) porque es el texto exacto de la fuente.
 - Si el skill menciona "allowed lateness", aclarar que el comportamiento por defecto es 0 (drop inmediato) — el comportamiento de "permitir tardíos" es opt-in, no el default.
 - Claim 5 (añadida en la ronda de corrección): el skill puede afirmar con confianza que `HashMapStateBackend` es el default y que no serializa en operación normal — ambas mitades están verificadas verbatim contra la doc v2.3.0.
+- Claim 6 (añadida durante la redacción del Paso 7): el skill puede describir Flink como un motor "event-at-a-time" apoyándose en el contraste textual STREAMING vs. BATCH de la página `execution_mode` — no es una etiqueta de marketing, es la propia documentación explicando por qué su modo streaming no puede materializar resultados intermedios entre etapas.

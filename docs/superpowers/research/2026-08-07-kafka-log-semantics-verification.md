@@ -151,6 +151,18 @@ Fuente: `https://kafka.apache.org/43/configuration/producer-configs/`, descripci
 
 ---
 
+## 8. Kafka Streams es una librería cliente embebida en la aplicación JVM, no un clúster separado, y procesa registro por registro
+
+**VEREDICTO: SUPPORTED**, verbatim. Agregado durante la redacción de `streaming-architecture-and-engines.md` (Paso 7 del plan), porque la comparación de motores de ese archivo describe a Kafka Streams como "una librería JVM, no un clúster" y esa caracterización no tenía verdict propio en el research existente — cae directamente en la categoría de minucia de motor que el plan exige verificar antes de escribirse.
+
+> "Kafka Streams is a client library for processing and analyzing data stored in Kafka... Designed as a simple and lightweight client library, which can be easily embedded in any Java application and integrated with any existing packaging, deployment and operational tools that users have for their streaming applications. Has no external dependencies on systems other than Apache Kafka itself as the internal messaging layer... Employs one-record-at-a-time processing to achieve millisecond processing latency, and supports event-time based windowing operations with out-of-order arrival of records."
+
+Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "Core Concepts", verbatim (descargado con `curl -A "Mozilla/5.0"` y extraído con el mismo script de strip de tags usado en el resto de este research).
+
+**Confirma exactamente la claim**: Kafka Streams no es un sistema con su propio clúster de coordinación — es una librería que se enlaza dentro de la aplicación Java/JVM del propio usuario, sin más dependencia externa que el propio clúster de Kafka al que ya se conecta como cliente. El escalado se logra corriendo más instancias de la aplicación, no aprovisionando un clúster de proceso separado (a diferencia de Flink o Spark, que sí tienen su propio plano de ejecución distribuido). El procesamiento es explícitamente "one-record-at-a-time", no por micro-batches.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -162,6 +174,7 @@ Fuente: `https://kafka.apache.org/43/configuration/producer-configs/`, descripci
 | 5 | Rebalanceo redistribuye particiones al unirse/salir un miembro | **SUPPORTED** — verbatim, fuente: Javadoc de `KafkaConsumer` |
 | 6 | Offset es por partición; commit habilita resumable y replayable | **SUPPORTED** — verbatim en ambas mitades |
 | 7 | Sin key, el particionador por defecto es sticky (no round-robin) | **SUPPORTED** — verbatim, fuente: `producer-configs` 4.3; round-robin es una clase distinta y no-default, con bug conocido documentado |
+| 8 | Kafka Streams es una librería cliente embebida en la JVM del usuario (no un clúster separado), con procesamiento one-record-at-a-time | **SUPPORTED** — verbatim, fuente: `streams/core-concepts` 4.3 |
 
 ## Implicación para el skill
 
@@ -169,3 +182,4 @@ Fuente: `https://kafka.apache.org/43/configuration/producer-configs/`, descripci
 - Sobre compaction: nunca escribir "retiene exactamente el último valor por key" como si fuera literal de la fuente — la fuente dice "at least the final state" y documenta un mecanismo de tombstones con expiración y un segmento activo exento. Usar la cita completa de §4.1–4.3.
 - Sobre `acks=all`: siempre calificar como "todas las réplicas in-sync en ese momento", nunca "todas las réplicas del topic" — son conjuntos distintos si el ISR se ha reducido.
 - Sobre el comportamiento sin key: describirlo como "sticky por defecto", nunca como "round-robin (o sticky)" — round-robin no es el default y no es intercambiable con sticky.
+- Claim 8 (añadida durante la redacción del Paso 7): el skill puede describir Kafka Streams como "librería cliente JVM embebida en la aplicación, no un clúster separado" con total confianza — es la cita textual de la propia página de conceptos de Kafka Streams, no una inferencia.

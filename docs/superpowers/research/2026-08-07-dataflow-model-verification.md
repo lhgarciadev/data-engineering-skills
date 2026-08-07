@@ -88,6 +88,22 @@ Corroboración adicional del propio fetch de Streaming 102 (fuente secundaria de
 
 ---
 
+## 4. Apache Beam es el modelo hecho portable: no es un motor de ejecución propio, un "runner" ejecuta el pipeline de Beam sobre el motor elegido (Flink, Spark, etc.)
+
+**VEREDICTO: SUPPORTED**, verbatim. Agregado durante la redacción de `streaming-architecture-and-engines.md` (Paso 7 del plan), para dar verdict propio a la caracterización de Beam en la comparación de motores de ese archivo — los claims 1–3 de este research verifican el paper académico (el modelo), no el proyecto Apache Beam (la implementación de código abierto del modelo) en sí.
+
+> "Runner - A runner runs a Beam pipeline using the capabilities of your chosen data processing engine."
+
+Fuente: `https://beam.apache.org/documentation/basics/`, Glosario, entrada "Runner", verbatim.
+
+> "A Beam runner runs a Beam pipeline on a specific platform. Most runners are... Flink runner translates a Beam pipeline into a Flink job. The Direct Runner runs... adheres to the Apache Beam model as closely as possible."
+
+Fuente: misma página, sección "Runner", verbatim (obtenido vía fetch directo del sitio oficial `beam.apache.org`, no del PDF del paper).
+
+**Confirma exactamente la claim**: Beam en sí mismo no ejecuta nada — un pipeline escrito contra el SDK de Beam se traduce, por un runner específico, a un job del motor subyacente elegido (el runner de Flink lo traduce a un job de Flink, y de forma análoga para otros runners). Esto es consistente con la posición del paper (claim 1 de este research): el modelo separa la lógica del pipeline del motor de ejecución, y Beam es el proyecto que implementa esa separación como una capa de portabilidad real entre SDKs y motores.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -95,8 +111,10 @@ Corroboración adicional del propio fetch de Streaming 102 (fuente secundaria de
 | 1 | Batch es caso especial de streaming sobre datos acotados; motor unificado lo trata así | **CORREGIDO** — el paper encuadra la relación como "la distinción es irrelevante para el modelo" y "streaming provee un superconjunto estricto de la funcionalidad de batch", no como "batch is a special case of streaming" (frase no encontrada verbatim en ninguna fuente primaria) |
 | 2 | Las cuatro preguntas: what/where/when/how | **SUPPORTED** — verbatim del paper (p. 1793) y corroborado en Streaming 102 |
 | 3 | Windowing y triggering son separables | **SUPPORTED** — verbatim del paper (p. 1797): "complementary... different axis of time" |
+| 4 | Beam no es un motor propio; un runner traduce el pipeline de Beam al motor elegido | **SUPPORTED** — verbatim, fuente: `beam.apache.org/documentation/basics/`, Glosario "Runner" |
 
 ## Implicación para el skill
 
 - No citar "batch is a special case of streaming" como frase de Akidau. Usar en su lugar la cita real del paper (Sección 1.1) sobre irrelevancia de la distinción desde la perspectiva del modelo, y la cita de Streaming 101 sobre "strict superset of batch functionality" — dejando claro que la dirección lógica es streaming ⊇ batch, y que la fuente que usa esa dirección es el artículo de blog, no el paper VLDB.
 - Las cuatro preguntas y la separabilidad windowing/triggering pueden citarse con total confianza contra el texto íntegro del paper VLDB 2015, que fue verificado de forma robusta (descarga directa + extracción de texto completo, no solo resumen de un fetcher).
+- Claim 4 (añadida durante la redacción del Paso 7): el skill puede describir Beam como "el modelo hecho portable, no un motor propio" con total confianza — es la definición textual del propio glosario oficial de `beam.apache.org`, no una inferencia sobre cómo funciona el proyecto.
