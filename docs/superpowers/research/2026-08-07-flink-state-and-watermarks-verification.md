@@ -107,6 +107,24 @@ Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastrea
 
 ---
 
+---
+
+## 7. La arquitectura de un clúster Flink consiste en un JobManager y uno o más TaskManagers
+
+**VEREDICTO: SUPPORTED**, verbatim. Agregado en fix round 1 de la revisión de `streaming-architecture-and-engines.md` (Paso 7), tras un finding de que el archivo nombraba "JobManager plus TaskManagers" sin verdict propio — los claims 1–6 de este research cubren checkpointing, watermarks, state backends y el modo de ejecución, no la topología del clúster en sí.
+
+> "The Flink runtime consists of two types of processes: a JobManager and one or more TaskManagers... TaskManagers connect to JobManagers, announcing themselves as available, and are assigned work."
+
+> "The JobManager has a number of responsibilities related to coordinating the distributed execution of Flink Applications: it decides when to schedule the next task (or set of tasks), reacts to finished tasks or execution failures, coordinates checkpoints, and coordinates recovery on..."
+
+> "The TaskManagers (also called workers) execute the tasks of a dataflow, and buffer and exchange the data streams. There must always be at least one TaskManager."
+
+Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/flink-architecture/`, sección "Anatomy of a Flink Cluster", Flink v2.3.0 (versión confirmada en el HTML de la página, `og:url` resuelve a `flink-docs-release-2.3`), verbatim (descargado con `curl -A "Mozilla/5.0"` y extraído con el mismo script de strip de tags del resto de este research).
+
+**Confirma exactamente la claim**: un clúster Flink corre como un proceso JobManager (coordina la ejecución distribuida, programa tareas, coordina checkpoints y recuperación) y uno o más procesos TaskManager (ejecutan las tareas del dataflow). Esto es lo que sostiene la caracterización de Flink en la comparación de motores como algo que requiere "running and operating its own dedicated cluster" — no es una descripción genérica de "un clúster", es la topología de dos tipos de proceso que la propia documentación de arquitectura de Flink nombra explícitamente.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -117,6 +135,7 @@ Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastrea
 | 4 | Allowed lateness permite emitir resultado actualizado tras pasar el watermark | **SUPPORTED** — verbatim, incluyendo que el default es 0 (drop) y que el disparo tardío depende del trigger (`EventTimeTrigger`) |
 | 5 | `HashMapStateBackend` es el default y no serializa en operación normal, a diferencia de RocksDB | **SUPPORTED** — verbatim en ambas mitades (default + ausencia de serialización por contraste con RocksDB) |
 | 6 | Modo STREAMING procesa registro por registro, continuo, sin etapas discretas — a diferencia del propio modo BATCH de Flink | **SUPPORTED** — verbatim, fuente: `dev/datastream/execution_mode` v2.3.0, contraste directo STREAMING vs. BATCH en la misma página |
+| 7 | Un clúster Flink consiste en un JobManager y uno o más TaskManagers | **SUPPORTED** — verbatim, fuente: `concepts/flink-architecture` v2.3.0, sección "Anatomy of a Flink Cluster" |
 
 ## Implicación para el skill
 
@@ -125,3 +144,4 @@ Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastrea
 - Si el skill menciona "allowed lateness", aclarar que el comportamiento por defecto es 0 (drop inmediato) — el comportamiento de "permitir tardíos" es opt-in, no el default.
 - Claim 5 (añadida en la ronda de corrección): el skill puede afirmar con confianza que `HashMapStateBackend` es el default y que no serializa en operación normal — ambas mitades están verificadas verbatim contra la doc v2.3.0.
 - Claim 6 (añadida durante la redacción del Paso 7): el skill puede describir Flink como un motor "event-at-a-time" apoyándose en el contraste textual STREAMING vs. BATCH de la página `execution_mode` — no es una etiqueta de marketing, es la propia documentación explicando por qué su modo streaming no puede materializar resultados intermedios entre etapas.
+- Claim 7 (añadida en fix round 1, tras finding de la revisión): el skill puede nombrar "JobManager" y "TaskManagers" como los dos tipos de proceso que componen un clúster Flink con total confianza — es la cita textual de la propia página de arquitectura, no una generalización sobre "algún tipo de clúster".

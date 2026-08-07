@@ -163,6 +163,18 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "Core Con
 
 ---
 
+## 9. El estado de Kafka Streams se mantiene en "state stores" locales, embebidos por tarea, con tolerancia a fallos
+
+**VEREDICTO: SUPPORTED**, verbatim, incluyendo la frase exacta "local state stores". Agregado en fix round 1 de la revisión de `streaming-architecture-and-engines.md` (Paso 7), tras un finding de que el archivo mencionaba "local state stores" de Kafka Streams sin verdict propio — la misma página ya descargada para el claim 8 de este research cubre esto directamente, no requirió una fuente nueva.
+
+> "Kafka Streams provides so-called state stores, which can be used by stream processing applications to store and query data. This is an important capability when implementing stateful operations. Every task in Kafka Streams embeds one or more state stores that can be accessed via APIs to store and query data required for processing. These state stores can either be a persistent key-value store, an in-memory hashmap, or another convenient data structure. Kafka Streams offers fault-tolerance and automatic recovery for local state stores."
+
+Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "States", verbatim (misma página y método de descarga que el claim 8).
+
+**Confirma exactamente la claim**: la propia documentación usa la frase literal "local state stores" al describir la tolerancia a fallos, y precisa que cada *task* de Kafka Streams "embeds" (embebe) uno o más state stores — es decir, el estado vive local a la instancia de la aplicación que lo procesa, no en un almacén externo centralizado, con recuperación automática a cargo del propio framework.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -175,6 +187,7 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "Core Con
 | 6 | Offset es por partición; commit habilita resumable y replayable | **SUPPORTED** — verbatim en ambas mitades |
 | 7 | Sin key, el particionador por defecto es sticky (no round-robin) | **SUPPORTED** — verbatim, fuente: `producer-configs` 4.3; round-robin es una clase distinta y no-default, con bug conocido documentado |
 | 8 | Kafka Streams es una librería cliente embebida en la JVM del usuario (no un clúster separado), con procesamiento one-record-at-a-time | **SUPPORTED** — verbatim, fuente: `streams/core-concepts` 4.3 |
+| 9 | El estado de Kafka Streams vive en "local state stores" embebidos por tarea, con tolerancia a fallos | **SUPPORTED** — verbatim, incluyendo la frase literal "local state stores"; fuente: `streams/core-concepts` 4.3, sección "States" |
 
 ## Implicación para el skill
 
@@ -183,3 +196,4 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "Core Con
 - Sobre `acks=all`: siempre calificar como "todas las réplicas in-sync en ese momento", nunca "todas las réplicas del topic" — son conjuntos distintos si el ISR se ha reducido.
 - Sobre el comportamiento sin key: describirlo como "sticky por defecto", nunca como "round-robin (o sticky)" — round-robin no es el default y no es intercambiable con sticky.
 - Claim 8 (añadida durante la redacción del Paso 7): el skill puede describir Kafka Streams como "librería cliente JVM embebida en la aplicación, no un clúster separado" con total confianza — es la cita textual de la propia página de conceptos de Kafka Streams, no una inferencia.
+- Claim 9 (añadida en fix round 1, tras finding de la revisión): el skill puede usar la frase "local state stores" para Kafka Streams con total confianza — es la frase literal de la doc, no una paráfrasis del research.
