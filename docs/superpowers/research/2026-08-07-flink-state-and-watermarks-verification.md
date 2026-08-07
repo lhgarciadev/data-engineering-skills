@@ -61,6 +61,36 @@ Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastrea
 
 ---
 
+## 5. `HashMapStateBackend` es el backend por defecto de Flink y no serializa en operación normal (a diferencia de `EmbeddedRocksDBStateBackend`)
+
+**VEREDICTO: SUPPORTED**, verbatim en ambas mitades. Verificación añadida en la ronda de corrección 1 de la revisión de `state-and-delivery-guarantees.md`, tras un finding de que el archivo afirmaba esto sin veredicto de respaldo.
+
+**Fuente:** `https://nightlies.apache.org/flink/flink-docs-stable/docs/ops/state/state_backends/`, Flink docs v2.3.0 (versión confirmada en la propia página), descargada y consultada directamente.
+
+Sobre el default:
+
+> "If nothing else is configured, the system will use the HashMapStateBackend."
+
+Fuente: sección "Available State Backends", verbatim.
+
+Sobre la ausencia de serialización en operación normal:
+
+> "The HashMapStateBackend holds data internally as objects on the Java heap."
+
+Fuente: sección "The HashMapStateBackend", verbatim.
+
+Y, por contraste directo, la propia página confirma la ausencia de serialización en `HashMapStateBackend` al describir qué es distinto en RocksDB:
+
+> "Unlike storing java objects in `HashMapStateBackend`, data is stored as serialized byte arrays..."
+
+> "...the maximum throughput that can be achieved will be lower with this state backend [RocksDB]."
+
+Fuente: sección "The EmbeddedRocksDBStateBackend", verbatim (ambas citas).
+
+**Confirma exactamente la claim**: `HashMapStateBackend` es el backend usado cuando no se configura nada explícitamente, y mantiene el estado como objetos Java en heap sin (de)serialización en el camino normal de lectura/escritura — la propia página lo señala por contraste al explicar que RocksDB, a diferencia de `HashMapStateBackend`, sí serializa cada acceso, y que por eso su throughput máximo es menor. No requirió corrección.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -69,9 +99,11 @@ Fuente: `https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastrea
 | 2 | Watermarks aseveran que no se esperan más eventos con timestamp ≤ watermark | **SUPPORTED** — verbatim; nota: la comparación documentada es `<=`, no solo `<` |
 | 3 | RocksDB embebido para estado mayor que memoria | **SUPPORTED** — verbatim; límite pasa a ser espacio en disco, no RAM |
 | 4 | Allowed lateness permite emitir resultado actualizado tras pasar el watermark | **SUPPORTED** — verbatim, incluyendo que el default es 0 (drop) y que el disparo tardío depende del trigger (`EventTimeTrigger`) |
+| 5 | `HashMapStateBackend` es el default y no serializa en operación normal, a diferencia de RocksDB | **SUPPORTED** — verbatim en ambas mitades (default + ausencia de serialización por contraste con RocksDB) |
 
 ## Implicación para el skill
 
-- Las cuatro claims de este pase quedaron confirmadas con cita textual exacta contra la documentación estable v2.3.0 de Flink, descargada y verificada de forma independiente (no solo vía resumen de fetcher). Ninguna requirió corrección.
+- Las cuatro claims del pase original quedaron confirmadas con cita textual exacta contra la documentación estable v2.3.0 de Flink, descargada y verificada de forma independiente (no solo vía resumen de fetcher). Ninguna requirió corrección.
 - Si el skill cita la definición de watermark, preservar el `<=` (no simplificar a `<`) porque es el texto exacto de la fuente.
 - Si el skill menciona "allowed lateness", aclarar que el comportamiento por defecto es 0 (drop inmediato) — el comportamiento de "permitir tardíos" es opt-in, no el default.
+- Claim 5 (añadida en la ronda de corrección): el skill puede afirmar con confianza que `HashMapStateBackend` es el default y que no serializa en operación normal — ambas mitades están verificadas verbatim contra la doc v2.3.0.
