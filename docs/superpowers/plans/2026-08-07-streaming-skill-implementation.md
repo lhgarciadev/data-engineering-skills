@@ -516,6 +516,8 @@ A failing new case means the description does not reach that prompt. Adjust the 
 
 Do not change a case's `EXPECTED` to match observed behaviour. That converts a measurement into a tautology.
 
+This is not in tension with Step 1. There, `D6` and `A8` change because the world changed — a skill that did not exist now does, so what those prompts *should* reach is different, and the change is decided before any measurement is run. Here, the prohibition is against changing an expectation *after* seeing a result you did not like. The test is timing and reason: a ground truth may change because the domain changed, never because the run disagreed with it.
+
 - [ ] **Step 5: Write the baseline digest**
 
 Record in `tests/triggering/baselines/2026-08-07-streaming-routing.md`: the `rescore.sh` output verbatim, the two changed ground truths with their pre-streaming behaviour, and the regression set with its verdicts. State the model and rep count.
