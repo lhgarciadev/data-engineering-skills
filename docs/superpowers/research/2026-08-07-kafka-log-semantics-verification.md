@@ -139,6 +139,18 @@ Fuente: `https://kafka.apache.org/43/design/design/`, sección "Consumer Positio
 
 ---
 
+## 7. Comportamiento del particionador por defecto cuando no hay key (registro con key nula)
+
+**VEREDICTO: SUPPORTED**, verbatim contra la configuración oficial del productor. Agregado en fix round 1 de la revisión de `the-log-and-partitioning.md`, porque la claim original ("round-robin, o 'sticky' en implementaciones actuales") no estaba cubierta por el alcance original de este research (ver nota en §2, línea 40: el comportamiento sin key fue marcado explícitamente como no verificado en esa pasada).
+
+> "partitioner.class Determines which partition to send a record to when records are produced. Available options are: If not set, the default partitioning logic is used. This strategy send records to a partition until at least batch.size bytes is produced to the partition. It works with the strategy: If no partition is specified but a key is present, choose a partition based on a hash of the key. If no partition or key is present, choose the sticky partition that changes when at least batch.size bytes are produced to the partition. org.apache.kafka.clients.producer.RoundRobinPartitioner: A partitioning strategy where each record in a series of consecutive records is sent to a different partition, regardless of whether the 'key' is provided or not, until partitions run out and the process starts over again. Note: There's a known issue that will cause uneven distribution when a new batch is created. See KAFKA-9965 for more detail."
+
+Fuente: `https://kafka.apache.org/43/configuration/producer-configs/`, descripción del parámetro `partitioner.class`, verbatim (verificado con `curl` directo + strip de tags, mismo método que el resto de este research).
+
+**Precisión que la claim original no tenía**: el comportamiento **por defecto** para un registro sin key no es round-robin — es **sticky**: el particionador por defecto envía registros a una misma partición hasta que se producen al menos `batch.size` bytes hacia esa partición, y solo entonces cambia de partición "pegajosa". Round-robin (`RoundRobinPartitioner`) es una clase de particionador *distinta y no default* que debe configurarse explícitamente, y la propia documentación advierte que tiene un problema conocido (KAFKA-9965) que causa distribución desigual cuando se crea un nuevo batch. El skill debe describir el comportamiento sin key como "sticky por defecto", no como "round-robin (o sticky)" — esas dos palabras no son sinónimos intercambiables ni opciones equivalentes, son el default y una alternativa no-default con una advertencia de bug adjunta.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -149,9 +161,11 @@ Fuente: `https://kafka.apache.org/43/design/design/`, sección "Consumer Positio
 | 4 | Log compaction retiene al menos el último valor por key (no "exactamente uno"); tombstones y segmento activo | **SUPPORTED**, con la precisión completa (at least, no exactly; tombstones expiran; segmento activo nunca se compacta) — la simplificación común omite estos tres matices |
 | 5 | Rebalanceo redistribuye particiones al unirse/salir un miembro | **SUPPORTED** — verbatim, fuente: Javadoc de `KafkaConsumer` |
 | 6 | Offset es por partición; commit habilita resumable y replayable | **SUPPORTED** — verbatim en ambas mitades |
+| 7 | Sin key, el particionador por defecto es sticky (no round-robin) | **SUPPORTED** — verbatim, fuente: `producer-configs` 4.3; round-robin es una clase distinta y no-default, con bug conocido documentado |
 
 ## Implicación para el skill
 
 - Al citar la negación "no ordenado entre particiones", usar formulación propia (no entre comillas) apoyada en la cita positiva de la doc 4.3, salvo que se quiera citar explícitamente la doc histórica 0.8.2 con su fecha.
 - Sobre compaction: nunca escribir "retiene exactamente el último valor por key" como si fuera literal de la fuente — la fuente dice "at least the final state" y documenta un mecanismo de tombstones con expiración y un segmento activo exento. Usar la cita completa de §4.1–4.3.
 - Sobre `acks=all`: siempre calificar como "todas las réplicas in-sync en ese momento", nunca "todas las réplicas del topic" — son conjuntos distintos si el ISR se ha reducido.
+- Sobre el comportamiento sin key: describirlo como "sticky por defecto", nunca como "round-robin (o sticky)" — round-robin no es el default y no es intercambiable con sticky.
