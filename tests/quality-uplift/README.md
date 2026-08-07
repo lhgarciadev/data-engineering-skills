@@ -229,3 +229,60 @@ judge structurally could have read the arm labels.
   `judge-pairs.sh` (none of the current 7 case IDs do).
 - An out-of-enum `more_useful` string from the judge falls through to `"tie"` rather
   than erroring.
+
+### Carried from the whole-branch review, for a follow-up branch
+
+Ruled non-blocking for the first campaign, since it published VOID. Several are the same
+class the harness exists to prevent — a confident number computed over data that was
+silently dropped — so treat them as a backlog, not as polish.
+
+**Decide before the next campaign is run:**
+
+- A non-zero extra-key count is not in *What voids a campaign* above. A future campaign
+  could report `extra keys: 3`, publish its table as a measurement, and be internally
+  consistent with this document. The fix has three parts: `additionalProperties: false`
+  in the judge's `--json-schema`, summing only the four named dimensions instead of `add`,
+  and promoting a non-zero extra-key count to a voiding condition. Each affected row can
+  move a case delta by roughly 0.1–0.3, enough to flip the sign of a small one.
+
+**Both harnesses:**
+
+- `analyze.sh` never enforces the spec's "fewer than 3 accepted samples per arm ⇒ void"
+  rule, and silently drops a `.meta` with no matching judgment from the correlation
+  without counting the drop.
+- Incoherent judgment rows are reported but not excluded from the uplift average, which
+  contradicts spec §6.1.
+- No judge session logs are saved, so a judging pass cannot be re-scored under a corrected
+  rubric without paying for it again. `results/` is regenerable *in kind*, not
+  reproducible — a re-run of a nondeterministic paid campaign yields different numbers.
+- Discarded attempts overwrite their own probe log (`$tag.jsonl` is attempt-invariant), so
+  a discard is recorded in `discards.tsv` but not backed by a log.
+- `judge-failures.tsv` is not truncated at the start of a run, while `judgments.jsonl` is,
+  so stale failures can be reported against a fresh judgment set.
+- `generate-answers.sh` truncates the whole run's `discards.tsv` on every invocation, so
+  topping up one case with `-c` erases the discard record for the others.
+- `check-generate.sh`'s scaffolding-leak canary greps for `EXPECTED`, a column that exists
+  in the *triggering* matrix, not in `cases.tsv`. It cannot detect the stdin leak it
+  guards against; grep for a distinctive token from a non-target row instead.
+- `EXPECTED_N` is derived from surviving rows, so a *uniform* loss is invisible: if one
+  judging pass failed for every pair, every case would report a complete count.
+- `await_memory` and the chain-extraction `jq` are duplicated across the two harnesses —
+  three copies of the latter. The chain extractor *is* the definition of "the skill
+  fired", so the two harnesses can silently drift on the measurement itself. Extract a
+  shared `tests/lib/probe.sh`.
+
+**`tests/triggering/` specifically:**
+
+- `rescore.sh` scores `NONE|X` inconsistently with bare `NONE`: the `NONE` branch treats
+  process skills as "no domain skill fired", the alternation branch does not, which
+  misgrades case A11.
+- `rescore.sh` degrades to all-`FAIL` when a matrix argument is omitted, because the
+  unresolved expectation `?` matches nothing. It should report no-expectation and exit
+  non-zero.
+- Stale `.rep*.jsonl` files from a longer prior run inflate the denominator, manufacturing
+  `FLAKY` verdicts.
+- `run-matrix.sh` writes its non-authoritative position-1 verdict to `summary.tsv` under a
+  `VERDICT` column with no caveat, and `results/matrix-green1-opus-with/summary.tsv` still
+  carries the exact false finding this branch spent a commit correcting.
+- Nothing checks the 1024-character frontmatter cap. `pipelines-architecture-data-engineering`
+  currently sits at 1021 with three characters of headroom.
