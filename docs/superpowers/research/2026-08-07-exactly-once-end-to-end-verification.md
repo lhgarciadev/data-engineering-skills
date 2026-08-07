@@ -74,7 +74,10 @@ Nota adicional verbatim sobre isolation levels (relevante para el skill si descr
 
 ## 3. Los motores describen esto como "effectively-once" o "exactly-once state semantics", no como una garantía de entrega física de un solo mensaje
 
-**VEREDICTO: SUPPORTED en el fondo — ambas fuentes primarias efectivamente cubren ("hedge") el término, con matiz honesto: el término literal "effectively-once" no se encontró verbatim en ninguna de las páginas de documentación vigente consultadas (sí en fuentes secundarias que describen a Flink, pero eso no cuenta aquí). Lo que sí se encontró, y es funcionalmente equivalente, es "exactly-once state semantics" (Flink, verbatim) y una advertencia explícita de Kafka sobre no confiar en la etiqueta "exactly-once" sin leer la letra pequeña.**
+**VEREDICTO: dos sub-veredictos, para que no se pierdan al leer solo la etiqueta.**
+
+- **Sustancia — SUPPORTED**: los motores efectivamente hedgean el término "exactly-once" en vez de prometer una entrega física de un solo mensaje. Esto está confirmado con cita verbatim tanto en Flink como en Kafka (ver §3.1–3.2).
+- **Terminología — CORREGIDO**: la palabra literal **"effectively-once" NO aparece en ninguna fuente primaria consultada** (se buscó explícitamente en el texto extraído de ambas páginas de Flink y no está) y **no debe escribirse en el skill como cita de Flink o Kafka**. La formulación verificada y correcta es **"exactly-once state semantics"** (Flink, verbatim) más la advertencia de Kafka de "leer la letra pequeña" ante cualquier claim de exactly-once (ver §3.3).
 
 ### 3.1 Flink: "exactly-once state semantics" ≠ garantía de entrega física
 
@@ -106,7 +109,7 @@ Se buscó la palabra exacta "effectively" en el texto extraído de ambas página
 |---|---|---|
 | 1 | Exactly-once requiere fuente replayable + estado con checkpoint + sink idempotente/transaccional; falla en el más débil | **SUPPORTED** en los tres componentes individuales (cada uno con cita verbatim); "falla en el más débil" es una síntesis del skill, no una cita — decirlo explícitamente |
 | 2 | Transacciones de Kafka: escritura atómica entre particiones + commit de offsets | **SUPPORTED** — verbatim en ambas mitades, misma página y mismo párrafo |
-| 3 | Los motores describen esto como "effectively-once" / "exactly-once state semantics", con hedge | **SUPPORTED** en el fondo, con corrección de término: usar "exactly-once state semantics" (cita verbatim de Flink) y la advertencia de Kafka sobre "leer la letra pequeña"; "effectively-once" no se verificó como término textual de ninguna fuente primaria consultada |
+| 3 | Los motores describen esto como "effectively-once" / "exactly-once state semantics", con hedge | Sustancia: **SUPPORTED**. Terminología: **CORREGIDO** — "effectively-once" **no aparece en ninguna fuente primaria** y no debe citarse; usar "exactly-once state semantics" (Flink, verbatim) + la advertencia de Kafka sobre "leer la letra pequeña" |
 
 ## Implicación para el skill
 

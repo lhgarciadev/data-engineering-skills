@@ -20,7 +20,7 @@
 
 > "When describing infinite/finite data sets, we prefer the terms unbounded/bounded over streaming/batch, because the latter terms carry with them an implication of the use of a specific type of execution engine. In reality, unbounded datasets have been processed using repeated runs of batch systems since their conception, and well-designed streaming systems are perfectly capable of processing bounded data. From the perspective of the model, the distinction of streaming or batch is largely irrelevant, and we thus reserve those terms exclusively for describing runtime execution engines."
 
-Fuente: Akidau et al. 2015, p. 1793 (Sección 1.1), extraído verbatim del PDF oficial de VLDB.
+Fuente: Akidau et al. 2015, p. 1794 (Sección 1.1), extraído verbatim del PDF oficial de VLDB.
 
 ### 1.2 La formulación de unificación real: "abstrae la distinción", no "batch es un subconjunto"
 
