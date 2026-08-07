@@ -291,9 +291,12 @@ Cover:
 cd skills/streaming-data-engineering/references
 wc -w state-and-delivery-guarantees.md
 grep -oE '\]\([^)]+\.md\)' state-and-delivery-guarantees.md | sed 's/^](//; s/)$//' | while read -r l; do [ -f "$(realpath -m "$l")" ] && echo "OK $l" || echo "BROKEN $l"; done
-grep -n "effectively-once\|exactly-once" state-and-delivery-guarantees.md | head
+grep -n "effectively-once" state-and-delivery-guarantees.md
+grep -n "exactly-once state semantics\|exactly-once" state-and-delivery-guarantees.md | head
 ```
-Expected: 1600–3500 words, all links `OK`, and the exactly-once discussion hedged the way the sources hedge it rather than promising more than they do.
+Expected: 1600–3500 words, all links `OK`, **zero** hits for `effectively-once`, and the exactly-once discussion hedged the way the sources hedge it.
+
+The `effectively-once` check is inverted deliberately. Task 1's verification found that term is **not** used in current Flink or Kafka documentation, so writing it would be attributing a hedge to sources that do not make it. Use `exactly-once state semantics` where a distinction between engine-internal state and end-to-end delivery is needed.
 
 - [ ] **Step 3: Commit**
 
