@@ -41,21 +41,47 @@ modes are identical:
 1. **`stdin` is `/dev/null`.** `claude -p` also reads stdin; without the redirect a
    probe launched from a `while read` loop over `cases.tsv` inherits the open file and
    the remaining rows leak into the prompt.
-2. **Each probe runs from a fresh `mktemp -d` outside the repo.** Claude Code injects the
-   cwd and its contents into session context; running from inside this repo would let a
-   probe see the skill sources it is being tested against.
+2. **Every session — answer probes *and* judge calls — runs from a fresh `mktemp -d`
+   outside the repo, deleted afterwards.** Claude Code injects the cwd and its contents
+   into session context; running from inside this repo would let an answer probe see the
+   skill sources it is being tested against, and would let the judge see the run
+   directory whose filenames carry the arm labels (see the blinding guard below).
 3. **No MCP servers, memory-gated serial execution.** `--strict-mcp-config` keeps the
    session minimal; `generate-answers.sh` waits for ≥1200 MB of `MemAvailable` before
    every probe. This is a 6 GB WSL2 box that has OOM'd mid-campaign before under
    concurrency — do not raise concurrency to speed this up.
 
-A fourth guard specific to this eval, not present in triggering: **the judge is blind**.
-It receives the two answers labeled only `A`/`B`, is never told a skill or ablation is
-involved, and scores under a fixed rubric. `judge-pairs.sh` maps `A`/`B` back to
-`with`/`without` only after scoring, so nothing about the judge's prompt could bias it
-toward the arm rather than the content.
+A fourth guard specific to this eval, not present in triggering: **the judge is blind,
+and blinded structurally rather than by instruction**. What the judge's prompt says is
+only half of it; the other half is what the judge can reach.
 
-**5. Exactly one writer per results directory, verified before starting a stage.**
+- **Prompt.** It receives the two answers labeled only `A`/`B`, is never told a skill or
+  ablation is involved, and scores under a fixed rubric. `judge-pairs.sh` maps `A`/`B`
+  back to `with`/`without` only after scoring.
+- **Tools.** `--disallowedTools "Bash" "Read" "Write" "Edit" "Task" "Glob" "Grep"`. The
+  judge has no way to read a file, list a directory, or grep for one.
+- **Cwd.** A fresh `mktemp -d` outside the repo (guard 2). Run from the operator's
+  `tests/quality-uplift` instead, a judge with `Read`/`Glob`/`Grep` could reach
+  `cases.tsv` (which names the expected skill per case), `full-answers.log` (`ok
+  A2.with.rep1 chain=…`), and `results/` — where every filename says `with` or
+  `without`.
+- **Skills.** `--settings '{"enabledPlugins":{"dataforge@skills-dir":false}}'`, so the
+  judge cannot load the skills it is scoring.
+- **`stdin` is the one deliberate exception to guard 1.** The rubric and both answers
+  arrive on the judge's stdin; that is why it needs nothing from the filesystem.
+
+No judge session log is kept, so after the fact there is no way to prove a judge did or
+did not look at something it had access to. That is precisely why the access is removed
+rather than trusted: only the invocation is auditable. `baselines/2026-08-05-uplift.md`
+records the campaign that ran before this hardening existed.
+
+**5. Exactly one writer per results directory, enforced by a lock in the scripts.**
+Both `generate-answers.sh` and `judge-pairs.sh` take `mkdir "$RUN/.lock"` before writing
+anything. `mkdir` fails atomically if the directory exists, so the second invocation
+refuses to start, exits 69, and writes nothing; the holder releases the lock from a
+`trap … EXIT`. A stale lock after a kill -9 is removed by hand: `rmdir <run>/.lock`.
+
+This used to be an operator instruction, which is how the incident below happened.
 During the 2026-08-05 campaign, `judge-pairs.sh` was started a second time against the
 same `results/full/` while the first invocation was still running. Both processes
 appended to the same `judgments.jsonl` concurrently, producing 62 duplicate
@@ -63,8 +89,15 @@ appended to the same `judgments.jsonl` concurrently, producing 62 duplicate
 harmless in isolation (each row was a real judge call) but fatal to the "Judge
 agreement" section, which depends on exactly one row per order-schedule slot. See
 `baselines/2026-08-05-uplift.md` for the full incident and how the contaminated file
-was preserved rather than silently deduplicated. Before starting `generate-answers.sh`
-or `judge-pairs.sh` against a run directory, confirm nothing is already writing to it:
+was preserved rather than silently deduplicated.
+
+`analyze.sh` now also detects the damage after the fact: it rejects a second row for an
+already-seen `(id, rep, judge_rep)` triplet, reports `duplicate (id,rep,judge_rep) rows
+rejected: N`, and refuses to present the uplift table as a measurement when N is
+non-zero. The lock prevents it; the report no longer certifies it as clean if it happens
+anyway.
+
+The old operator check still works as a secondary confirmation that nothing is running:
 
 ```bash
 ps -eo pid,cmd | grep -E "generate-answers\.sh|judge-pairs\.sh" | grep -v grep
@@ -121,16 +154,27 @@ State these plainly in every report of the numbers, not just here:
 - Either calibration gate failing.
 - Pearson r above 0.5 between answer length and rubric total (`analyze.sh`'s "Score vs
   length" section). If scores track verbosity, the delta is not measuring the skill.
+  Read the per-arm lines too, not just the pooled one: a pooled r is high both when the
+  judge rewards length and when the with-arm is simply longer *and* better. Correlation
+  that survives *within* an arm — where the arm label is constant — is judge
+  length-bias, and it is not fixed by narrowing the gap between the arms.
 - A case whose with-arm never passed the validity gate in 3 attempts — report as **not
   measurable**, never filled in.
 - Fewer than 3 accepted samples per arm for a case.
+- Any duplicate `(id, rep, judge_rep)` rows rejected by `analyze.sh`. More than one
+  writer touched `judgments.jsonl`, so which competing row survived per slot is an
+  artifact of write order — re-judge into a clean directory instead of publishing it.
 
 `analyze.sh` also reports, and a digest must carry forward without editing:
 judge-coherence failures (a row that scores one answer higher but prefers the other),
 judge failures (empty/unparseable judge replies — a dropped row means a case averaged
-over fewer reps than the table implies), discard counts by reason, and malformed-input
-counts rejected by the report itself. None of these are footnotes; a non-zero count in
-any of them changes how much the uplift table can be trusted.
+over fewer reps than the table implies), the per-case judgment count against the count
+expected from the data (reps × judging passes), discard counts by reason, and
+malformed-input counts rejected by the report itself — malformed lines, duplicate slots,
+and score objects carrying keys outside the four rubric dimensions (which inflate a
+rubric total above the documented max of 8; observed once, `tradeeoff` alongside
+`tradeoff`). None of these are footnotes; a non-zero count in any of them changes how
+much the uplift table can be trusted.
 
 ## Reading uplift against cost
 
@@ -157,16 +201,24 @@ nohup ./judge-pairs.sh -o results/full -r 3 > full-judge.log 2>&1 &
 minutes and ~$16 at the per-answer cost observed while writing the eval plan. Do not
 raise concurrency — see contamination guard 3, above.
 
+Running from this directory is safe: no `claude` session started by these scripts
+inherits it as a cwd (guard 2), and neither script will write into a run directory
+another writer holds (guard 5).
+
 `results/` is gitignored and fully regenerable; re-run the scripts to reproduce or
 extend it. `baselines/` is the committed record — each file there is a single campaign's
 `analyze.sh` output, verbatim, plus the hand-appended cost column. Never edit a
 committed baseline's numbers after the fact; a re-run gets a new dated file, and the old
-one stays as the record of what was true when it ran.
+one stays as the record of what was true when it ran. Appending a dated amendment that
+discloses something later found out about how the run was produced is the one allowed
+edit — it adds context, it does not restate a number.
 
 **The first campaign, `baselines/2026-08-05-uplift.md`, is void** — its score-vs-length
-correlation was r = 0.61, above the 0.5 threshold below. Read that file for why, and do
+correlation was r = 0.61, above the 0.5 threshold above. Read that file for why, and do
 not treat its per-skill delta table as a standing result. It is kept as the record of
-what happened, not as evidence about the suite's uplift.
+what happened, not as evidence about the suite's uplift. Its amendments section also
+discloses that it was judged before the blinding hardening in guard 4 existed, so its
+judge structurally could have read the arm labels.
 
 ## Known deferred issues
 
