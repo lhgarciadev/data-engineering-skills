@@ -24,6 +24,25 @@
   - from `SKILL.md` to another skill: `[text](../other-skill/references/file.md)`
   - from a file inside `references/` to another skill: `[text](../../other-skill/references/file.md)` — two levels, because you climb out of `references/` first
   Verify every link by resolving it, never by eye. An earlier draft of this plan wrote the two-level case with one level in fourteen places.
+- **Anchored links must have their anchor checked too.** The obvious grep, `grep -oE '\]\([^)]+\.md\)'`, silently skips any link carrying a `#fragment` — it matched nothing in a file where all ten links were anchored. Use this instead, from the directory holding the file:
+
+```bash
+bad=0
+for f in *.md; do
+  while read -r l; do
+    [ -z "$l" ] && continue
+    path="${l%%#*}"; frag="${l#*#}"
+    t=$(realpath -m "$path" 2>/dev/null)
+    [ -f "$t" ] || { echo "BROKEN FILE   $f -> $l"; bad=1; continue; }
+    [ "$frag" = "$l" ] && continue
+    grep -oE '^#{1,6} .*' "$t" | sed 's/^#* //' | tr '[:upper:]' '[:lower:]' \
+      | sed 's/[^a-z0-9 -]//g; s/ /-/g' | grep -qx "$frag" \
+      || echo "BROKEN ANCHOR $f -> $l"
+  done < <(grep -ohE '\]\([^)]+\)' "$f" | sed 's/^](//; s/)$//' | grep '\.md')
+done
+```
+
+  The trap this catches: a heading containing an em-dash slugifies to a **double** hyphen, because the dash is stripped and its two surrounding spaces both become hyphens. `## Retention vs. compaction — and the sentence` becomes `retention-vs-compaction--and-the-sentence`. Writing one hyphen there produces a link that resolves to the file but lands at the top of it, not the section.
 - Every reference file linked from `SKILL.md` must exist, and every file under `references/` must be linked from `SKILL.md`.
 - Research verification docs go to `docs/superpowers/research/2026-08-07-<topic>-verification.md`, matching the 28 already there.
 - Commit per task. Conventional commits, no AI attribution.
