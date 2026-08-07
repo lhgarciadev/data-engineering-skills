@@ -69,12 +69,16 @@ EXPECTED_N="$(jq -s '(map(.rep)|unique|length) * (map(.judge_rep)|unique|length)
 [[ "$EXPECTED_N" =~ ^[0-9]+$ ]] || EXPECTED_N=0
 
 # Score objects carrying keys beyond the four rubric dimensions are counted and
-# reported, not rejected. Every total below is `.with|add` / `.without|add`, which
-# sums whatever numeric keys the object has: a judge reply that repeats a
-# dimension under a misspelled key (observed once in the 2026-08-05 campaign:
-# `tradeeoff` alongside `tradeoff`) scores 10 on a scale documented as max 8.
-# Rejecting the row would change a committed campaign's numbers, so this only
-# surfaces the count — a non-zero value means some rubric total is inflated.
+# reported. Totals sum the four named dimensions explicitly rather than `add`,
+# which would sum whatever numeric keys the object happens to have: a judge reply
+# repeating a dimension under a misspelled key (observed once in the 2026-08-05
+# campaign, `tradeeoff` alongside `tradeoff`) scored 10 on a scale documented as
+# max 8. The count is still reported, because an extra key means the judge did
+# not answer the rubric it was given — that is worth seeing even once the
+# arithmetic can no longer be distorted by it, and it is a voiding condition.
+#
+# Note this changes what re-running against the 2026-08-05 campaign prints: that
+# digest's table was produced when totals used `add`. See its amendment 4.
 extra_keys="$(jq -s '
   ["mechanism","actionable","specific","tradeoff"] as $dims
   | [ .[] | select((((.with|keys) - $dims)|length) > 0 or (((.without|keys) - $dims)|length) > 0) ]
@@ -123,8 +127,8 @@ while IFS=$'\t' read -r id skill _prompt; do
   | jq -s -r --arg id "$id" --arg skill "$skill" --argjson exp "$EXPECTED_N" '
       if length==0 then "| \($id) | \($skill) | – | – | – | not measurable | 0/\($exp) |"
       else
-        (map(.with|add)|add/length) as $w |
-        (map(.without|add)|add/length) as $o |
+        (map(.with|(.mechanism+.actionable+.specific+.tradeoff))|add/length) as $w |
+        (map(.without|(.mechanism+.actionable+.specific+.tradeoff))|add/length) as $o |
         (map(select(.more_useful=="with"))|length) as $pw |
         (if length == $exp then "" else " COUNT-MISMATCH" end) as $flag |
         "| \($id) | \($skill) | \($w*10|round/10) | \($o*10|round/10) | \(($w-$o)*10|round/10) | \($pw)/\(length) | \(length)/\($exp)\($flag) |"
@@ -167,7 +171,8 @@ echo
     [[ -n "$id" ]] || continue
     tot=$(jq -r --arg id "$id" --arg rep "$rep" --arg arm "$arm" '
             select(.id==$id and .rep==($rep|tonumber))
-            | (if $arm=="with" then .with else .without end) | add' \
+            | (if $arm=="with" then .with else .without end)
+            | (.mechanism+.actionable+.specific+.tradeoff)' \
           "$JUDGMENTS" 2>/dev/null | jq -s 'if length==0 then empty else add/length end')
     [[ -n "$tot" ]] && printf '%s\t%s\t%s\n' "$arm" "$bytes" "$tot"
   done < "$METAS"; } | awk -F'\t' '
@@ -228,7 +233,8 @@ echo "internally inconsistent, and that pair does not count."
 echo
 jq -s -r '
   map(select(.more_useful != "tie"))
-  | map(. + {wt:(.with|add), ot:(.without|add)})
+  | map(. + {wt:(.with|(.mechanism+.actionable+.specific+.tradeoff)),
+             ot:(.without|(.mechanism+.actionable+.specific+.tradeoff))})
   | map(select((.more_useful=="with" and .wt < .ot) or
                (.more_useful=="without" and .ot < .wt)))
   | if length==0 then "  none — all rows coherent"
@@ -257,13 +263,16 @@ else
   echo "  recorded by the judge: none"
 fi
 echo
-echo "## Malformed input rejected by this report"
+echo "## Input this report would not take at face value"
 echo
-echo "Input this script refused to parse. Non-zero here means the sections above"
-echo "were computed over less data than the run produced, so read them accordingly."
+echo "The first two and the last were dropped, so a non-zero count means the sections"
+echo "above were computed over less data than the run produced. The extra-key count is"
+echo "different: those rows were scored, over the four named dimensions only, but a judge"
+echo "that invents a dimension is not answering the rubric it was given, so any non-zero"
+echo "value voids the campaign rather than merely trimming it."
 printf '  unparseable judgments.jsonl lines: %d\n' "$malformed"
 printf '  duplicate (id,rep,judge_rep) rows rejected: %d\n' "$dup_rows"
-printf '  rows with score keys outside the four rubric dimensions (total inflated above 8, counted not rejected): %d\n' "$extra_keys"
+printf '  rows with score keys outside the four rubric dimensions (VOIDS the campaign): %d\n' "$extra_keys"
 printf '  .meta files with a bad field count or non-numeric length: %d\n' "$bad_meta"
 if (( dup_rows > 0 )); then
   echo

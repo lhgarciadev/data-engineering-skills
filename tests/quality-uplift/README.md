@@ -164,6 +164,12 @@ State these plainly in every report of the numbers, not just here:
 - Any duplicate `(id, rep, judge_rep)` rows rejected by `analyze.sh`. More than one
   writer touched `judgments.jsonl`, so which competing row survived per slot is an
   artifact of write order — re-judge into a clean directory instead of publishing it.
+- A non-zero extra-key count. A score object carrying a key outside the four rubric
+  dimensions means the judge did not answer the rubric it was given. Totals now sum the
+  four named dimensions explicitly, so an extra key can no longer inflate a score — but a
+  judge that invents a dimension is not scoring reliably, and its other rows are not
+  trustworthy either. The schema sets `additionalProperties: false`, so reaching a
+  non-zero count means the schema was not enforced, which is itself the finding.
 
 `analyze.sh` also reports, and a digest must carry forward without editing:
 judge-coherence failures (a row that scores one answer higher but prefers the other),

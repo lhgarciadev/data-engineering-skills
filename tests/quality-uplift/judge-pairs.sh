@@ -33,8 +33,8 @@ mkdir "$RUN/.lock" 2>/dev/null || {
 trap 'rmdir "$RUN/.lock" 2>/dev/null' EXIT
 
 SCHEMA='{"type":"object","properties":{
-"a":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"]},
-"b":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"]},
+"a":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"],"additionalProperties":false},
+"b":{"type":"object","properties":{"mechanism":{"type":"integer"},"actionable":{"type":"integer"},"specific":{"type":"integer"},"tradeoff":{"type":"integer"}},"required":["mechanism","actionable","specific","tradeoff"],"additionalProperties":false},
 "more_useful":{"type":"string","enum":["A","B","tie"]},
 "reason":{"type":"string"}},
 "required":["a","b","more_useful","reason"]}'
