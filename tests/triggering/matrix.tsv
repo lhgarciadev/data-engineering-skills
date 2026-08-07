@@ -12,9 +12,11 @@ D2	discriminator	quality-data-engineering|project-structure-data-engineering	Nec
 D3	discriminator	sql-data-engineering	Dame el MERGE de SQL para implementar SCD Type 2 sobre una tabla de clientes en Snowflake.
 D4	discriminator	python-data-engineering	¿Uso Pydantic o Pandera para validar este dataframe antes de escribirlo?
 D5	discriminator	python-data-engineering	¿Cómo hago que la función que escribe en S3 dentro de mi task sea idempotente si se reintenta?
-D6	discriminator	NONE	Tengo un job de Spark Structured Streaming y el micro-batch se está atrasando con backpressure.
+D6	discriminator	streaming-data-engineering	Tengo un job de Spark Structured Streaming y el micro-batch se está atrasando con backpressure.
 D7	discriminator	modeling-data-engineering	¿Star schema o una tabla ancha denormalizada para la capa de consumo en BigQuery?
 N1	negative	NONE	Arregla el CSS grid de mi componente React de dashboard, las cards se desbordan en móvil.
 N2	negative	NONE	Escribime un Dockerfile multi-stage para una API de Node.
 N3	negative	NONE	¿Cómo hago un rebase interactivo en git para aplastar los últimos 5 commits?
 N4	negative	NONE	Necesito un decorador en Python que cachee los resultados de una función de fibonacci.
+P9	positive	streaming-data-engineering	Necesito procesar eventos de Kafka y agregar por ventanas de 5 minutos. ¿Cómo manejo los que llegan tarde?
+D8	discriminator	streaming-data-engineering	Mi job de Spark lee de Kafka y quiero exactly-once end-to-end hacia Delta. ¿Alcanza con el checkpoint?
