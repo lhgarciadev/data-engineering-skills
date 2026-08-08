@@ -35,6 +35,8 @@ A backfill runs the pipeline over past dates — because you launched it today b
 
 Core claim: **a backfill is trivial if — and only if — every run is idempotent and parameterized by its window.** If your tasks meet that bar, backfilling is just asking the orchestrator to run the DAG over a date range; each run reprocesses its own partition and overwrites, with no duplication and no cross-contamination. If tasks don't meet that bar — `now()` calls, append-only writes — a backfill duplicates data or produces results that don't match the original run, and turns into a manual nightmare.
 
+If what you're reprocessing is a stream rather than a set of date partitions — replaying a Kafka topic from an earlier offset because logic changed or a bug was found — that's the same engineering move on a different substrate, and [streaming-data-engineering's streaming-architecture-and-engines.md](../../streaming-data-engineering/references/streaming-architecture-and-engines.md#replay-is-the-streaming-form-of-backfill) owns it: replay from an offset, and why it makes Kappa's single-pipeline reprocessing work. The window mechanics on this page — parameterizing a run by its interval, determinism, overwrite-not-append, isolating the reprocessing from production — still apply; only the way the window gets addressed changes, from a partition to an offset range.
+
 ## Concurrency and load control
 
 Backfilling two years can launch hundreds of runs that saturate the warehouse or blow straight through the source API's rate limit. Bound the backfill's parallelism: Airflow's Pools and `max_active_runs` exist for exactly this — see `airflow-structure-and-reliability.md` for what each actually controls.

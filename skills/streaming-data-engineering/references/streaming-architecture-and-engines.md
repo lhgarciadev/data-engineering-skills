@@ -12,10 +12,11 @@ The architecture's real cost isn't the extra infrastructure — it's the obligat
 
 The same article proposes an alternative: run one streaming pipeline, and when the logic needs to change or a bug needs correcting, reprocess by replaying the log from an earlier offset instead of maintaining a second, separate batch system to do the reprocessing. Kreps's own description of the mechanism is a four-step recipe, and it depends on nothing more exotic than the log replay this skill's earlier file already established:
 
-1. Retain the full log of data you might need to reprocess (retention long enough to cover the reprocessing window).
-2. Start a second instance of the stream processing job, reading from the beginning of the retained data, writing to a new output table.
-3. When the second job catches up to the first, switch reads to the new table.
-4. Stop the old job and delete the old output table.
+> "So, how can we do the reprocessing directly from our stream processing job? My preferred approach is actually stupidly simple:
+> 1. Use Kafka or some other system that will let you retain the full log of the data you want to be able to reprocess and that allows for multiple subscribers. For example, if you want to reprocess up to 30 days of data, set your retention in Kafka to 30 days.
+> 2. When you want to do the reprocessing, start a second instance of your stream processing job that starts processing from the beginning of the retained data, but direct this output data to a new output table.
+> 3. When the second job has caught up, switch the application to read from the new table.
+> 4. Stop the old version of the job, and delete the old output table."
 
 (Kreps, "Questioning the Lambda Architecture," O'Reilly Radar, 2014-07-02, section "An alternative," quoted in full because the mechanism is the whole point: nothing here needs a second framework, only a second run of the same one.) The mechanism this leans on — a consumer can "deliberately rewind back to an old offset and re-consume data," which "violates the common contract of a queue, but turns out to be an essential feature" — is the exact replayability property [`the-log-and-partitioning.md`](the-log-and-partitioning.md#replayability-the-property-that-makes-recovery-reprocessing-and-kappa-possible) already named and built the argument for. Kappa doesn't introduce a new capability; it's what you get for free once you've accepted that the log is the durable system of record and everything downstream is a rebuildable projection of it.
 

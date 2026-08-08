@@ -17,7 +17,7 @@ Entry point for data engineering tasks that cross domain boundaries. Identifies 
 
 ## Process
 
-1. **Identify relevant domains.** Read the request and list which of the 9 domain skills apply. If only one applies, stop and use that skill directly instead of continuing here.
+1. **Identify relevant domains.** Read the request and list which of the 8 domain skills apply. If only one applies, stop and use that skill directly instead of continuing here.
 2. **Dispatch one subagent per relevant domain, in parallel when your environment supports it.** Each subagent's prompt must: name the specific domain skill to read first, quote the slice of the original request relevant to that domain, and ask for a focused analysis from that lens only — not a full solution. If your environment does not support parallel or background subagent dispatch, perform each domain's analysis in sequence within this session instead of skipping any.
 3. **Synthesize.** Combine the per-domain analyses into one answer. Do not just concatenate them — explicitly call out interactions between domains that no single analysis would see (a partition scheme in `spark-data-engineering` that conflicts with a clustering key decision in `sql-data-engineering`; a Terraform-provisioned resource that a stream consumer assumes already exists). If a domain you identified in step 1 has no skill in this suite — IaC/cloud currently does not — analyse it yourself and say so explicitly in the synthesis, instead of silently presenting the analysis as complete or trying to load a skill that is not there.
 
