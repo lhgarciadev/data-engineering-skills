@@ -23,17 +23,30 @@ That changed because the world changed, decided before the run — not because a
 measurement disagreed with them. Their pre-streaming behaviour:
 
 - **D6** (Spark Structured Streaming, backpressure): fired `spark` 4 of 5 before the
-  phantom-reference mitigation, including one run that invoked a skill that did not
-  exist and received `Unknown skill`. After the mitigation, 1 of 5. Now 3/3 to streaming.
+  phantom-reference mitigation, plus a fifth run that invoked a skill that did not exist,
+  received `Unknown skill`, and never reached `spark` at all — the two sets are disjoint,
+  as recorded in `GREEN-crowd-out.md`. After the mitigation, 1 of 5. Now 3/3 to streaming.
 - **A8** (Kafka exactly-once into Delta): fired the orchestrator, which had nowhere to
   route. Now 3/3 to streaming.
 
 ## Regression — every description Task 8 touched
 
 Four descriptions changed: `spark`, `modeling`, `quality`, and the `data-engineering`
-orchestrator. `pipelines-architecture` kept its description byte-identical on purpose,
-because D1 and P5 pass on its "backfills" vocabulary; its replay/backfill split lives
-in the body instead.
+orchestrator. `pipelines-architecture` kept its description byte-identical on purpose;
+its replay/backfill split lives in the body instead.
+
+**What that decision was and was not measured against.** D1 (dbt folder layering) and
+P5 (Airflow vs Dagster) both hold at 3/3, but neither sits anywhere near the boundary
+this delivery put at risk — they are orchestrator-choice and project-layout prompts, not
+reprocessing prompts. The case actually at risk is **A2** (`matrix-adversarial.tsv`:
+*"Relancé el proceso de ayer y ahora hay registros duplicados"*, EXPECTED
+`pipelines-architecture-data-engineering`), because streaming's new description contains
+"or when replaying a stream produced duplicates" — a near-verbatim lexical collision with
+`pipelines-architecture`'s own "a rerun that produced duplicate rows", now competing from
+a brand-new description, on a case already recorded FLAKY 4/5 in `GREEN-crowd-out.md`.
+**A2 was not run in this campaign.** Neither was any `EXPECTED=NONE` case. Leaving
+`pipelines-architecture`'s description untouched was still the right call — an unchanged
+description is the smaller risk — but the 19/19 above does not test it.
 
 | case | expected | hits | positions |
 |---|---|---|---|
@@ -57,9 +70,25 @@ in the body instead.
 | P8 | data-engineering | 3/3 | 2,2,2 |
 | P9 | streaming-data-engineering | 3/3 | 1,1,1 |
 
-All 14 regression cases hold at 3/3. A4 improved from a historical 2/3.
+All 14 regression cases hold at 3/3.
 
 ## What this does not establish
+
+**A2 was not measured.** It is the case whose expected destination
+(`pipelines-architecture`) now competes lexically with streaming's new description over
+"replay produced duplicates", and it was already FLAKY 4/5 before this delivery. Nothing
+in the 19 cases above covers it. Until A2 is re-run at the same rep count, the claim
+"adding streaming cost `pipelines-architecture` nothing" is unsupported for the one
+prompt where it was most likely to cost something.
+
+**No `EXPECTED=NONE` case was measured.** Every case above expects a skill to fire. The
+suite's *quietness* after adding a ninth description — that a prompt which should route
+nowhere still routes nowhere — is therefore unverified for this delivery. That axis has
+its own history: D6 and A8 both used to be `EXPECTED=NONE` cases, and the phantom-skill
+incident was found on exactly that axis.
+
+Both gaps are being closed in a separate run owned by the controller; this document will
+be appended, not rewritten, when that result lands.
 
 Routing, not answer quality. Whether the skill's content makes an answer better is a
 separate axis, measured by `tests/quality-uplift/`, whose first campaign was published
