@@ -439,7 +439,7 @@ Note the jargon-free triggers deliberately included alongside the technical ones
 - [ ] **Step 2: Verify the frontmatter parses and fits**
 
 ```bash
-cd /home/leonardo-garcia/dev/data-engineering-skills
+cd "$(git rev-parse --show-toplevel)"
 awk '/^---$/{c++; next} c==1{print} c==2{exit}' skills/streaming-data-engineering/SKILL.md | wc -c
 claude plugin validate .
 ```
@@ -462,7 +462,7 @@ In `data-engineering/SKILL.md`, add `streaming-data-engineering` back to the dom
 - [ ] **Step 6: Verify no dangling names and everything links**
 
 ```bash
-cd /home/leonardo-garcia/dev/data-engineering-skills
+cd "$(git rev-parse --show-toplevel)"
 grep -rn "iac-cloud-data-engineering" skills/ | grep -v "no skill\|does not exist\|not exist yet\|in scope for the suite"
 grep -rn "a streaming skill is planned\|streaming skill.*does not exist" skills/
 bad=0; for d in skills/*/; do while read -r l; do [ -z "$l" ] && continue; t=$(cd "$d" && realpath -m "$l"); [ -f "$t" ] || { echo "BROKEN $d -> $l"; bad=1; }; done < <(grep -oE '\]\([^)]+\.md\)' "$d/SKILL.md" | sed 's/^](//; s/)$//'); done; [ $bad -eq 0 ] && echo "links OK"
@@ -481,7 +481,7 @@ Expected: nine names including `dataforge:streaming-data-engineering`.
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /home/leonardo-garcia/dev/data-engineering-skills
+cd "$(git rev-parse --show-toplevel)"
 git add skills/
 git commit -m "feat(streaming): add streaming-data-engineering and close its forward-pointers"
 ```
