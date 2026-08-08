@@ -368,6 +368,8 @@ Se declara con transparencia, porque es la trampa evidente de este pase: el índ
 
 Ni "Synapse está deprecado" ni "Synapse y Fabric son alternativas equivalentes". La formulación fiel a las fuentes de hoy es:
 
+*Redacción propuesta para el skill, **no es una cita**: el bloque siguiente es texto redactado por esta verificación a partir de las fuentes citadas en §3.1–§3.3, no una transcripción de ninguna página. Las citas verbatim que lo sustentan están en esas secciones, cada una con su URL.*
+
 > Azure Synapse Analytics sigue siendo un servicio disponible y documentado en presente; Microsoft no ha publicado una fecha de retiro para el servicio. La orientación oficial es que **el trabajo nuevo empiece en Microsoft Fabric** ("If you're new to data warehousing, start with Fabric Data Warehouse"), y existen asistentes de migración —algunos aún en preview— para llevar cargas de Synapse a Fabric. Al mismo tiempo, la propia documentación de Fabric sigue recomendando Azure Synapse Spark para capacidades que Fabric todavía no cubre. Componentes concretos de Synapse **sí** han sido retirados o cerrados a proyectos nuevos, con fecha y lenguaje explícitos; el servicio en su conjunto, no.
 
 ---

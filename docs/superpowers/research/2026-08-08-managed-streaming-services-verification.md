@@ -37,9 +37,11 @@
 
 ## 1. La unidad de escalado que cada servicio expone al usuario, con el término del propio proveedor
 
-**VEREDICTO GLOBAL: CORRECTED**
+**VEREDICTO GLOBAL: SUPPORTED**
 
-Los cuatro sub-veredictos son SUPPORTED, pero la claim se corrige en su supuesto de encuadre: el plan trata la dependencia de tier como una particularidad de Event Hubs ("Event Hubs has more than one tier with different units"). **La dependencia de modo/tier no es exclusiva de Event Hubs**: en MSK la unidad depende del *cluster type* (Provisioned expone brokers, Serverless no expone ninguna) y en Kinesis depende del *capacity mode* (Provisioned expone shards, On-demand no). El único servicio que **nunca** expone una unidad es Pub/Sub. Detalle abajo.
+La claim, tal como la enuncia el brief —*"The scaling unit each exposes to the user — broker count, shard, throughput unit, or none — named with the vendor's own term"*— queda confirmada: los cuatro sub-veredictos son SUPPORTED y cada unidad se documenta con el término literal del proveedor. El brief no hace ninguna afirmación de encuadre sobre Event Hubs ni sobre ningún otro servicio, así que no hay nada que corregir.
+
+**Ampliación (hallazgo adicional, no corrección):** la unidad expuesta no es una propiedad fija del servicio sino del *modo o tier* contratado, y esto ocurre en tres de los cuatro servicios, no solo en Event Hubs. En MSK la unidad depende del *cluster type* (Provisioned expone brokers, Serverless no expone ninguna); en Kinesis depende del *capacity mode* (Provisioned expone shards, On-demand no); en Event Hubs hay **tres** unidades distintas repartidas en cuatro tiers (TU/PU/CU). El único servicio que **nunca** expone una unidad, en ningún modo, es Pub/Sub. La skill debe enunciar la unidad siempre junto al modo o tier que la hace visible; decir "Kinesis se escala por shards" sin más es incompleto. Detalle abajo.
 
 ### 1.1 AWS MSK — **VEREDICTO: SUPPORTED**. Término del proveedor: *broker nodes*, y solo en MSK Provisioned.
 
@@ -206,6 +208,8 @@ Fuente: misma página, verbatim.
 Fuente: `https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about`, sección "Why choose Azure Event Hubs?", verbatim.
 
 El skill **no** debe traducir "consumption-based" ni "zero infrastructure management" como "Event Hubs tiene un modo serverless": no existe tal producto nombrado, y el usuario sigue eligiendo y pagando TUs/PUs/CUs.
+
+**Advertencia de honestidad** (mismo criterio aplicado en §3.3 para Kinesis): en ninguna de las páginas consultadas Microsoft afirma explícitamente "Event Hubs does not offer a serverless tier". El veredicto SUPPORTED sobre un **negativo** se apoya en evidencia positiva —la tabla de tiers enumera exactamente Basic/Standard/Premium/Dedicated y ninguno se llama serverless; la capacidad es *"prepurchased units of capacity"*, que es el opuesto conceptual de on-demand; y Auto-inflate *"scales up by increasing the number of throughput units"*, es decir sigue habiendo unidad— más la ausencia total del término como nombre de modo en la documentación de producto. Es suficiente para el skill, pero el skill debe formularlo como "**Event Hubs no documenta ningún modo llamado serverless; su capacidad se precompra en TU/PU/CU**", no como "Microsoft declara que Event Hubs no es serverless".
 
 ### 2.4 GCP Pub/Sub — **VEREDICTO: SUPPORTED**. Google usa literalmente la palabra "serverless" como descriptor del servicio.
 
@@ -490,7 +494,7 @@ Fuente: misma página, verbatim.
 
 | # | Claim | Sub-veredictos por servicio | Veredicto global |
 |---|---|---|---|
-| 1 | Unidad de escalado expuesta, con el término del proveedor | MSK **SUPPORTED** (*broker nodes*, solo Provisioned) · Kinesis **SUPPORTED** (*shard*, solo provisioned mode) · Event Hubs **SUPPORTED** (TU / PU / CU según tier — **tres** unidades sobre cuatro tiers, no dos) · Pub/Sub **SUPPORTED** (ninguna; "does not have partitions") | **CORRECTED** — la dependencia de tier/modo no es exclusiva de Event Hubs; MSK y Kinesis también dejan de exponer unidad en su modo serverless/on-demand |
+| 1 | Unidad de escalado expuesta, con el término del proveedor | MSK **SUPPORTED** (*broker nodes*, solo Provisioned) · Kinesis **SUPPORTED** (*shard*, solo provisioned mode) · Event Hubs **SUPPORTED** (TU / PU / CU según tier — **tres** unidades sobre cuatro tiers, no dos) · Pub/Sub **SUPPORTED** (ninguna; "does not have partitions") | **SUPPORTED** — los cuatro términos son los del proveedor. *Ampliación, no corrección:* la unidad depende del modo/tier en tres de los cuatro servicios; MSK y Kinesis también dejan de exponer unidad en su modo serverless/on-demand |
 | 2 | Modo serverless / on-demand y su nombre exacto | MSK **SUPPORTED** (*MSK Serverless*, un *cluster type*) · Kinesis **CORRECTED** (hoy son *On-demand Standard*, *On-demand Advantage* y *Provisioned*; la propia doc de AWS se contradice) · Event Hubs **SUPPORTED** (no existe modo serverless; capacidad *prepurchased*, lo más cercano es *Auto-inflate*) · Pub/Sub **SUPPORTED** ("wholly managed, serverless") | **CORRECTED** |
 | 3 | Superficie Kafka vs. API propietaria (eje de acoplamiento) | MSK **SUPPORTED** ("runs open-source versions of Apache Kafka") · Event Hubs **SUPPORTED** con hedges (*Kafka endpoint* / *implements the same protocol* / *built-in compatibility*; solo standard/premium/dedicated; Streams y Transactions en public preview; compresión solo premium/dedicated y solo gzip) · Kinesis **SUPPORTED** (API AWS: `PutRecord`/`PutRecords`/`GetRecords`/`SubscribeToShard`; parte de la evidencia es negativa) · Pub/Sub **CORRECTED** (API propia gRPC/REST, **pero** Google documenta *Managed Service for Apache Kafka* como producto separado y un *Pub/Sub Group Kafka Connector*) | **CORRECTED** |
 | 4 | Ordenamiento acotado por shard/partición | MSK **SUPPORTED** (Kafka garantiza orden por topic-partition) · Event Hubs **SUPPORTED** (partición como *commit log*, clave de partición preserva "the exact order in which they arrived") · Kinesis **CORRECTED** (alcance = shard, pero el orden de escritura requiere `SequenceNumberForOrdering`, ausente en `PutRecords`) · Pub/Sub **CORRECTED** (alcance = *ordering key*, no partición; el verbo es "are **expected to be** received in order", no "guaranteed"; restricción de región; contradicción documental entre páginas de Google) | **CORRECTED** |
@@ -503,7 +507,7 @@ Ninguna claim quedó UNSUPPORTED: todas las fuentes fueron alcanzables y todas l
 
 **Sobre la unidad de escalado (claim 1):**
 
-- No presentar "Event Hubs es el raro con varios tiers". La formulación correcta es: **la unidad de escalado depende del modo o tier elegido en tres de los cuatro servicios**; solo Pub/Sub nunca expone ninguna.
+- Los cuatro términos del proveedor están confirmados y la skill puede usarlos tal cual. Lo que la skill debe añadir —hallazgo de esta verificación, no corrección de la claim— es que **la unidad de escalado depende del modo o tier elegido en tres de los cuatro servicios**; solo Pub/Sub nunca expone ninguna. Nombrar la unidad sin nombrar el modo que la hace visible ("Kinesis se escala por shards") es incompleto, y tratar la dependencia de tier como una rareza exclusiva de Event Hubs sería inexacto.
 - Event Hubs se dimensiona en **tres** unidades sobre cuatro tiers (Basic y Standard → *throughput unit*; Premium → *processing unit*; Dedicated → *capacity unit*). El encabezado de la propia página de Microsoft que solo nombra dos está incompleto.
 - Marcar la asimetría conceptual: en Kinesis el **shard es a la vez unidad de capacidad y unidad de ordenamiento**; en Event Hubs la **partición no es unidad de capacidad** (esa es la TU/PU/CU) sino solo de organización y paralelismo. Confundirlos lleva a dimensionar mal en Azure.
 - Para Google, si se menciona *Managed Service for Apache Kafka*, la unidad es **vCPU + RAM agregados de clúster**, no conteo de brokers. No copiar el modelo de MSK.

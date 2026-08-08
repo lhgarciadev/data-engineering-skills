@@ -643,6 +643,8 @@ Fuente: `https://docs.aws.amazon.com/cdk/v2/guide/resources.html`, verbatim.
 
 **4. La skill declara UNA sola vez, en el mismo bloque inicial, que el consejo es independiente de la herramienta en tres ejes y NO lo es en un cuarto:**
 
+*Redacción propuesta para el skill, **no es una cita**: los dos bloques siguientes son texto redactado por esta verificación a partir de las fuentes citadas en §3, no una transcripción de ninguna página. Las citas verbatim de Pulumi, AWS CDK y CloudFormation que lo sustentan están en esa sección, cada una con su URL.*
+
 > Independiente: estado deseado declarativo, plan/preview antes de aplicar, protección explícita contra destrucción en recursos con datos. Equivalentes: `terraform plan` ≈ `pulumi preview` ≈ `cdk diff`; `prevent_destroy` ≈ `protect` ≈ `RemovalPolicy`/`DeletionPolicy`.
 >
 > **NO independiente:** todo lo relativo al **state file como artefacto que tú alojas** — backend remoto, bloqueo, versionado, cifrado en reposo, recuperación de un estado corrupto, `state rm`/`import`. Aplica a Terraform/OpenTofu y, con otro vocabulario, a Pulumi ("state"/"backend"/"checkpoint"). **No aplica a AWS CDK**, donde ese artefacto no existe: la fuente de verdad es el stack de CloudFormation y su durabilidad la gestiona AWS.

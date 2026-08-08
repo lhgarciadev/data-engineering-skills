@@ -39,7 +39,7 @@ Google Cloud
 
 **Nota de método**: la herramienta de fetch basada en LLM (`WebFetch`) funcionó sin bloqueos para `docs.aws.amazon.com`; **no se recibió ningún 403 en esta ronda**. Aun así, para dejar auditable cada cita, **todas** las páginas se volvieron a descargar con `curl -A "Mozilla/5.0 …"` y se extrajo texto plano con un script Python de stripping de HTML; los archivos resultantes están en `/tmp/claude-1000/-home-leonardo-garcia-dev-data-engineering-skills/bc10f192-c330-4b36-b218-d872fbb1f871/scratchpad/raw/` con prefijo `crypto-`. Cada cita de este documento es grepeable en esos archivos. Para Microsoft se usaron **ambas** vías: las herramientas MCP de Microsoft Learn (`microsoft_docs_search` / `microsoft_docs_fetch`) y `curl` sobre `learn.microsoft.com`; el contenido coincide y las citas se tomaron del texto obtenido por `curl` (guardado en crudo). Se usó `WebSearch` una sola vez, para localizar la página exacta donde AWS documenta el cambio de terminología CMK → KMS key; la cita final se verificó y guardó desde la página original, no desde el resumen del buscador.
 
-**Nota sobre elisión de cifras**: por la regla no-numbers del repo, las cifras de rotación, cuotas y precios que aparecían dentro de las citas se han elidido como `[…]`. Los identificadores de algoritmo (AES-256, AES-GCM, AES-128, FIPS 140-2, TLS 1.2/1.3) se conservan porque son nombres de algoritmo/estándar, no límites de servicio. Las elisiones concretas se señalan bajo cada cita afectada.
+**Nota sobre elisión de cifras**: por la regla no-numbers del repo, las cifras de rotación, cuotas y precios que aparecían dentro de las citas se han elidido como `[…]`. Los identificadores de algoritmo (AES-256, AES-GCM, AES-128, FIPS 140-2, TLS 1.2/1.3) se conservan porque son nombres de algoritmo/estándar, no límites de servicio. Por el mismo criterio se conservan los **identificadores de versión** (versiones de API, de producto o de licencia): no son precios, límites, cuotas, tipos de instancia ni tamaños de nodo, y además son trazabilidad exigida por el brief; ver §3.A.2, donde `2026-02-01` es load-bearing para saber desde cuándo aplica un default. Las elisiones concretas se señalan bajo cada cita afectada.
 
 ---
 
@@ -276,9 +276,9 @@ Cuál usar (recomendación explícita del proveedor, con el motivo de seguridad)
 
 Fuente: misma página, bloque "Warning", verbatim.
 
-> "Azure RBAC is the recommended authorization system for the Azure Key Vault data plane. Starting with API version […], Azure RBAC is also the default access control model for new key vaults, consistent with the Azure portal experience."
+> "Azure RBAC is the recommended authorization system for the Azure Key Vault data plane. Starting with API version 2026-02-01, Azure RBAC is also the default access control model for new key vaults, consistent with the Azure portal experience."
 
-Fuente: misma página, sección "Data plane access control recommendation", verbatim; se ha elidido el identificador de versión de API por consistencia con la regla no-numbers del repo (el texto original nombra una versión concreta).
+Fuente: misma página, sección "Data plane access control recommendation", verbatim, sin elisiones. **Nota sobre la regla no-numbers:** `2026-02-01` es un **identificador de versión de API**, no un precio, límite, cuota, tipo de instancia ni tamaño de nodo, así que la regla no lo alcanza y se conserva. Es además trazabilidad exigible —igual que `v1.15.8` o `BUSL-1.1` en la verificación de tooling IaC— y aquí es load-bearing: sin el "desde cuándo", el lector no puede saber si el default aplica a su key vault.
 
 Y el propio doc de seguridad de Key Vault marca las access policies como no recomendadas:
 
