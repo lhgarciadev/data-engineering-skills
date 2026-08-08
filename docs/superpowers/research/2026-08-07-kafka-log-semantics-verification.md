@@ -179,6 +179,34 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "States",
 
 ---
 
+## 10. Qué es exactamente un KTable, y su relación con un topic compactado
+
+**VEREDICTO: CORREGIDO.** Agregado en el fix round de la revisión de rama, tras un finding de que `stream-processing-patterns.md` afirmaba dos veces, de forma definicional, que "un KTable es un topic compactado con una interfaz de consulta" — una identidad que la documentación de Kafka **no** establece. La documentación define el KTable por el *changelog stream*, no por la compactación; la compactación aparece como recomendación de almacenamiento ("probably want to enable"), no como parte de la definición.
+
+### 10.1 La definición literal
+
+> "Only the Kafka Streams DSL has the notion of a KTable. A KTable is an abstraction of a changelog stream, where each data record represents an update. More precisely, the value in a data record is interpreted as an 'UPDATE' of the last value for the same record key, if any (if a corresponding key doesn't exist yet, the update will be considered an INSERT). Using the table analogy, a data record in a changelog stream is interpreted as an UPSERT aka INSERT/UPDATE because any existing row with the same key is overwritten. Also, null values are interpreted in a special way: a record with a null value represents a 'DELETE' or tombstone for the record's key."
+
+Fuente: `https://kafka.apache.org/43/streams/developer-guide/dsl-api/`, sección "KTable", verbatim (descargado con `curl -A "Mozilla/5.0"` y extraído con el mismo script de strip de tags usado en el resto de este research).
+
+### 10.2 La compactación es consecuencia recomendada, no definición
+
+> "Effects of Kafka's log compaction: Another way of thinking about KStream and KTable is as follows: If you were to store a KTable into a Kafka topic, you'd probably want to enable Kafka's log compaction feature, e.g. to save storage space. However, it would not be safe to enable log compaction in the case of a KStream because, as soon as log compaction would begin purging older data records of the same key, it would break the semantics of the data."
+
+Fuente: misma página y sección, verbatim.
+
+**Esto es exactamente lo que invalida la identidad**: el texto es condicional ("if you were to store a KTable into a Kafka topic, you'd probably want to enable...") y motivado por ahorro de espacio, no por corrección semántica. Un topic fuente pasado a `builder.table()` no tiene por qué estar compactado para que el KTable resultante sea válido; la compactación es lo que hace que un topic sea un hogar durable seguro para una tabla, no lo que convierte una cosa en la otra.
+
+### 10.3 La mitad "queryable" de la claim sí está soportada
+
+> "KTable also provides an ability to look up current values of data records by keys. This table-lookup functionality is available through join operations (see also Joining in the Developer Guide) as well as through Interactive Queries."
+
+Fuente: misma página, sección "KTable", verbatim. Consistente con la claim 9 de este research (Interactive Queries sobre state stores locales).
+
+**Wording corregido para el skill**: describir el KTable como "un changelog stream leído como upserts, materializado en una vista de estado actual consultable por key", y la compactación como el mecanismo de almacenamiento que hace que un topic pueda alojar esa tabla de forma durable. Nunca escribir "un KTable es un topic compactado" como identidad.
+
+---
+
 ## Resumen de veredictos
 
 | # | Claim | Veredicto |
@@ -192,6 +220,7 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "States",
 | 7 | Sin key, el particionador por defecto es sticky (no round-robin) | **SUPPORTED** — verbatim, fuente: `producer-configs` 4.3; round-robin es una clase distinta y no-default, con bug conocido documentado |
 | 8 | Kafka Streams es una librería cliente embebida en la JVM del usuario (no un clúster separado), con procesamiento one-record-at-a-time | **SUPPORTED** — verbatim, fuente: `streams/core-concepts` 4.3 |
 | 9 | El estado de Kafka Streams vive en "local state stores" embebidos por tarea, con tolerancia a fallos, y es consultable directamente vía Interactive Queries | **SUPPORTED** — verbatim, incluyendo la frase literal "local state stores"; fuente: `streams/core-concepts` 4.3, sección "States" |
+| 10 | "Un KTable es un topic compactado con interfaz de consulta" | **CORREGIDO** — la doc define el KTable como "an abstraction of a changelog stream" (upsert por key, null = tombstone) y consultable por key vía joins e Interactive Queries; la compactación aparece como recomendación condicional de almacenamiento ("you'd probably want to enable"), no como definición. Fuente: `streams/developer-guide/dsl-api` 4.3 |
 
 ## Implicación para el skill
 
@@ -200,4 +229,5 @@ Fuente: `https://kafka.apache.org/43/streams/core-concepts/`, sección "States",
 - Sobre `acks=all`: siempre calificar como "todas las réplicas in-sync en ese momento", nunca "todas las réplicas del topic" — son conjuntos distintos si el ISR se ha reducido.
 - Sobre el comportamiento sin key: describirlo como "sticky por defecto", nunca como "round-robin (o sticky)" — round-robin no es el default y no es intercambiable con sticky.
 - Claim 8 (añadida durante la redacción del Paso 7): el skill puede describir Kafka Streams como "librería cliente JVM embebida en la aplicación, no un clúster separado" con total confianza — es la cita textual de la propia página de conceptos de Kafka Streams, no una inferencia.
+- Claim 10 (añadida en el fix round de la revisión de rama): nunca escribir "un KTable es un topic compactado" — es una identidad que la fuente no establece. Usar "changelog stream leído como upserts, materializado en una vista de estado actual consultable por key", y presentar la compactación como el mecanismo de almacenamiento que hace durable esa tabla en un topic, no como su definición.
 - Claim 9 (añadida en fix round 1, tras finding de la revisión, y extendida en el mismo round para cubrir "queryable in place"): el skill puede usar la frase "local state stores" para Kafka Streams con total confianza — es la frase literal de la doc, no una paráfrasis del research — y puede describir ese estado como consultable en el sitio ("queryable in place") apoyándose en la cita de Interactive Queries del mismo párrafo.
