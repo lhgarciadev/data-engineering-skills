@@ -16,6 +16,7 @@
 - Frontmatter must stay **≤ 1024 characters** total, and must parse as YAML. A `: ` inside an unquoted scalar breaks parsing and the skill loads with every field silently dropped. Run `claude plugin validate .` after any frontmatter edit.
 - **The suite is complete after this delivery.** No skill may say a domain "has no skill in this suite yet". Every such phrase is a defect after Task 8 — see Task 8 Step 1 for the enumeration that proves none survive. The inverse of the phantom-skill rule still holds: never name a skill that does not exist.
 - **THE NO-NUMBERS RULE (spec §3).** This skill names cloud services. It must never state a price, a service limit, a quota, an instance type, a node size, or a maximum partition/shard count. Cost is taught as a **shape** — per-hour provisioned, per-request, per-GB-scanned, per-GB-stored, egress — never as a figure. A number in a reference file is a delivery-blocking defect, because it is the claim that rots fastest and cannot be kept sourced. Every content task carries a grep for this.
+  **The rule is the prose above; the grep is only an instrument for it.** Billing *units* are required — `per GB / per month` is a shape and must survive verbatim where a source states it; only *amounts* are forbidden. Version identifiers (`2026-02-01`) are not amounts either, and are required for traceability. If the grep flags a legitimate unit, fix the grep, never the sentence. It was narrowed once already for exactly this: an earlier form matched the bare string `per month` and forced a reference file to rephrase a vendor's literal meter name.
 - **THE SERVICE-NAME RULE (spec §5).** Every named service is a claim and needs a verdict. The streaming delivery's most expensive finding was that six different writers shipped a true-sounding engine claim with no verdict behind it, and two were false. This skill is nothing but service names, so the exposure is worse. Every content task and every review prompt must grep the research corpus for each service named and delete or verify anything without a verdict.
 - Description patterns, all three measured in this repo, not stylistic preference:
   - jargon-free triggers alongside technical ones — real diagnostic prompts do not use domain vocabulary;
@@ -189,7 +190,7 @@ Cross-link the table-format and lakehouse material in `../../modeling-data-engin
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w statefulness-and-the-one-way-door.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' statefulness-and-the-one-way-door.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' statefulness-and-the-one-way-door.md
 ```
 Expected: word count between 1600 and 3500; the numbers grep returns **nothing** (the no-numbers rule); then run the anchored-link checker from Global Constraints and expect zero BROKEN lines.
 
@@ -226,7 +227,7 @@ Cross-link `../../streaming-data-engineering/references/the-log-and-partitioning
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w choosing-a-managed-service.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' choosing-a-managed-service.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' choosing-a-managed-service.md
 for s in MSK Kinesis "Event Hubs" "Pub/Sub" EMR Glue Dataproc Databricks Fabric Synapse; do
   grep -qi "$s" choosing-a-managed-service.md && \
   { grep -rqi "$s" ../../../docs/superpowers/research/2026-08-08-*.md && echo "VERDICT OK  $s" || echo "NO VERDICT  $s"; }
@@ -265,7 +266,7 @@ git commit -m "docs(iac-cloud): add the six selection axes and the managed-servi
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w sizing-and-the-cost-model.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' sizing-and-the-cost-model.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' sizing-and-the-cost-model.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing — this file is the highest-risk one for the no-numbers rule, since it is about cost; then the anchored-link checker with zero BROKEN lines.
 
@@ -302,7 +303,7 @@ Cross-link `../../quality-data-engineering/references/data-contracts-and-schema-
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w identity-network-and-encryption.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' identity-network-and-encryption.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' identity-network-and-encryption.md
 grep -noE "CMK|CMEK|BYOK|managed identit(y|ies)|service account|IAM role|Workload Identity" identity-network-and-encryption.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; every term in the third grep must appear in `2026-08-08-workload-identity-verification.md` or `2026-08-08-encryption-at-rest-verification.md` attached to the same provider. Using one provider's term for another's mechanism is a delivery-blocking defect.
@@ -341,7 +342,7 @@ This is the **only** IaC-practice file, and it earns its place solely where stat
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w iac-for-stateful-resources.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' iac-for-stateful-resources.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' iac-for-stateful-resources.md
 grep -c "prevent_destroy" iac-for-stateful-resources.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; `prevent_destroy` appears and its described behaviour matches the Task 1 verdict verbatim — re-read the verification doc and compare, do not rely on memory.
@@ -385,7 +386,7 @@ Cross-link, with two-level paths since this file lives in `references/`: `../../
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w platform-archetypes.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' platform-archetypes.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' platform-archetypes.md
 grep -oE '\]\(\.\./\.\./[^)]+\)' platform-archetypes.md | sed 's/^](//; s/)$//' | while read -r l; do [ -f "$(realpath -m "$l")" ] && echo "OK $l" || echo "BROKEN $l"; done
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; every cross-skill link `OK` and every one of them two levels deep. Then confirm all five archetypes are present and each one names a domain skill it defers to — an archetype with no reciprocal boundary is an invasion.
