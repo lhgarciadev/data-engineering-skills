@@ -94,3 +94,47 @@ Routing, not answer quality. Whether the skill's content makes an answer better 
 separate axis, measured by `tests/quality-uplift/`, whose first campaign was published
 VOID. And correctness of the content is a third axis, covered by the verification
 documents under `docs/superpowers/research/`.
+
+## Appendix — the two gaps this campaign did not cover, measured separately
+
+The whole-branch review flagged that the 19 cases above measured the ones most
+likely to pass: A2, whose prompt lexically collides with the new description, and
+every `EXPECTED=NONE` case, so the suite's quietness after adding a skill was
+unverified. Both were run afterwards, on opus, and are recorded here rather than
+left as an open claim.
+
+### The negatives — clean
+
+| case | hits | verdict |
+|---|---|---|
+| N1 | 3/3 | PASS |
+| N2 | 3/3 | PASS |
+| N3 | 3/3 | PASS |
+| N4 | 3/3 | PASS |
+
+Adding a skill did not make the suite noisier. N1–N4 stay silent 3/3.
+
+### A2 — the collision hypothesis is refuted
+
+**Streaming never fired on A2.** Across ten reps run today, the only skills invoked
+were `superpowers:systematic-debugging` (6) and `pipelines-architecture-data-engineering`
+(5). The new description does not capture the prompt, so the lexical collision
+between "replaying a stream produced duplicates" and "relancé el proceso y ahora hay
+registros duplicados" did not cost pipelines the case.
+
+What the reps do show is that A2 is unstable, and was already:
+
+| when | reps | reached pipelines |
+|---|---|---|
+| before streaming existed (opus) | 5 | 4 — recorded FLAKY |
+| today (opus) | 10 | 5 |
+
+That is not a regression this branch can be charged with. `pipelines-architecture`'s
+description is byte-identical to what it was before this delivery — verified, not
+assumed — so the stimulus A2 responds to did not change. The honest reading is that
+A2 is a genuinely flaky case, the earlier 4/5 was the lucky end of that instability,
+and ten reps place it near half.
+
+It remains the weakest case in the suite and deserves attention on its own terms —
+a body-level fix or a re-worded case, not a description edit, since the descriptions
+are what the 19/19 above was measured against.
