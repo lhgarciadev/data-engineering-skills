@@ -12,7 +12,7 @@ That's the distinction that matters: **bounded vs unbounded**, not "batch is slo
 
 ## What the model says about batch and streaming — not the popular paraphrase
 
-A common shorthand for this topic is "batch is a special case of streaming." It's a tidy sentence, and it's not what the paper that unified this area actually argues.
+A common shorthand for this topic is "batch is a special case of streaming." It's a tidy sentence, and it gets attributed to the paper that unified this area — which never wrote it, and frames the relationship differently.
 
 Akidau et al.'s "The Dataflow Model" (VLDB 2015) is explicit that it avoids exactly that framing. On bounded and unbounded data versus the streaming/batch label:
 
@@ -24,9 +24,9 @@ Two things fall out of that. First, "streaming" and "batch" describe *engines*, 
 
 That's the actual unification: not a subset relationship, but a shared vocabulary that makes engine choice a tuning decision instead of a rewrite. This is also why the same operations — grouping, windowing, aggregating — apply whether the input is a fixed file or a live topic; the model was built so that "how much of the data is here right now" doesn't change what operations mean, only how often results get emitted.
 
-If you want a directional claim instead of "irrelevant," the closest one on record comes from a different source — Akidau's own blog post, not the peer-reviewed paper — and it points the *other* way from the popular paraphrase: "well-designed streaming systems actually provide a strict superset of batch functionality" (Akidau, "Streaming 101," O'Reilly Radar, 2015). Superset of A over B is the mirror of "B is a special case of A" — so if you insist on a subset relationship at all, the sourced version has streaming as the superset and batch as the special case, not the reverse. But treat that as one author's blog-post framing, not the paper's own position; the paper's actual position is the "largely irrelevant" line above, and that's the one to carry forward. The practical takeaway for this skill is simpler than either framing: don't reach for streaming because it sounds architecturally superior. It isn't a promotion from batch. It's a different tool with a different cost profile, covered next.
+If you want a directional claim instead of "irrelevant," the closest one on record comes from a different source — Akidau's own blog post, not the peer-reviewed paper: "well-designed streaming systems actually provide a strict superset of batch functionality" (Akidau, "Streaming 101," O'Reilly Radar, 2015). Be precise about what that does and doesn't settle, because the problem with the popular paraphrase is **attribution, not direction**. A superset of A over B is the mirror of "B is a special case of A," so "streaming provides a superset of batch functionality" and "batch is a special case of streaming" assert the same relationship — they are one claim, not two pointing opposite ways. What's unsourced is the wording: the phrase "special case" appears in neither the paper nor the blog post, so it can't be quoted as either one's. And the framing itself is the blog post's, not the paper's: the paper declines to rank the two at all and says the distinction of streaming or batch is "largely irrelevant" from the model's perspective. Use the superset sentence if you want a directional statement, attribute it to the blog post, and don't hand the "special case" wording to the paper. The practical takeaway for this skill is simpler than either framing: don't reach for streaming because it sounds architecturally superior. It isn't a promotion from batch. It's a different tool with a different cost profile, covered next.
 
-## The trade that decides: latency against cost, completeness, and reasoning difficulty
+## The trade that decides: latency against cost, operational burden, and reasoning difficulty
 
 If boundedness is the technical distinction, the trade that actually decides which one to build is economic and cognitive, not technical.
 
