@@ -4,7 +4,7 @@
 
 ## 1. Contexto y objetivo
 
-Esta skill cierra la suite en 9/9 y convierte en frontera real los seis punteros que hoy
+Esta skill cierra la suite en 9/9 y convierte en frontera real los diez punteros que hoy
 declinan hacia un dominio que no existe. Es la única skill de la suite que se escribe
 sabiendo exactamente qué le van a preguntar: las otras ocho ya declararon por escrito qué
 le ceden.
@@ -45,7 +45,7 @@ Se hereda literal del spec de streaming §2.1, sin renegociar:
 | diseño del esquema dimensional | hosting del almacén que lo contiene |
 | tuning de memoria de executors | tipo de nodo y forma de cobro del cluster |
 
-### 2.2 Los seis forward-pointers a cerrar
+### 2.2 Los diez forward-pointers a cerrar
 
 Al entregar esta skill dejan de ser texto muerto. Ubicaciones exactas, verificadas contra
 el árbol en `432790b`:
@@ -53,17 +53,35 @@ el árbol en `432790b`:
 | Skill | Ubicación | Qué cede |
 |---|---|---|
 | `spark-data-engineering` | `SKILL.md:3` (description) | deployment e infraestructura de clusters Spark |
+| `spark-data-engineering` | `SKILL.md:21` (when-to-use) | ídem, en el cuerpo |
 | `modeling-data-engineering` | `SKILL.md:3` (description) | infraestructura y hosting de NoSQL |
+| `modeling-data-engineering` | `SKILL.md:23` (when-to-use) | ídem, en el cuerpo |
 | `streaming-data-engineering` | `SKILL.md:3` (description) | provisión, sizing y elección de servicio gestionado |
 | `streaming-data-engineering` | `SKILL.md:22` (when-to-use) | ídem, en el cuerpo |
 | `pipelines-architecture-data-engineering` | `references/serving-pipeline-output.md:27` | hosting e infraestructura de una API de serving |
-| `data-engineering` (orquestador) | `SKILL.md:3`, `:16`, `:22` | el dominio IaC/cloud como tal |
+| `data-engineering` (orquestador) | `SKILL.md:3` (description) | el dominio IaC/cloud como tal |
+| `data-engineering` (orquestador) | `SKILL.md:16` (when-to-use) | ídem |
+| `data-engineering` (orquestador) | `SKILL.md:22` (paso 3, síntesis) | ídem |
 
-**Cuatro de las seis son descriptions** — `spark`, `modeling`, `streaming` y el
-orquestador. Las otras dos son cuerpo: `streaming/SKILL.md:22` y la línea 27 del reference
-de `pipelines`. La description de `pipelines` no se toca: su puntero sobre hosting de APIs
-apunta a su propio reference file, no a una skill inexistente. Esa distinción decide qué
-se re-mide y por qué (§6).
+**Cuatro son descriptions** — `spark`, `modeling`, `streaming` y el orquestador — y seis
+son cuerpo. Esa distinción decide qué se re-mide y por qué (§6). La description de
+`pipelines` no se toca: su puntero sobre hosting de APIs apunta a su propio reference file,
+no a una skill inexistente.
+
+**Cómo se llegó a diez, y por qué importa.** La primera enumeración devolvió seis porque el
+patrón de grep era `"no skill in this suite yet"`. Las líneas de `spark:21` y `modeling:23`
+usan otra redacción — *"an IaC/cloud skill is planned but does not exist yet"* — y quedaron
+fuera del conteo. El patrón determinó el resultado, que es exactamente el artefacto de
+medición contra el que advierte el proceso de este repo. El plan de implementación no debe
+confiar en esta tabla: **enumera de nuevo con al menos dos patrones independientes** —
+`iac`, `terraform`, `infrastructure as code` por un lado; `no skill`, `does not exist`,
+`not yet`, `suite yet` por otro — y falla si el conteo no da diez.
+
+**Dos menciones que NO se editan**, verificadas y decididas: `data-engineering/SKILL.md:14`
+usa Terraform dentro de un ejemplo de petición multi-dominio y sigue siendo válido —
+gana un dominio al que rutear, no pierde sentido. `data-engineering/SKILL.md:36` es una
+fila de common mistakes sobre skills no instaladas en general, no sobre IaC, y sobrevive
+intacta.
 
 **Consecuencia sobre el orquestador.** Sus tres menciones dicen hoy que el dominio existe
 pero no tiene skill y hay que cubrirlo directamente. Las tres se reemplazan por la skill
@@ -176,7 +194,7 @@ que no tiene equivalente en infraestructura de aplicación. Secretos y state.
 
 ### 4.6 `platform-archetypes.md`
 
-El archivo que absorbe los seis punteros. Cinco arquetipos — plataforma de streaming,
+El archivo que absorbe los diez punteros. Cinco arquetipos — plataforma de streaming,
 cómputo Spark/distribuido, warehouse-lakehouse, almacén NoSQL de serving, hosting de API
 de serving — cada uno con la misma estructura: qué decide la skill de dominio, qué se
 decide aquí, y cuál es la puerta de un solo sentido del arquetipo.
