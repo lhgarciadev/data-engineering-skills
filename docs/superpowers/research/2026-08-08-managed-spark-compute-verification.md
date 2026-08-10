@@ -404,7 +404,7 @@ Ni "Synapse está deprecado" ni "Synapse y Fabric son alternativas equivalentes"
 - **No escribir "Dataproc" ni "Dataproc Serverless" como nombre actual.** Usar **"Managed Service for Apache Spark"** y sus dos despliegues, **"on clusters"** y **"serverless"**. Si el skill quiere ayudar al lector a reconocer material antiguo, citar la fórmula del proveedor: *"formerly Dataproc on Compute Engine"* / *"formerly Google Cloud Serverless for Apache Spark"*. Y advertir que el prefijo `dataproc` **sigue vivo** en versiones de imagen, propiedades de clúster y nombres de recursos, aunque el nombre comercial haya cambiado.
 - **No presentar EMR y EMR Serverless como dos servicios.** AWS lo escribe como *"a deployment option for Amazon EMR"*.
 - Si el skill nombra la oferta Spark de Glue, el término del proveedor es **"AWS Glue for Spark"**.
-- **Este renombre tiene fecha de caducidad conocida.** Google renombró este producto dos veces en aproximadamente dieciocho meses (julio 2025 y enero 2026, según sus propias notas de versión). Cualquier nombre que el skill fije debe llevar la fecha de verificación adjunta.
+- **Este renombre tiene fecha de caducidad conocida.** Google renombró este producto **dos veces**, y las dos evidencias fechadas en sus propias notas de versión son la entrada del **04 de julio de 2025** (primer nombre nuevo ya en uso) y la del **24 de enero de 2026** (segundo nombre nuevo ya en uso); ver §1.4. Las fechas son lo sourced: son fechas de *entrada de release note en la que el nombre ya aparece*, no fechas del renombre en sí, así que no se deriva de ellas ningún intervalo. Cualquier nombre que el skill fije debe llevar la fecha de verificación adjunta.
 
 **Sobre "serverless" (claim 2)**
 
