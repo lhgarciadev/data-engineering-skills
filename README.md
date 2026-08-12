@@ -31,7 +31,9 @@ Claude Code users who prefer the plugin/marketplace flow instead of manual symli
 | `modeling-data-engineering` | Dimensional modeling (star/snowflake schemas, grain, additivity, fact table types), SCD and dimension patterns (conformed, bridge, junk, role-playing, late-arriving), modeling methodology choice (Inmon vs. Kimball vs. Data Vault), Data Vault 2.0 (hubs/links/satellites, hash keys), modern lakehouse modeling (medallion, One Big Table), and modeling for access patterns (NoSQL single-table design, event/stream modeling, bitemporal modeling) |
 | `streaming-data-engineering` | The append-only log and partitioning (topics, offsets, partition keys, acks/ISR, retention vs. compaction), event time vs. processing time, windows and watermarks, state and checkpointing, delivery semantics and exactly-once, stream-stream and stream-table joins, CDC as a stream, and Lambda vs. Kappa with replay |
 
-8 of the suite's 9 planned domain skills are shipped; the remaining one — IaC/cloud — ships later, and has no skill yet. See `docs/` for the design specs.
+| `iac-cloud-data-engineering` | Managed-service selection and the six axes that decide it, sizing and the cost shape (per-hour, per-request, per-GB-scanned, per-GB-stored, egress), service identity, network placement and encryption around a data store, infrastructure code for resources that hold state, and the five platform archetypes |
+
+All 9 domain skills are shipped. See `docs/` for the design specs.
 
 Every domain skill's identifier ends in the `-data-engineering` suffix, leading with its domain word (the orchestrator is just `data-engineering`), so none of them collide with unrelated `python`/`sql`/etc. skills you may already have installed elsewhere — `~/.claude/skills/` and `~/.agents/skills/` are flat, shared namespaces. The plugin itself is named `dataforge` — kept distinct from the orchestrator's `data-engineering` so a marketplace install never doubles up as `dataforge:data-engineering` colliding with anything.
 

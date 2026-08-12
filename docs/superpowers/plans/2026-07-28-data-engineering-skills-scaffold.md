@@ -204,7 +204,7 @@ git commit -m "Scaffold repo: README with install instructions, optional Claude 
 - [ ] **Step 1: Copy the skill folder**
 
 ```bash
-cp -R /Users/leonardogarcia/dev/legacy-team-repo/.claude/skills/python-data-engineering \
+cp -R <ruta-al-repo-de-origen>/.claude/skills/python-data-engineering \
       data-engineering-skills/skills/python
 ```
 
@@ -231,7 +231,7 @@ Expected: no output (only the renamed frontmatter line existed, and it's now fix
 
 - [ ] **Step 4: Verify the 7 reference files copied intact**
 
-Run: `diff -rq /Users/leonardogarcia/dev/legacy-team-repo/.claude/skills/python-data-engineering/references data-engineering-skills/skills/python/references`
+Run: `diff -rq <ruta-al-repo-de-origen>/.claude/skills/python-data-engineering/references data-engineering-skills/skills/python/references`
 Expected: no output (identical).
 
 - [ ] **Step 5: Commit**
@@ -369,7 +369,7 @@ Expected: shows Task 4's commit.
 - [x] **Step 2: Remove the backup from this repo**
 
 ```bash
-cd /Users/leonardogarcia/dev/legacy-team-repo
+cd <ruta-al-repo-de-origen>
 git rm -r .claude/skills/python-data-engineering/
 git commit -m "Remove python-data-engineering: migrated to data-engineering-skills repo"
 ```
