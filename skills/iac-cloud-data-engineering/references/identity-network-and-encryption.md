@@ -40,14 +40,15 @@ Access-control reviews are trained on write and delete, because those break thin
 
 ## Network placement
 
-The other independent control is reachability. A store on a public endpoint is reachable by anyone who can resolve its name and present a credential; on a private path it is reachable only from networks you attached to it, so a leaked credential is not sufficient on its own.
+The other independent control is reachability: a public endpoint answers anyone who resolves its name and presents a credential, a private path only networks you attach.
 
-Keep the axis provider-neutral — each provider has its own name for the private path, and porting a term learned elsewhere is how these documents go wrong. What generalises is the risk asymmetry that makes a public data endpoint a different class of exposure from a public application endpoint:
+A public *data* endpoint is a different class of exposure from a public application one. **The blast radius is the corpus, not the request** — an application endpoint leaks what the compromised operation touches, a store leaks accumulated history, including everything deleted from the systems of record, never the landing zone. And **nothing fails closed in front of it**: an application validates, filters, rate-limits and logs, a data endpoint has authorization alone in the path, and the credential you could not eliminate works from anywhere until this path stops it.
 
-- **The blast radius is the corpus, not the request.** A compromised application endpoint leaks what the compromised operation touches. A compromised warehouse or object-store endpoint leaks history — including records of people who stopped being customers long ago, and everything deleted from the systems of record but never from the landing zone.
-- **The store has no application layer to fail closed.** An application in front of data validates, filters, rate-limits and logs; a directly exposed data endpoint has authorization and nothing else in the path. And any credential that could not be moved onto the identity mechanisms above is sitting in a configuration store somewhere — the private path is what stops it working from anywhere on the internet.
+**The private path is a named product**, checked 2026-08-12: AWS **PrivateLink** (**interface VPC endpoint**), **Azure Private Link** (**private endpoint**), Google Cloud **Private Service Connect** (**endpoint**). Meter shape: [`sizing-and-the-cost-model.md`](sizing-and-the-cost-model.md). All three are regional by default, with named ways out: `cross Region endpoint`, `Global reach`, `global access`. Azure's endpoint "must be deployed in the same region and subscription as the virtual network"; its target need not be.
 
-Network placement is *in addition to* identity, never a replacement — and the reverse is the more common mistake: a private path does not make an over-broad read grant safe, it only puts the over-permissioned reader inside the network.
+**AWS's gateway endpoint is not PrivateLink**, in AWS's words: "Gateway endpoints do not use AWS PrivateLink". It works by route table, not DNS; instances reaching S3 or DynamoDB through one "access the service using its public endpoint". Both types exist for both services.
+
+Placement is *in addition to* identity: a private path does not make an over-broad read grant safe, it relocates the over-permissioned reader. **Not settled here**: what disabling public access does, differing by provider and service.
 
 ## "Encrypted at rest by default" — what it actually buys
 
