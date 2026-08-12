@@ -20,3 +20,4 @@ N3	negative	NONE	¿Cómo hago un rebase interactivo en git para aplastar los úl
 N4	negative	NONE	Necesito un decorador en Python que cachee los resultados de una función de fibonacci.
 P9	positive	streaming-data-engineering	Necesito procesar eventos de Kafka y agregar por ventanas de 5 minutos. ¿Cómo manejo los que llegan tarde?
 D8	discriminator	streaming-data-engineering	Mi job de Spark lee de Kafka y quiero exactly-once end-to-end hacia Delta. ¿Alcanza con el checkpoint?
+D11	discriminator	iac-cloud-data-engineering	¿Debería correr mis jobs de Spark sobre Kubernetes o contratar un servicio administrado como EMR o Dataproc?
