@@ -6,7 +6,7 @@ Most "which service should we use?" conversations are six separate questions ask
 
 ## The six axes
 
-Name them and keep the names — `platform-archetypes.md` applies these same six to whole platform stacks.
+Name them and keep the names — [`platform-archetypes.md`](platform-archetypes.md) applies these same six to whole platform stacks.
 
 - **Operational burden.** Who gets paged, for what, and what they can do once paged. Not "how much work" — *whose* work, and where it goes when it stops being yours.
 - **Scaling granularity.** The smallest unit of capacity you can add or remove, in the vendor's own term — and whether the vendor exposes one at all. Always state the unit together with the mode or tier that makes it visible; the unit belongs to the mode, not the product.
@@ -40,7 +40,7 @@ So: **the product name is never the answer, the billing unit is.** Ask what mete
 - **Load close to its peak most of the time** favours a provisioned shape. You pay for the capacity either way; buying it as a standing unit is usually cheaper and gives you a knob to turn.
 - **Load that is spiky, unpredictable, or idle most of the day** favours a consumption shape, since the alternative is paying for a peak you touch briefly.
 
-Two traps sit on top of that. First, an on-demand mode hides the underlying mechanism rather than deleting it — AWS documents that Kinesis Data Streams in on-demand mode still distributes by partition key across shards it manages for you, and that it "does not detect and isolate hash keys that are driving a higher portion of incoming traffic to a particular shard", recommending provisioned mode for highly uneven keys. A skewed key is still a skewed key. Second, warm-capacity features such as EMR Serverless' pre-initialized capacity reintroduce a standing charge in exchange for start-up latency, moving the product back toward the provisioned shape you thought you had left. Billing shapes crossed against workload shapes are `sizing-and-the-cost-model.md`; here, the shape rather than the name is the selection input.
+Two traps sit on top of that. First, an on-demand mode hides the underlying mechanism rather than deleting it — AWS documents that Kinesis Data Streams in on-demand mode still distributes by partition key across shards it manages for you, and that it "does not detect and isolate hash keys that are driving a higher portion of incoming traffic to a particular shard", recommending provisioned mode for highly uneven keys. A skewed key is still a skewed key. Second, warm-capacity features such as EMR Serverless' pre-initialized capacity reintroduce a standing charge in exchange for start-up latency, moving the product back toward the provisioned shape you thought you had left. Billing shapes crossed against workload shapes are [`sizing-and-the-cost-model.md`](sizing-and-the-cost-model.md); here, the shape rather than the name is the selection input.
 
 ## The worked comparison: streaming ingest
 

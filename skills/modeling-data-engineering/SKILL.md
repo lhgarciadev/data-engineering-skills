@@ -1,6 +1,6 @@
 ---
 name: modeling-data-engineering
-description: Data modeling guidance — dimensional modeling (star/snowflake schemas, grain, additivity, fact tables), Slowly Changing Dimensions and other dimension patterns (conformed, bridge, junk, role-playing, degenerate, late-arriving), modeling methodology choice (Inmon vs. Kimball vs. Data Vault), Data Vault 2.0 (hubs/links/satellites, hash keys), modern lakehouse modeling (medallion, One Big Table), and modeling for access patterns (NoSQL single-table design, event/stream, bitemporal). Use when designing a warehouse schema, declaring the grain of a fact table, choosing an SCD type, deciding between a star schema and a wide denormalized table, or modeling a NoSQL serving store or an event stream. Not for SQL implementing SCD Type 2 (see sql-data-engineering), runtime schema validation (see quality-data-engineering), CDC/log-based change capture (see streaming-data-engineering), or NoSQL infrastructure and hosting, which has no skill in this suite yet.
+description: Data modeling guidance — dimensional modeling (star/snowflake schemas, grain, additivity, fact tables), Slowly Changing Dimensions and other dimension patterns (conformed, bridge, junk, role-playing, degenerate, late-arriving), modeling methodology choice (Inmon vs. Kimball vs. Data Vault), Data Vault 2.0 (hubs/links/satellites, hash keys), modern lakehouse modeling (medallion, One Big Table), and modeling for access patterns (NoSQL single-table design, event/stream, bitemporal). Use when designing a warehouse schema, declaring the grain of a fact table, choosing an SCD type, deciding between a star schema and a wide denormalized table, or modeling a NoSQL serving store or an event stream. Not for SQL implementing SCD Type 2 (see sql-data-engineering), runtime schema validation (see quality-data-engineering), CDC/log-based change capture (see streaming-data-engineering), or NoSQL infrastructure and hosting (see iac-cloud-data-engineering).
 ---
 
 # Modeling Data Engineering
@@ -20,7 +20,7 @@ The atom of data modeling is the grain — what one row of a table actually repr
 - Not for the SQL that implements SCD Type 2 — see `sql-data-engineering`
 - Not for runtime schema validation — see `quality-data-engineering`
 - Not for CDC/log-based change capture mechanics — see `streaming-data-engineering`
-- Not for NoSQL infrastructure or hosting decisions — an IaC/cloud skill is planned but does not exist yet
+- Not for NoSQL infrastructure or hosting decisions — see `iac-cloud-data-engineering`
 
 ## Quick reference
 

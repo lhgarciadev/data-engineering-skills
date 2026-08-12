@@ -36,7 +36,7 @@ Athena is the product closest to the popular story, and even there AWS's phrasin
 
 ## Three workload shapes
 
-`Throughput shape` is one of the six axes in [`choosing-a-managed-service.md`](choosing-a-managed-service.md), and it is a fact about your workload rather than about any product. For cost purposes it takes three values, named here and reused by `platform-archetypes.md`:
+`Throughput shape` is one of the six axes in [`choosing-a-managed-service.md`](choosing-a-managed-service.md), and it is a fact about your workload rather than about any product. For cost purposes it takes three values, named here and reused by [`platform-archetypes.md`](platform-archetypes.md):
 
 - **Steady.** Load sits near its peak for most of the operating window, and the volume is forecastable a period ahead. Scheduled batch pipelines and always-on ingest live here.
 - **Spiky.** Bursts separated by idle, where the peak sits far above the mean but arrives on a trigger you know or can detect. Batch loads on a schedule, period-end closes, event-driven reprocessing.

@@ -67,7 +67,7 @@ A second reason bites earlier: the two change at different rates and want differ
 
 Where DDL does belong is [`dbt-project-architecture.md`](../../pipelines-architecture-data-engineering/references/dbt-project-architecture.md) — the transformation tool emits the DDL as part of running, which is why the `table` materialization is documented as a model "rebuilt as a table on each run, via a `create table as` statement". The object's existence is an output of the transformation, not a declaration in a tool that also holds the power to destroy its container.
 
-The one honest grey area is the database or schema *object*, plausibly either. Pick a side per platform, write it down, and make sure the resource that can cascade a delete into contained objects carries both a protection rule and provider-side deletion protection. `platform-archetypes.md` applies this boundary archetype by archetype.
+The one honest grey area is the database or schema *object*, plausibly either. Pick a side per platform, write it down, and make sure the resource that can cascade a delete into contained objects carries both a protection rule and provider-side deletion protection. [`platform-archetypes.md`](platform-archetypes.md) applies this boundary archetype by archetype.
 
 ## Drift, when the resource is supposed to change itself
 

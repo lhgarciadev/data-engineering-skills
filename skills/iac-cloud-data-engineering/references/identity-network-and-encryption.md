@@ -100,7 +100,7 @@ Work the residue down in this order.
 3. **What remains goes in a purpose-built store.** Third-party API tokens, partner SFTP credentials and passwords for engines outside the provider's identity plane are irreducible. They belong in a managed secret store, referenced at runtime rather than materialised into configuration, an image or a repository. Consuming-side handling is [`external-api-integration.md`](../../python-data-engineering/references/external-api-integration.md)'s territory; what belongs here is that the credential's home is infrastructure.
 4. **Remember the secret store is a data store.** The read-grant section applies to it, and the interesting permission is again bulk read — of every secret it holds. Azure's warning above shows how that grant arrives sideways, through a management role that can attach itself a data-plane policy.
 
-And the one people miss entirely: the infrastructure code provisioning all of this writes a state file, and **that state file can contain secrets in plain text**. It is a data store you did not think of as one, it usually lives in a bucket, and its read grant is usually the broadest here. `iac-for-stateful-resources.md` covers storing, locking and permissioning it.
+And the one people miss entirely: the infrastructure code provisioning all of this writes a state file, and **that state file can contain secrets in plain text**. It is a data store you did not think of as one, it usually lives in a bucket, and its read grant is usually the broadest here. [`iac-for-stateful-resources.md`](iac-for-stateful-resources.md) covers storing, locking and permissioning it.
 
 ## Common mistakes
 

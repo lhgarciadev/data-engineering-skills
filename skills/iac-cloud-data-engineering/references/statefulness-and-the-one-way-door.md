@@ -66,14 +66,14 @@ And note the gravity you cannot compute. Egress is the part with a unit attached
 
 ## What this means for the infrastructure-code workflow
 
-The default infrastructure-as-code loop is: change the configuration, read the plan, let the tool converge reality onto it. That loop has an implicit repair mechanism — if convergence goes wrong, destroy and recreate. **For stateful resources that repair is not available**, and removing it changes the practice more than it changes the tooling. Four consequences, each owned by `iac-for-stateful-resources.md` rather than restated here:
+The default infrastructure-as-code loop is: change the configuration, read the plan, let the tool converge reality onto it. That loop has an implicit repair mechanism — if convergence goes wrong, destroy and recreate. **For stateful resources that repair is not available**, and removing it changes the practice more than it changes the tooling. Four consequences, each owned by [`iac-for-stateful-resources.md`](iac-for-stateful-resources.md) rather than restated here:
 
 - A plan proposing to **replace** a stateful resource is an incident to be read line by line, not a diff to be approved. Replacement is destruction plus creation, and the created object is empty.
-- The destroy-protection rules the tooling offers are **narrower than their reputation**, narrow enough that they are a guard against accident and not a governance control. Read `iac-for-stateful-resources.md` for what each one does and does not stop before you rely on one.
+- The destroy-protection rules the tooling offers are **narrower than their reputation**, narrow enough that they are a guard against accident and not a governance control. Read [`iac-for-stateful-resources.md`](iac-for-stateful-resources.md) for what each one does and does not stop before you rely on one.
 - **Drift on a resource that scales itself is legitimate**, which makes drift detection on stateful infrastructure a different problem from drift detection on a load balancer that should never change on its own.
 - **Environment parity cannot be achieved by cloning**, because the one thing you cannot clone into the lower environment is the data — and the data is what the production behaviour is made of.
 
-Service selection under these constraints is `choosing-a-managed-service.md`; the billing shapes named above, crossed against workload shape, are `sizing-and-the-cost-model.md`.
+Service selection under these constraints is [`choosing-a-managed-service.md`](choosing-a-managed-service.md); the billing shapes named above, crossed against workload shape, are [`sizing-and-the-cost-model.md`](sizing-and-the-cost-model.md).
 
 ## Common mistakes
 
@@ -84,4 +84,4 @@ Service selection under these constraints is `choosing-a-managed-service.md`; th
 | Asking "how would we leave this?" after adoption | Asked on the day you want to leave, the answer is at its worst and your leverage is zero | Ask it as a selection criterion: export path, exit cost in shape, and whether the data leaves in an open format |
 | Quoting a provider as saying egress causes lock-in | What is documented is the transfer asymmetry — inbound free on Amazon S3 and Google Cloud Storage, in-region transfer excluded on S3's own exclusion list, outbound metered per GB; none of those pages draws the lock-in conclusion, and attributing it to them is a sourcing error | State each half of the asymmetry with the attribution it actually carries, and the lock-in reading as your own inference from it |
 | Treating egress as a one-time migration cost | A cross-region read path or replica charges on every run, for as long as the pipeline exists — it is recurring, not one-off | Decide processing placement and replication topology together, as cost-shape decisions, and colocate compute with storage by default |
-| Believing a destroy-protection flag makes the resource safe | These rules are narrower than their reputation and stop protecting in cases people assume are covered — `iac-for-stateful-resources.md` has the exact limitation | Pair the flag with controls outside the tool — change review on infrastructure files, provider-side deletion protection, and permissions |
+| Believing a destroy-protection flag makes the resource safe | These rules are narrower than their reputation and stop protecting in cases people assume are covered — [`iac-for-stateful-resources.md`](iac-for-stateful-resources.md) has the exact limitation | Pair the flag with controls outside the tool — change review on infrastructure files, provider-side deletion protection, and permissions |
