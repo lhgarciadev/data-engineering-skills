@@ -12,3 +12,5 @@ A10	multi-domain	data-engineering	Heredé un pipeline que nadie documentó: muev
 A11	adjacent-trap	NONE|pipelines-architecture-data-engineering	Necesito exponer los datos del warehouse como una API REST para que la app móvil los consuma.
 A12	adjacent-trap	NONE	¿Cómo entreno un modelo de forecasting de demanda con los datos históricos de ventas?
 A13	no-vocab	streaming-data-engineering	El tablero en vivo muestra menos ventas de las que hubo, y si lo miro una hora después el número cambió.
+A14	no-vocab	iac-cloud-data-engineering	La factura del almacén de datos se triplicó el mes pasado y nadie sabe por qué.
+A15	gap-ml	NONE	Necesito montar un feature store para servir features a un modelo en tiempo real durante el entrenamiento.

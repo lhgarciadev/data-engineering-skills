@@ -21,3 +21,6 @@ N4	negative	NONE	Necesito un decorador en Python que cachee los resultados de un
 P9	positive	streaming-data-engineering	Necesito procesar eventos de Kafka y agregar por ventanas de 5 minutos. ¿Cómo manejo los que llegan tarde?
 D8	discriminator	streaming-data-engineering	Mi job de Spark lee de Kafka y quiero exactly-once end-to-end hacia Delta. ¿Alcanza con el checkpoint?
 D11	discriminator	iac-cloud-data-engineering	¿Debería correr mis jobs de Spark sobre Kubernetes o contratar un servicio administrado como EMR o Dataproc?
+P10	positive	iac-cloud-data-engineering	Vamos a montar la plataforma de datos en la nube. ¿Uso un warehouse serverless o uno con cluster aprovisionado?
+D9	discriminator	iac-cloud-data-engineering	Necesito decidir entre MSK, Kinesis y Kafka autogestionado para el pipeline de eventos. ¿Cuál elijo?
+D10	discriminator	spark-data-engineering	Mi job de Spark tarda demasiado en el shuffle y quiero saber si agrando el cluster o cambio el código.
