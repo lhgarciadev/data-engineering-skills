@@ -520,9 +520,12 @@ cd tests/triggering
 awk -F'\t' 'NR>1{n++} END{print n" cases in matrix.tsv (expect 24)"}' matrix.tsv
 awk -F'\t' 'NR>1{n++} END{print n" cases in matrix-adversarial.tsv (expect 15)"}' matrix-adversarial.tsv
 ./run-matrix.sh -m opus -a with -r 3 -j 1 -o results/iac-delivery
+./run-matrix.sh -m opus -a with -r 3 -j 1 -f matrix-adversarial.tsv -o results/iac-delivery
 ./rescore.sh results/iac-delivery matrix.tsv matrix-adversarial.tsv
 ```
-Expected: 39 cases total. `A9`, `P10`, `D9` and `A14` route to `iac-cloud-data-engineering`; `D10` holds `spark-data-engineering`; `A15` holds `NONE`; and every pre-existing case holds its prior verdict, with the four edited descriptions — `spark` (P3, A4, A5, D10), `modeling` (P4, D7, A3, A7), `streaming` (P9, D6, D8, A8, A13) and the orchestrator (P8, A10) — under the closest watch.
+**Two invocations are required, not one.** `run-matrix.sh` defaults to `matrix.tsv` (line 18) and only `-f` changes it, so a single call silently runs the main matrix alone while `rescore.sh` is handed both files. The first execution of this plan made exactly that mistake: it reported exit 0 having never run a single adversarial case — including `A9`, the one case that validates the whole delivery. **Count the produced runs before scoring:** `find results/<outdir> -name '*.rep*.jsonl' | wc -l` must equal cases × reps. An exit code of 0 is not evidence of completeness.
+
+Expected: 40 cases total. `A9`, `P10`, `D9` and `A14` route to `iac-cloud-data-engineering`; `D10` holds `spark-data-engineering`; `A15` holds `NONE`; and every pre-existing case holds its prior verdict, with the four edited descriptions — `spark` (P3, A4, A5, D10), `modeling` (P4, D7, A3, A7), `streaming` (P9, D6, D8, A8, A13) and the orchestrator (P8, A10) — under the closest watch.
 
 Score with `rescore.sh`, never the live verdict: the live one reads position 1 only, and a correct session here often chains a superpowers process skill first. Scoring position 1 once manufactured a "systemic crowd-out" finding that did not exist.
 
