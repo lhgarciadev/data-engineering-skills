@@ -420,7 +420,7 @@ git commit -m "docs(iac-cloud): add the five platform archetypes that absorb the
 The spec's table says ten. Do not trust it — the first enumeration during design said six, because a single grep pattern missed two differently-worded lines. Confirm independently:
 
 ```bash
-cd /home/leonardo-garcia/dev/data-engineering-skills
+cd "$(git rev-parse --show-toplevel)"
 echo "--- pattern A: the domain ---"
 grep -rniE "iac|infrastructure as code|terraform" --include="*.md" skills/ | grep -viE "dbt-project|serving-pipeline"
 echo "--- pattern B: the absence ---"
@@ -451,7 +451,7 @@ Do **not** touch `data-engineering/SKILL.md:14` or `:36`.
 - [ ] **Step 4: Validate the manifest, the links and the absence of dead phrases**
 
 ```bash
-cd /home/leonardo-garcia/dev/data-engineering-skills
+cd "$(git rev-parse --show-toplevel)"
 claude plugin validate .
 awk '/^---$/{n++; next} n==1{c+=length($0)+1} END{print "frontmatter chars: "c}' skills/iac-cloud-data-engineering/SKILL.md
 grep -rniE "no skill in this suite|does not exist yet|is planned but" --include="*.md" skills/
