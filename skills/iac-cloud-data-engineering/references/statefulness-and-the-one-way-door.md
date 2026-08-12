@@ -30,6 +30,8 @@ The discipline that follows: **settle the least reversible decisions first, and 
 
 The near-irreversible rungs are **one-way doors**: decisions you can technically reverse but will not, because the cost of reversing exceeds whatever the reversal would buy. The rest of this file is about pricing those doors before you walk through them.
 
+Some doors are narrower than a whole rung, and the vendor states them outright. Amazon DynamoDB global tables carry a consistency mode — **multi-Region eventual consistency (MREC)** or **multi-Region strong consistency (MRSC)** — fixed when the table is created: AWS writes that "You cannot change a global table's consistency mode after creation", that a table defaults to MREC when you do not specify one, and that MRSC supports same-account configurations only. Checked 2026-08-12. That is the pattern in miniature — a property of the resource holding the state, settled at creation, and afterwards reachable only by building a new table and moving the data into it. Read the creation-time properties of a stateful resource *before* you create it, because that is the only moment at which they are still properties rather than migrations.
+
 ## Migration cost is a selection criterion, not a consequence
 
 Because the near-irreversible rungs are one-way, the question *"how would we leave this?"* has to be asked **before** adoption, not discovered afterwards. Most teams ask it for the first time on the day they want to leave, which is the day the answer is worst and the leverage is zero.
