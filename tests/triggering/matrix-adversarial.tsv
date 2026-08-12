@@ -7,8 +7,10 @@ A5	lure	spark-data-engineering|sql-data-engineering	Mi query de Spark SQL con va
 A6	lure	python-data-engineering|sql-data-engineering	Estoy escribiendo un script de Python que corre un UPDATE masivo en Postgres y se cae por timeout.
 A7	lure	modeling-data-engineering|pipelines-architecture-data-engineering	¿En qué capa del medallion pongo las dimensiones conformadas y cómo las materializo en dbt?
 A8	gap-streaming	streaming-data-engineering	Necesito consumir un topic de Kafka con exactly-once y escribir en Delta. ¿Cómo lo monto?
-A9	gap-iac	NONE	Necesito el Terraform para levantar un warehouse en Snowflake con sus roles y warehouses de cómputo.
+A9	positive	iac-cloud-data-engineering	Necesito el Terraform para levantar un warehouse en Snowflake con sus roles y warehouses de cómputo.
 A10	multi-domain	data-engineering	Heredé un pipeline que nadie documentó: mueve datos de Oracle a S3, hay unos scripts de Spark, un dbt a medias y cero tests. Necesito ponerlo presentable.
 A11	adjacent-trap	NONE|pipelines-architecture-data-engineering	Necesito exponer los datos del warehouse como una API REST para que la app móvil los consuma.
 A12	adjacent-trap	NONE	¿Cómo entreno un modelo de forecasting de demanda con los datos históricos de ventas?
 A13	no-vocab	streaming-data-engineering	El tablero en vivo muestra menos ventas de las que hubo, y si lo miro una hora después el número cambió.
+A14	no-vocab	iac-cloud-data-engineering	La factura del almacén de datos se triplicó el mes pasado y nadie sabe por qué.
+A15	gap-ml	NONE	Necesito montar un feature store para servir features a un modelo en tiempo real durante el entrenamiento.

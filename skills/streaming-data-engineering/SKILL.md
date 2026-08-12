@@ -1,6 +1,6 @@
 ---
 name: streaming-data-engineering
-description: Streaming and unbounded-data guidance — the append-only log and partitioning (topics, offsets, partition keys, acks/ISR, retention vs compaction), event time versus processing time, windows and watermarks, state and checkpointing, delivery semantics and exactly-once, bounded stream-stream and stream-table joins, CDC as a stream, and Lambda versus Kappa with replay. Use when designing or reviewing a streaming pipeline, choosing between streaming and batch, picking a partition key, reasoning about late or out-of-order events, diagnosing a consumer falling behind, or when replaying a stream produced duplicates. Still applies when a general debugging or design skill also fits — that one supplies the method, this one the streaming-domain knowledge. Not for cluster provisioning, sizing or managed-service choice, which is decided in infrastructure code and has no skill in this suite yet, or for Spark tuning unrelated to streaming (see spark-data-engineering).
+description: Streaming and unbounded-data guidance — the append-only log and partitioning (topics, offsets, partition keys, acks/ISR, retention vs compaction), event time versus processing time, windows and watermarks, state and checkpointing, delivery semantics and exactly-once, bounded stream-stream and stream-table joins, CDC as a stream, and Lambda versus Kappa with replay. Use when designing or reviewing a streaming pipeline, choosing between streaming and batch, picking a partition key, reasoning about late or out-of-order events, diagnosing a consumer falling behind, or when replaying a stream produced duplicates. Still applies when a general debugging or design skill also fits — that one supplies the method, this one the streaming-domain knowledge. Not for cluster provisioning, sizing or managed-service choice, which is decided in infrastructure code (see iac-cloud-data-engineering), or for Spark tuning unrelated to streaming (see spark-data-engineering).
 ---
 
 # Streaming Data Engineering
@@ -19,7 +19,7 @@ Streaming is not a faster batch — it's a different relationship with the *end*
 - Evaluating whether a pipeline's "exactly-once" claim actually holds end to end
 - Designing a stream-stream or stream-table join, or treating CDC as a change stream
 - Choosing between Lambda and Kappa, or between Kafka Streams, Flink, Spark Structured Streaming, and Beam
-- Not for cluster provisioning, sizing, or managed-service choice — that's infrastructure code, and has no skill in this suite yet
+- Not for cluster provisioning, sizing, or managed-service choice — that's infrastructure code; see `iac-cloud-data-engineering`
 - Not for Spark tuning unrelated to streaming (shuffle, joins, memory, AQE) — see `spark-data-engineering`
 - Not for partition-level batch backfill mechanics — see `pipelines-architecture-data-engineering`
 

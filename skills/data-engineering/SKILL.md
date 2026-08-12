@@ -1,6 +1,6 @@
 ---
 name: data-engineering
-description: Cross-domain router for data engineering tasks that span more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of python-data-engineering, sql-data-engineering, spark-data-engineering, modeling-data-engineering, pipelines-architecture-data-engineering, quality-data-engineering, project-structure-data-engineering, or streaming-data-engineering at once. IaC/cloud is in the suite's scope but has no skill yet; cover that domain directly. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
+description: Cross-domain router for data engineering tasks that span more than one domain — designing or reviewing an end-to-end pipeline, evaluating a full data platform, or any request that touches two or more of python-data-engineering, sql-data-engineering, spark-data-engineering, modeling-data-engineering, pipelines-architecture-data-engineering, quality-data-engineering, project-structure-data-engineering, streaming-data-engineering, or iac-cloud-data-engineering at once. For a single-domain task (e.g. "review this PySpark job", "optimize this SQL query"), use that domain's skill directly instead — this orchestrator adds no value there.
 ---
 
 # Data Engineering (Orchestrator)
@@ -13,13 +13,13 @@ Entry point for data engineering tasks that cross domain boundaries. Identifies 
 
 - A request explicitly spans multiple domains ("design this pipeline end-to-end: Kafka → PySpark → warehouse, with data quality checks, deployed via Terraform")
 - Reviewing a full data solution rather than one component
-- Not for single-domain tasks — let that domain's own skill trigger directly (`python-data-engineering`, `sql-data-engineering`, `spark-data-engineering`, `modeling-data-engineering`, `pipelines-architecture-data-engineering`, `quality-data-engineering`, `project-structure-data-engineering`, `streaming-data-engineering`). IaC/cloud is in scope for the suite but has no skill yet — cover that domain yourself rather than trying to load one.
+- Not for single-domain tasks — let that domain's own skill trigger directly (`python-data-engineering`, `sql-data-engineering`, `spark-data-engineering`, `modeling-data-engineering`, `pipelines-architecture-data-engineering`, `quality-data-engineering`, `project-structure-data-engineering`, `streaming-data-engineering`, `iac-cloud-data-engineering`).
 
 ## Process
 
-1. **Identify relevant domains.** Read the request and list which of the 8 domain skills apply. If only one applies, stop and use that skill directly instead of continuing here.
+1. **Identify relevant domains.** Read the request and list which of the 9 domain skills apply. If only one applies, stop and use that skill directly instead of continuing here.
 2. **Dispatch one subagent per relevant domain, in parallel when your environment supports it.** Each subagent's prompt must: name the specific domain skill to read first, quote the slice of the original request relevant to that domain, and ask for a focused analysis from that lens only — not a full solution. If your environment does not support parallel or background subagent dispatch, perform each domain's analysis in sequence within this session instead of skipping any.
-3. **Synthesize.** Combine the per-domain analyses into one answer. Do not just concatenate them — explicitly call out interactions between domains that no single analysis would see (a partition scheme in `spark-data-engineering` that conflicts with a clustering key decision in `sql-data-engineering`; a Terraform-provisioned resource that a stream consumer assumes already exists). If a domain you identified in step 1 has no skill in this suite — IaC/cloud currently does not — analyse it yourself and say so explicitly in the synthesis, instead of silently presenting the analysis as complete or trying to load a skill that is not there.
+3. **Synthesize.** Combine the per-domain analyses into one answer. Do not just concatenate them — explicitly call out interactions between domains that no single analysis would see (a partition scheme in `spark-data-engineering` that conflicts with a clustering key decision in `sql-data-engineering`; a Terraform-provisioned resource that a stream consumer assumes already exists). If a domain you identified in step 1 has no skill installed, analyse it yourself and say so explicitly in the synthesis, instead of silently presenting the analysis as complete or trying to load a skill that is not there.
 
 ## What this skill does not do
 

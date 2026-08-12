@@ -16,6 +16,8 @@
 - Frontmatter must stay **≤ 1024 characters** total, and must parse as YAML. A `: ` inside an unquoted scalar breaks parsing and the skill loads with every field silently dropped. Run `claude plugin validate .` after any frontmatter edit.
 - **The suite is complete after this delivery.** No skill may say a domain "has no skill in this suite yet". Every such phrase is a defect after Task 8 — see Task 8 Step 1 for the enumeration that proves none survive. The inverse of the phantom-skill rule still holds: never name a skill that does not exist.
 - **THE NO-NUMBERS RULE (spec §3).** This skill names cloud services. It must never state a price, a service limit, a quota, an instance type, a node size, or a maximum partition/shard count. Cost is taught as a **shape** — per-hour provisioned, per-request, per-GB-scanned, per-GB-stored, egress — never as a figure. A number in a reference file is a delivery-blocking defect, because it is the claim that rots fastest and cannot be kept sourced. Every content task carries a grep for this.
+  If you add a broader bare-digit sweep on top of the mandated grep, exclude product identifiers before reading its output — `S3`, `EC2`, `Log4j` and ordered-list markers are not amounts, and a sweep that flags them trains you to ignore it. Filter with `grep -vE 'S3|EC2|EMR|Log4j|^[0-9]+\.'` or read the hits rather than counting them.
+  **The rule is the prose above; the grep is only an instrument for it.** Billing *units* are required — `per GB / per month` is a shape and must survive verbatim where a source states it; only *amounts* are forbidden. Version identifiers (`2026-02-01`) are not amounts either, and are required for traceability. If the grep flags a legitimate unit, fix the grep, never the sentence. It was narrowed once already for exactly this: an earlier form matched the bare string `per month` and forced a reference file to rephrase a vendor's literal meter name.
 - **THE SERVICE-NAME RULE (spec §5).** Every named service is a claim and needs a verdict. The streaming delivery's most expensive finding was that six different writers shipped a true-sounding engine claim with no verdict behind it, and two were false. This skill is nothing but service names, so the exposure is worse. Every content task and every review prompt must grep the research corpus for each service named and delete or verify anything without a verdict.
 - Description patterns, all three measured in this repo, not stylistic preference:
   - jargon-free triggers alongside technical ones — real diagnostic prompts do not use domain vocabulary;
@@ -189,7 +191,7 @@ Cross-link the table-format and lakehouse material in `../../modeling-data-engin
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w statefulness-and-the-one-way-door.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' statefulness-and-the-one-way-door.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' statefulness-and-the-one-way-door.md
 ```
 Expected: word count between 1600 and 3500; the numbers grep returns **nothing** (the no-numbers rule); then run the anchored-link checker from Global Constraints and expect zero BROKEN lines.
 
@@ -226,7 +228,7 @@ Cross-link `../../streaming-data-engineering/references/the-log-and-partitioning
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w choosing-a-managed-service.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' choosing-a-managed-service.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' choosing-a-managed-service.md
 for s in MSK Kinesis "Event Hubs" "Pub/Sub" EMR Glue Dataproc Databricks Fabric Synapse; do
   grep -qi "$s" choosing-a-managed-service.md && \
   { grep -rqi "$s" ../../../docs/superpowers/research/2026-08-08-*.md && echo "VERDICT OK  $s" || echo "NO VERDICT  $s"; }
@@ -265,7 +267,7 @@ git commit -m "docs(iac-cloud): add the six selection axes and the managed-servi
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w sizing-and-the-cost-model.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' sizing-and-the-cost-model.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' sizing-and-the-cost-model.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing — this file is the highest-risk one for the no-numbers rule, since it is about cost; then the anchored-link checker with zero BROKEN lines.
 
@@ -302,7 +304,7 @@ Cross-link `../../quality-data-engineering/references/data-contracts-and-schema-
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w identity-network-and-encryption.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' identity-network-and-encryption.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' identity-network-and-encryption.md
 grep -noE "CMK|CMEK|BYOK|managed identit(y|ies)|service account|IAM role|Workload Identity" identity-network-and-encryption.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; every term in the third grep must appear in `2026-08-08-workload-identity-verification.md` or `2026-08-08-encryption-at-rest-verification.md` attached to the same provider. Using one provider's term for another's mechanism is a delivery-blocking defect.
@@ -341,7 +343,7 @@ This is the **only** IaC-practice file, and it earns its place solely where stat
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w iac-for-stateful-resources.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' iac-for-stateful-resources.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' iac-for-stateful-resources.md
 grep -c "prevent_destroy" iac-for-stateful-resources.md
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; `prevent_destroy` appears and its described behaviour matches the Task 1 verdict verbatim — re-read the verification doc and compare, do not rely on memory.
@@ -385,7 +387,7 @@ Cross-link, with two-level paths since this file lives in `references/`: `../../
 ```bash
 cd skills/iac-cloud-data-engineering/references
 wc -w platform-archetypes.md
-grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|per month|[0-9]+ *%' platform-archetypes.md
+grep -nE '\$[0-9]|[0-9]+ *(GB|TB|vCPU|cores|nodes|shards|partitions|ms|USD)/|[0-9][0-9.,]* *per month|[0-9]+ *%' platform-archetypes.md
 grep -oE '\]\(\.\./\.\./[^)]+\)' platform-archetypes.md | sed 's/^](//; s/)$//' | while read -r l; do [ -f "$(realpath -m "$l")" ] && echo "OK $l" || echo "BROKEN $l"; done
 ```
 Expected: 1600–3500 words; numbers grep returns nothing; every cross-skill link `OK` and every one of them two levels deep. Then confirm all five archetypes are present and each one names a domain skill it defers to — an archetype with no reciprocal boundary is an invasion.
@@ -518,9 +520,12 @@ cd tests/triggering
 awk -F'\t' 'NR>1{n++} END{print n" cases in matrix.tsv (expect 24)"}' matrix.tsv
 awk -F'\t' 'NR>1{n++} END{print n" cases in matrix-adversarial.tsv (expect 15)"}' matrix-adversarial.tsv
 ./run-matrix.sh -m opus -a with -r 3 -j 1 -o results/iac-delivery
+./run-matrix.sh -m opus -a with -r 3 -j 1 -f matrix-adversarial.tsv -o results/iac-delivery
 ./rescore.sh results/iac-delivery matrix.tsv matrix-adversarial.tsv
 ```
-Expected: 39 cases total. `A9`, `P10`, `D9` and `A14` route to `iac-cloud-data-engineering`; `D10` holds `spark-data-engineering`; `A15` holds `NONE`; and every pre-existing case holds its prior verdict, with the four edited descriptions — `spark` (P3, A4, A5, D10), `modeling` (P4, D7, A3, A7), `streaming` (P9, D6, D8, A8, A13) and the orchestrator (P8, A10) — under the closest watch.
+**Two invocations are required, not one.** `run-matrix.sh` defaults to `matrix.tsv` (line 18) and only `-f` changes it, so a single call silently runs the main matrix alone while `rescore.sh` is handed both files. The first execution of this plan made exactly that mistake: it reported exit 0 having never run a single adversarial case — including `A9`, the one case that validates the whole delivery. **Count the produced runs before scoring:** `find results/<outdir> -name '*.rep*.jsonl' | wc -l` must equal cases × reps. An exit code of 0 is not evidence of completeness.
+
+Expected: 40 cases total. `A9`, `P10`, `D9` and `A14` route to `iac-cloud-data-engineering`; `D10` holds `spark-data-engineering`; `A15` holds `NONE`; and every pre-existing case holds its prior verdict, with the four edited descriptions — `spark` (P3, A4, A5, D10), `modeling` (P4, D7, A3, A7), `streaming` (P9, D6, D8, A8, A13) and the orchestrator (P8, A10) — under the closest watch.
 
 Score with `rescore.sh`, never the live verdict: the live one reads position 1 only, and a correct session here often chains a superpowers process skill first. Scoring position 1 once manufactured a "systemic crowd-out" finding that did not exist.
 
