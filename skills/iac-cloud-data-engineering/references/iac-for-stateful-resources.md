@@ -91,7 +91,7 @@ Staging can mirror the **shape** of production infrastructure — resource types
 
 That asymmetry decides what a green staging run is worth. It is real evidence that the configuration applies, the identity binding resolves, permissions are sufficient and the pipeline runs end to end. It is **no evidence at all** about anything sized: skew, cardinality, partition counts, shuffle spill, scan cost, timeouts, memory pressure, and the query plan the engine picks once the statistics look different — see [`joins-and-skew.md`](../../spark-data-engineering/references/joins-and-skew.md) for what those failures look like when they arrive. Infrastructure that behaves correctly at staging volume can fail on production volume, and that failure is not a regression: nothing changed except the input.
 
-The tempting repair — copy production data down — trades one problem for a worse one. It moves the corpus into an environment with weaker access controls and looser review, where the bulk-read exposure in [`identity-network-and-encryption.md`](identity-network-and-encryption.md) applies with fewer guards, and the copy is a transfer with a meter on it and a standing storage charge behind it ([`sizing-and-the-cost-model.md`](sizing-and-the-cost-model.md)). A production-sized staging environment fails from the other direction: standing cost on the most expensive rung of the ladder, and still not production, having neither its history nor its cardinality.
+The tempting repair — copy production data down — trades one problem for a worse one. It moves the corpus into an environment with weaker access controls and looser review, where the bulk-read exposure in [`identity-and-network-access.md`](identity-and-network-access.md) applies with fewer guards, and the copy is a transfer with a meter on it and a standing storage charge behind it ([`sizing-and-the-cost-model.md`](sizing-and-the-cost-model.md)). A production-sized staging environment fails from the other direction: standing cost on the most expensive rung of the ladder, and still not production, having neither its history nor its cardinality.
 
 What to do instead, in order:
 
@@ -103,7 +103,7 @@ What to do instead, in order:
 
 *Scope: this section applies to Terraform/OpenTofu and, with the vocabulary translation above, to Pulumi. It does not apply to AWS CDK, where no such artefact exists.*
 
-[`identity-network-and-encryption.md`](identity-network-and-encryption.md) ends by pointing here. The documentation is direct:
+[`identity-and-network-access.md`](identity-and-network-access.md) ends by pointing here. The documentation is direct:
 
 > "Terraform state and plan files contain detailed information about your infrastructure, including resource attributes and metadata that can contain sensitive values, such as initial database passwords or API tokens."
 
@@ -113,7 +113,7 @@ What to do instead, in order:
 
 What does keep a value out is a different mechanism: ephemeral values, "available at the run time of an operation, but Terraform omits them from state and plan files", and write-only arguments, which "let you securely pass temporary values to Terraform's managed resources during an operation without persisting those values to state or plan files" — with the documented requirement to "Use Terraform 1.11 or later to use a write-only argument on a managed resource". OpenTofu additionally documents encryption of state and plan files at rest — what OpenTofu documents, not a comparison.
 
-The documentation's own recommendations, as a shape: store the state remotely, encrypt it at rest, use access controls to limit who can reach it, keep audit logs of access. Everything in [`identity-network-and-encryption.md`](identity-network-and-encryption.md) about bulk read on a data store applies to the bucket holding it — and that bucket usually carries the broadest read grant and the least review, because it does not look like a data store on any inventory.
+The documentation's own recommendations, as a shape: store the state remotely, encrypt it at rest, use access controls to limit who can reach it, keep audit logs of access. Everything in [`identity-and-network-access.md`](identity-and-network-access.md) about bulk read on a data store applies to the bucket holding it — and that bucket usually carries the broadest read grant and the least review, because it does not look like a data store on any inventory.
 
 One last twist closes the loop with the frame. **The state file is itself a stateful resource by this skill's definition**: it is not recoverable from the configuration that produced it. Losing it destroys no infrastructure, but it destroys the *mapping* between configuration and managed objects, after which the tool sees a world where nothing it declares exists — and proposes to create all of it. Recovery is importing resources one at a time. Version the backend, lock it, restrict it, and back it up as seriously as the warehouse it provisions.
 
