@@ -295,3 +295,170 @@ Mean observed uplift **1.6825**; mean maximum detectable uplift **2.3175**; rati
   means (1.49 vs. 1.92–1.98). If the rubric is re-scaled, `tradeoff` is where the
   remaining headroom actually lives — the other three dimensions have almost none left
   to find.
+
+## Rubric v2 — saturation gate
+
+**Question.** The v1 rubric saturated: three of four dimensions had ≥85% of
+with-arm answers at the maximum, with standard deviations of 0.071, 0.142 and
+0.203. The v2 rubric raises what the top score costs. **Does it actually leave
+room, or does it saturate too?**
+
+Answered by re-judging the 42 answers already on disk in `results/full/` — no
+answer generation, so the cost is judge calls only.
+
+### Threshold — registered 2026-08-13, before any v2 score existed
+
+The v2 **passes** if, on the with-arm:
+
+- **no** dimension has ≥50% of answers at the maximum (3); **and**
+- **all four** dimensions have SD ≥ 0.4.
+
+The v2 **fails** if either condition is unmet.
+
+0.4 is a deliberately lax floor: `tradeoff`, the only v1 dimension that
+discriminated, had SD 0.647, and requiring all four to match the best would be a
+harder bar than the problem needs.
+
+**"The v2 failed" is a legitimate outcome.** A redesign that still saturates is
+one that did not work, and the point of running this on already-paid-for data is
+to learn that before funding a campaign rather than after.
+
+### Result — the v2 FAILS the gate
+
+Run: `results/headroom-v2/run.txt`, produced by re-judging the same 42 answers
+under the v2 rubric (63 rows, 21 case-reps x 3 judge reps, zero judge failures)
+and reading them with `./rubric-headroom.sh -d ../results/full-v2-judgments -x 3`.
+
+Applying the threshold as registered, mechanically, before any interpretation.
+
+**Condition 1 — no with-arm dimension has >= 50% of answers at the maximum (3).**
+`mechanism` 12/21 = **57.1%**, `actionable` 2/21 = 9.5%, `assumptions` 8/21 =
+38.1%, `tradeoff` 5/21 = 23.8%. `mechanism` is at or above the 50% bound.
+**Condition 1 is unmet.**
+
+**Condition 2 — all four with-arm dimensions have SD >= 0.4.** `mechanism`
+**0.343**, `actionable` **0.380**, `assumptions` 0.839, `tradeoff` 1.033. Two of
+the four fall below the 0.4 floor. **Condition 2 is unmet.**
+
+The threshold fails the v2 if *either* condition is unmet. Both are.
+**Verdict: FAIL.**
+
+Nota: `results/headroom-v2/run.txt` reimprime, bajo el encabezado "Reading rule", la
+regla de lectura CONFIRMED/REFUTED propia del instrumento — el heurístico de
+saturación v1, no el estándar que juzga esta entrega. Aplicada mecánicamente a los
+números de esa misma corrida, esa regla arroja REFUTED ("no saturado"), una lectura
+distinta del umbral pre-registrado el 2026-08-13 arriba. El estándar vigente es ese
+umbral, y bajo él el veredicto es **FAIL**.
+
+### Which dimensions did not leave room
+
+- **`mechanism` fails both conditions.** 57.1% of with-arm answers score the
+  maximum and its SD is 0.343 — the lowest of the four. Raising what a 3 costs
+  moved it off the v1 ceiling (95.2% at max, SD 0.071) without moving it far
+  enough: a clear majority still lands at the top of the new scale.
+- **`actionable` fails the SD condition only**, at 0.380. Its shape is not the
+  ceiling shape — only 9.5% score the maximum, and its mean is 2.397. It is
+  *compressed*, not saturated: nearly every with-arm answer lands on 2 or 3 and
+  almost nothing lands below. Low variance and a full ceiling are different
+  failures, and the SD floor catches both; this is the second one.
+- `assumptions` (SD 0.839) and `tradeoff` (SD 1.033) clear both conditions. The
+  dimension that replaced `specific` does discriminate; the two that were already
+  near the v1 ceiling are the two that still do not.
+
+### The numbers, both arms
+
+| dimension | arm | n | mean | sd | count@3 | pct@3 |
+|---|---|---|---|---|---|---|
+| mechanism | with | 21 | 2.762 | 0.343 | 12 | 57.1% |
+| actionable | with | 21 | 2.397 | 0.380 | 2 | 9.5% |
+| assumptions | with | 21 | 2.143 | 0.839 | 8 | 38.1% |
+| tradeoff | with | 21 | 1.921 | 1.033 | 5 | 23.8% |
+| mechanism | without | 21 | 2.286 | 0.645 | 4 | 19.0% |
+| actionable | without | 21 | 1.778 | 0.863 | 2 | 9.5% |
+| assumptions | without | 21 | 1.714 | 0.950 | 4 | 19.0% |
+| tradeoff | without | 21 | 1.254 | 1.088 | 4 | 19.0% |
+
+Totals against a maximum of 12: with-arm mean **9.222** (sd 2.117), **0/21
+(0.0%)** at the maximum; without-arm mean **7.032** (sd 2.949), **0/21 (0.0%)**
+at the maximum. Mean observed uplift **2.1905**, mean maximum detectable uplift
+(`12 - without_total`) **4.9683**, ratio **0.4409 (44.1%)**.
+
+Those totals are recorded because the instrument prints them, and they are not
+part of the threshold. No answer in either arm scores a perfect 12 — the v2 has
+headroom *in the aggregate* while two of its four dimensions do not. The
+threshold was written per-dimension deliberately, and it is applied per-dimension
+here; a total-level reading is not a route around it.
+
+### What this does not establish
+
+- **It does not measure uplift.** This is descriptive statistics over the same 42
+  answers (21 per arm, 7 cases) that every instrument in this directory reads. It
+  measures whether the *scale* leaves room, not whether any skill improves an
+  answer. The converse also holds and is the easier mistake: a rubric that left
+  room would not have been evidence that uplift exists.
+- **It re-judges v1-era answers.** The 42 answers were produced by models that
+  were never shown the v2 rubric. Whether a fresh campaign — answers generated
+  and judged under v2 throughout — reproduces this distribution is untested. The
+  measurement is of the rubric applied to existing text, not of the rubric in the
+  loop it is meant for.
+- **These numbers are not reproducible from a clone of this repo.**
+  `tests/quality-uplift/results/` is gitignored, so neither `results/full/` (the
+  42 answers) nor `results/full-v2-judgments/` (the 63 v2 judgment rows) is in
+  the repo. Only `experiments/results/*/run.txt` is durable. Anyone cloning this
+  repo cannot re-run this gate, and cannot re-run either instrument's
+  reproduction check against the committed v1 output either, because both read
+  the same absent directory. The run file *is* the artifact; it is a record of
+  what was computed, not something a reader can verify by recomputing it.
+- **n = 21 per arm, clustered by case, and the judge is nondeterministic.** Three
+  judge reps per pair are averaged before any statistic here, which reduces that
+  variance but does not remove it. An SD of 0.343 against a 0.4 floor is not a
+  wide miss, and this design cannot say how much of that gap is sampling.
+- **It does not say why the v2 fell where it did.** That the top score was made
+  more expensive and `mechanism` still sits at 57.1% is an observation about the
+  outcome, not a diagnosis of the rubric wording.
+
+The gate is applied and the answer is FAIL. What follows from that is a separate
+decision, made with these numbers in hand and pre-registered before the next run
+in the same way this threshold was.
+
+### Residual conocido: los dos instrumentos discrepan sobre la clave inventada
+
+`analyze.sh` cuenta las filas cuyas claves de puntaje caen fuera del conjunto de
+dimensiones y declara que un valor distinto de cero **anula la campaña**.
+`rubric-headroom.sh` no lo hace: su guarda compara la fila 1 contra el conjunto
+en que coincide el resto del archivo, así que detecta una fila 1 discrepante pero
+**deja pasar en silencio una fila que trae una clave de más**.
+
+No es hipotético. `results/full/judgments.jsonl` tiene exactamente una fila así —
+`P4 rep3 jr2`, con `tradeeoff` mal tipeado junto a `tradeoff` — y por eso la
+guarda no se escribió como una comparación fila a fila: así redactada, abortaría
+sobre los datos v1 y rompería la reproducción del resultado v1 en el que se apoya
+todo este rediseño.
+
+Sobre el veredicto de arriba no incide: las tres corridas v2
+(`full-v2-judgments`, `calib-v2`, `calib-len-v2`) tienen cero filas con claves
+fuera del conjunto v2, porque el esquema del juez lleva
+`additionalProperties: false`. Queda anotado porque el instrumento que produjo
+este FALLA es, de los dos, el que menos ve — y porque "los instrumentos
+discrepan sobre qué anula una campaña" es una pregunta de diseño, no un bug que
+se arregla eligiendo el más estricto sin pensarlo.
+
+### La forma de defecto que este harness produce
+
+Siete defectos se corrigieron durante esta entrega y los siete comparten forma:
+**el instrumento reportaba éxito sin haber medido.** `judge-pairs.sh` apuntado a
+un directorio vacío escribe cero filas y termina con `exit 0`. `git stash` sin
+cambios que guardar sale 0, y una guarda de reproducción construida sobre él
+compara el código nuevo contra sí mismo y siempre pasa. Un hook con ruta
+relativa no encuentra su propio script y queda mudo, que se lee igual que
+"nada que reportar". `git status --short` sobre un directorio ignorado sale
+vacío tanto si los datos están intactos como si se borraron. Un instrumento con
+la escala vieja imprime `max 8` sobre un total de 10.3. Otro, con la fila 1
+truncada, emite un veredicto de aspecto completo sobre tres cuartos del rubric.
+Y un archivo de corrida reimprime la regla de lectura de la versión anterior,
+que sobre los números nuevos da el veredicto contrario.
+
+Ninguno tiraba un error, y ninguno era visible leyendo el código: los siete
+aparecieron sólo al ejercitar el instrumento con datos de la forma equivocada.
+De ahí la regla para lo que se agregue acá: **un `exit 0` no es evidencia hasta
+que alguien haya confirmado que el mismo camino falla cuando debe fallar.**

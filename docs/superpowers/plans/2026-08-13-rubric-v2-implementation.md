@@ -18,6 +18,8 @@
 - **The judge's schema keeps `additionalProperties: false`.** A score object carrying a key outside the rubric's dimensions means the judge did not answer the rubric it was given, and the schema is what makes that impossible rather than merely detectable.
 - **Blinding is structural and must not weaken.** The judge receives the rubric and both answers on stdin, with no Read/Glob/Grep/Bash, a fresh cwd outside the repo, and the suite plugin disabled (`judge-pairs.sh:42-52`). No task may give the judge filesystem access or run it from inside `tests/quality-uplift/`.
 - **One writer per run directory.** `judge-pairs.sh:25-28` enforces this with an atomic `mkdir` because two concurrent judging runs once both appended to the same `judgments.jsonl`. Do not weaken it, and never judge into an existing directory.
+- **A run directory is `judge-pairs.sh`'s input as well as its output.** It judges whatever `*.with.rep*.txt` / `*.without.rep*.txt` files it finds in `-o` (`judge-pairs.sh:69`). Pointed at an empty directory it writes an empty `judgments.jsonl` and **exits 0** — a silent no-op that reads as success. Every task that judges must therefore (a) copy the answer files in first, and (b) assert the seeded file count *before* judging and the row count *after*. Neither number may be inferred from the exit code.
+- **Record the judge model that actually served the run.** `judge-pairs.sh:11` defaults to the alias `sonnet`, which is not a pinned ID: `claude-sonnet-5` and `claude-sonnet-4-6` differ materially (adaptive thinking on by default, different tokenizer, `effort` default `high`). An alias that moves between the calibration run and the re-judge changes the instrument mid-measurement with nothing in the record. Every task that judges writes the resolved model ID into the run directory as `model.txt`.
 - **The pre-registered threshold is fixed before any v2 number exists** and is never amended afterwards. Task 2 commits it; Task 6 applies it.
 - **Standing constraint from spec §6, carried forward:** any analysis that computes a **correlation** over this campaign's data must pre-register how it handles case clustering (7 cases × 3 reps), which inflates every correlation calculated over it. **No task in this plan computes a correlation** — the saturation gate reports means, standard deviations and percentages — so nothing here is bound by it. It is recorded because the constraint outlives this delivery and neither prior diagnostic declared it.
 - Spanish for specs, plans and write-ups; English for code and identifiers.
@@ -269,20 +271,32 @@ The existing thresholds are calibrated against 0–8 — the discrimination gate
 
 - [ ] **Step 1: Re-run the discrimination gate**
 
+The fixture answers must be copied in first — `judge-pairs.sh` judges the `.txt` files it finds in the run directory, and against an empty one it writes nothing and exits 0.
+
 ```bash
 cd tests/quality-uplift
+mkdir -p results/calib-v2
+cp results/calib/CAL.with.rep1.txt results/calib/CAL.without.rep1.txt results/calib-v2/
+[ "$(ls results/calib-v2/*.txt | wc -l)" -eq 2 ] || { echo "FIXTURE MISSING — stop"; exit 1; }
 ./judge-pairs.sh -o results/calib-v2 -m sonnet -r 3
+claude --model sonnet -p 'Reply with only your exact model ID.' 2>/dev/null > results/calib-v2/model.txt
+wc -l < results/calib-v2/judgments.jsonl   # must be 3, not 0
 jq -r '[.with, .without, .more_useful] | @json' results/calib-v2/judgments.jsonl
 ```
-Expected: 3/3 reps prefer the specific answer, with a real score gap. Read the actual `judgments.jsonl`; do not trust a summary.
+Expected: exactly **3 rows**, and 3/3 reps prefer the specific answer with a real score gap. Read the actual `judgments.jsonl`; do not trust a summary. **A row count of 0 is the silent-no-op failure, not a passing gate.**
 
 - [ ] **Step 2: Re-run the length-bias gate**
 
 ```bash
+mkdir -p results/calib-len-v2
+cp results/calib-len/CAL.with.rep1.txt results/calib-len/CAL.without.rep1.txt results/calib-len-v2/
+[ "$(ls results/calib-len-v2/*.txt | wc -l)" -eq 2 ] || { echo "FIXTURE MISSING — stop"; exit 1; }
 ./judge-pairs.sh -o results/calib-len-v2 -m sonnet -r 3
+cp results/calib-v2/model.txt results/calib-len-v2/model.txt
+wc -l < results/calib-len-v2/judgments.jsonl   # must be 3, not 0
 jq -r '[.with, .without, .more_useful] | @json' results/calib-len-v2/judgments.jsonl
 ```
-Expected: 3/3 reps still prefer the specific answer despite it being the shorter file.
+Expected: exactly **3 rows**, and 3/3 reps still prefer the specific answer despite it being the shorter file.
 
 - [ ] **Step 3: If either gate fails, STOP and report**
 
@@ -315,12 +329,18 @@ git commit -m "test(quality-uplift): recalibrar ambas compuertas contra la escal
 
 - [ ] **Step 1: Re-judge the existing answers under v2**
 
+The 42 answers are **copied** out of `results/full/` into the new run directory — that is the read, and it is the only way `judge-pairs.sh` sees them. Copying out never writes to `results/full/`. Assert the seeded count before judging: against an empty directory the script writes nothing and exits 0.
+
 ```bash
 cd tests/quality-uplift
+mkdir -p results/full-v2-judgments
+cp results/full/*.with.rep*.txt results/full/*.without.rep*.txt results/full-v2-judgments/
+[ "$(ls results/full-v2-judgments/*.txt | wc -l)" -eq 42 ] || { echo "SEED WRONG — stop"; exit 1; }
 ./judge-pairs.sh -o results/full-v2-judgments -m sonnet -r 3
-wc -l results/full-v2-judgments/judgments.jsonl
+claude --model sonnet -p 'Reply with only your exact model ID.' 2>/dev/null > results/full-v2-judgments/model.txt
+wc -l < results/full-v2-judgments/judgments.jsonl
 ```
-Expected: 63 rows — 21 `(id, rep)` pairs × 3 judge reps. **No answers are generated**; `results/full/` is read but never written.
+Expected: 42 seeded answer files, then **63 rows** — 21 `(id, rep)` pairs × 3 judge reps. **No answers are generated.** A count of 0 rows means the seed failed, not that the gate passed.
 
 - [ ] **Step 2: Confirm the campaign data was not touched**
 

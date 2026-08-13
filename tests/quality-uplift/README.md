@@ -114,15 +114,19 @@ Both gates live in `results/calib/` and `results/calib-len/` and must be re-veri
 by reading the actual `judgments.jsonl`, not by re-running the gate and trusting a
 summary — before any campaign is judged credible:
 
-- **Discrimination gate** (`results/calib/`): given one deliberately specific answer and
-  one deliberately generic one, does the judge pick the specific one, consistently, with
-  a real score gap? Passing bar: 3/3 judge reps prefer the specific answer, with scores
-  that actually separate them (observed: 8 vs 0/1/0 on the 0–8 scale).
-- **Length-bias gate** (`results/calib-len/`): given the same specific/generic pair, but
-  with the *generic* one padded to be the *longer* file, does the judge still pick the
-  specific one? Passing bar: 3/3 judge reps still prefer the specific answer despite it
-  being shorter (observed: specific answer wins 3/3 despite being 848 bytes against a
-  1494-byte padded opponent).
+- **Discrimination gate** (`results/calib/`, re-verified in `results/calib-v2/`): given
+  one deliberately specific answer and one deliberately generic one, does the judge pick
+  the specific one, consistently, with a real score gap? Passing bar: 3/3 judge reps
+  prefer the specific answer, with scores that actually separate them (observed: 11 vs 1
+  on the 0–12 scale, 3/3 reps).
+- **Length-bias gate** (`results/calib-len/`, re-verified in `results/calib-len-v2/`):
+  given the same specific/generic pair, but with the *generic* one padded to be the
+  *longer* file, does the judge still pick the specific one? The specific answer is the
+  *shorter* file in this gate (the `without` arm); the padded generic answer is the
+  `with` arm — inverted from the discrimination gate above, so read the winning arm
+  carefully. Passing bar: 3/3 judge reps still prefer the specific answer despite it
+  being shorter (observed: specific answer wins 3/3, 11 vs 1 on the 0–12 scale, despite
+  being 848 bytes against a 1494-byte padded opponent).
 
 **If either gate does not hold, the campaign is not run.** A judge that cannot tell a
 specific answer from a generic one, or that can be bought with padding, produces numbers
@@ -208,8 +212,15 @@ nohup ./generate-answers.sh -r 3 -o results/full > full-answers.log 2>&1 &
 nohup ./judge-pairs.sh -o results/full -r 3 > full-judge.log 2>&1 &
 # expect 63 judgments
 
-./analyze.sh results/full | tee baselines/<date>-uplift.md
+./analyze.sh -x 3 results/full | tee baselines/<date>-uplift.md
 ```
+
+`-x 3` matches `rubric.md`'s current per-dimension scale (0-3, four dimensions, max 12
+per answer). `analyze.sh` defaults `-x` to 2 — the retired v1 scale — purely so it keeps
+reading the committed v1 baselines unchanged; running the *current* rubric through that
+default would understate the header's declared ceiling, and `analyze.sh` now aborts
+rather than print a report against the wrong one (see "What voids a campaign"). Check
+`rubric.md`'s stated per-dimension range before a campaign and pass `-x` to match it.
 
 ~42 `opus` answer sessions plus ~63 `sonnet` judgments, serial by design, roughly 45
 minutes and ~$16 at the per-answer cost observed while writing the eval plan. Do not
