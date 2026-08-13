@@ -216,3 +216,82 @@ would have been specified differently had they been caught on 2026-08-13:
   indistinguishable from zero at this n ([−0.30, +0.55], the same post-hoc Fisher-z
   arithmetic, recorded and not acted on). A rule that decides on signs should state the n
   at which a sign is readable.
+
+## `rubric-headroom.sh`
+
+**Question.** `dimension-length-decomposition.sh` left a post-hoc, not-acted-on
+observation on the table: with-arm dimension means of 1.98 `mechanism`, 1.92
+`actionable`, 1.97 `specific` and 1.49 `tradeoff`, against a per-dimension maximum of 2
+— 7.37 of 8 total. **Does the rubric have too little dynamic range to measure uplift?**
+If a competent answer already scores near the ceiling, any improvement a skill produces
+beyond "competent" is unmeasurable, and the erratic `specific` correlation upstream is
+what a near-zero-variance variable produces when correlated against anything.
+
+**Method.** Descriptive statistics only — no split, no new sampling. Average each
+answer's per-dimension scores across judge reps first, exactly as the upstream
+instruments do (`analyze.sh:170-177`), then compute per arm: the count/percentage of
+answers at each of 0/1/2 per dimension, per-dimension mean and population SD, the
+count/percentage of totals at the maximum (8), the full distribution of totals, and the
+mean observed uplift against the mean maximum detectable uplift (`8 − without_total`,
+paired by case-rep).
+
+### Reading rule — registered 2026-08-13, before the instrument was run
+
+Saturation is **CONFIRMED** if both hold:
+- on at least two of the four dimensions, **≥ 50%** of with-arm answers score the
+  maximum (2); **and**
+- the mean observed total uplift is **≥ 60%** of the mean maximum detectable uplift.
+
+Saturation is **REFUTED** if neither holds. **Anything else is PARTIAL**, reported as
+such and not rounded toward either verdict.
+
+### Result — the diagnosis is CONFIRMED
+
+Applying the rule to `results/headroom/run.txt`, mechanically, before any interpretation:
+
+- **Condition 1 — dimensions at ≥ 50% max.** With-arm answers scoring exactly 2:
+  `mechanism` 20/21 (95.2%), `specific` 20/21 (95.2%), `actionable` 18/21 (85.7%),
+  `tradeoff` 10/21 (47.6%). Three of the four dimensions clear the 50% bound — the rule
+  requires two. **Condition 1 holds.**
+- **Condition 2 — uplift vs. headroom ratio.** Mean observed uplift (with − without) is
+  **1.6825**; mean maximum detectable uplift (`8 − without_total`) is **2.3175**. Ratio:
+  **1.6825 / 2.3175 = 0.7260 (72.6%)**, against a 60% bound. **Condition 2 holds.**
+
+Both conditions hold. **Verdict: CONFIRMED.**
+
+### The numbers
+
+| dimension | arm | n | mean | sd | count@2 | pct@2 |
+|---|---|---|---|---|---|---|
+| mechanism | with | 21 | 1.984 | 0.071 | 20 | 95.2% |
+| actionable | with | 21 | 1.921 | 0.203 | 18 | 85.7% |
+| specific | with | 21 | 1.968 | 0.142 | 20 | 95.2% |
+| tradeoff | with | 21 | 1.492 | 0.647 | 10 | 47.6% |
+| mechanism | without | 21 | 1.651 | 0.465 | 11 | 52.4% |
+| actionable | without | 21 | 1.429 | 0.676 | 11 | 52.4% |
+| specific | without | 21 | 1.508 | 0.432 | 8 | 38.1% |
+| tradeoff | without | 21 | 1.095 | 0.784 | 6 | 28.6% |
+
+Totals: with-arm mean **7.365/8** (sd 0.705), **8/21 (38.1%)** scoring the maximum;
+without-arm mean **5.683/8** (sd 1.890), **2/21 (9.5%)** scoring the maximum.
+
+Mean observed uplift **1.6825**; mean maximum detectable uplift **2.3175**; ratio
+**0.7260 (72.6%)**.
+
+### What this does not establish
+
+- **This is descriptive statistics on n = 42 answers across 7 cases** (21 per arm), the
+  same small, case-clustered dataset every instrument in this directory reads.
+- **It does not prove the rubric caused anything.** A ceiling this close does not say
+  *why* the with-arm lands there — only that the scale has little room left above it.
+- **It does not measure uplift.** It measures how much of the *possible* uplift range
+  the rubric can still register, not whether any skill produced a real improvement.
+- **It does not resolve the correlation `dimension-length-decomposition.sh` left open.**
+  The `specific` sign flip between arms is untouched by this result; a saturated with-arm
+  is consistent with that instrument's own post-hoc observation but does not explain the
+  flip, and this instrument was not built to.
+- **`tradeoff` is the outlier that keeps this from being unanimous.** It clears neither
+  the 50%-at-max bar on its own (47.6%) nor comes close to the other three dimensions'
+  means (1.49 vs. 1.92–1.98). If the rubric is re-scaled, `tradeoff` is where the
+  remaining headroom actually lives — the other three dimensions have almost none left
+  to find.

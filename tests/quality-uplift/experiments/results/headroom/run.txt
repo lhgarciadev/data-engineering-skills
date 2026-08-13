@@ -1,0 +1,48 @@
+# Rubric headroom
+
+Source: ../results/full
+Judgments: 63 rows
+
+Duplicate slots: none
+
+## Reading rule (fixed before computation)
+
+Saturation is CONFIRMED if both hold:
+  - on at least two of the four dimensions, >= 50% of with-arm answers score the
+    maximum (2); AND
+  - the mean observed total uplift (with - without) is >= 60% of the mean maximum
+    detectable uplift (8 - without_total, per case-rep).
+
+Saturation is REFUTED if neither holds.
+
+Anything else is PARTIAL.
+
+Answers joined: 42 (expected 42 for the full campaign: 21 case-reps x 2 arms)
+
+## Per-dimension distribution, mean, SD (n=21 per arm)
+
+dimension    arm           n     mean       sd    count@2    pct@2 count@1/@0 pct@1/@0
+mechanism    with         21    1.984    0.071         20    95.2%     0/0       0.0%/0.0%
+actionable   with         21    1.921    0.203         18    85.7%     0/0       0.0%/0.0%
+specific     with         21    1.968    0.142         20    95.2%     0/0       0.0%/0.0%
+tradeoff     with         21    1.492    0.647         10    47.6%     1/2       4.8%/9.5%
+mechanism    without      21    1.651    0.465         11    52.4%     3/0      14.3%/0.0%
+actionable   without      21    1.429    0.676         11    52.4%     4/2      19.0%/9.5%
+specific     without      21    1.508    0.432          8    38.1%     7/0      33.3%/0.0%
+tradeoff     without      21    1.095    0.784          6    28.6%     3/5      14.3%/23.8%
+
+## Total distribution per arm (max = 8)
+
+with     n=21  mean total=7.365  sd=0.705  count@8=8 (38.1%)
+without  n=21  mean total=5.683  sd=1.890  count@8=2 (9.5%)
+
+Distribution of totals (sorted, one value per answer):
+  with:    5.667 6.000 6.333 6.667 6.667 7.000 7.333 7.333 7.333 7.333 7.667 7.667 7.667 8.000 8.000 8.000 8.000 8.000 8.000 8.000 8.000 
+  without: 2.000 2.333 2.667 3.000 4.000 4.333 5.333 5.667 5.667 6.000 6.000 6.000 6.000 7.000 7.000 7.333 7.667 7.667 7.667 8.000 8.000 
+
+## Uplift vs headroom (paired by case-rep, n=21)
+
+pairs matched: 21 (expected 21)
+mean observed uplift (with - without):        1.6825
+mean maximum detectable uplift (8 - without):  2.3175
+ratio (mean uplift / mean max detectable):     0.7260  (72.6%)
