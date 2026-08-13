@@ -420,3 +420,45 @@ here; a total-level reading is not a route around it.
 The gate is applied and the answer is FAIL. What follows from that is a separate
 decision, made with these numbers in hand and pre-registered before the next run
 in the same way this threshold was.
+
+### Residual conocido: los dos instrumentos discrepan sobre la clave inventada
+
+`analyze.sh` cuenta las filas cuyas claves de puntaje caen fuera del conjunto de
+dimensiones y declara que un valor distinto de cero **anula la campaña**.
+`rubric-headroom.sh` no lo hace: su guarda compara la fila 1 contra el conjunto
+en que coincide el resto del archivo, así que detecta una fila 1 discrepante pero
+**deja pasar en silencio una fila que trae una clave de más**.
+
+No es hipotético. `results/full/judgments.jsonl` tiene exactamente una fila así —
+`P4 rep3 jr2`, con `tradeeoff` mal tipeado junto a `tradeoff` — y por eso la
+guarda no se escribió como una comparación fila a fila: así redactada, abortaría
+sobre los datos v1 y rompería la reproducción del resultado v1 en el que se apoya
+todo este rediseño.
+
+Sobre el veredicto de arriba no incide: las tres corridas v2
+(`full-v2-judgments`, `calib-v2`, `calib-len-v2`) tienen cero filas con claves
+fuera del conjunto v2, porque el esquema del juez lleva
+`additionalProperties: false`. Queda anotado porque el instrumento que produjo
+este FALLA es, de los dos, el que menos ve — y porque "los instrumentos
+discrepan sobre qué anula una campaña" es una pregunta de diseño, no un bug que
+se arregla eligiendo el más estricto sin pensarlo.
+
+### La forma de defecto que este harness produce
+
+Siete defectos se corrigieron durante esta entrega y los siete comparten forma:
+**el instrumento reportaba éxito sin haber medido.** `judge-pairs.sh` apuntado a
+un directorio vacío escribe cero filas y termina con `exit 0`. `git stash` sin
+cambios que guardar sale 0, y una guarda de reproducción construida sobre él
+compara el código nuevo contra sí mismo y siempre pasa. Un hook con ruta
+relativa no encuentra su propio script y queda mudo, que se lee igual que
+"nada que reportar". `git status --short` sobre un directorio ignorado sale
+vacío tanto si los datos están intactos como si se borraron. Un instrumento con
+la escala vieja imprime `max 8` sobre un total de 10.3. Otro, con la fila 1
+truncada, emite un veredicto de aspecto completo sobre tres cuartos del rubric.
+Y un archivo de corrida reimprime la regla de lectura de la versión anterior,
+que sobre los números nuevos da el veredicto contrario.
+
+Ninguno tiraba un error, y ninguno era visible leyendo el código: los siete
+aparecieron sólo al ejercitar el instrumento con datos de la forma equivocada.
+De ahí la regla para lo que se agregue acá: **un `exit 0` no es evidencia hasta
+que alguien haya confirmado que el mismo camino falla cuando debe fallar.**
