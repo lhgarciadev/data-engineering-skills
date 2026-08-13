@@ -103,7 +103,7 @@ What to do instead, in order:
 
 *Scope: this section applies to Terraform/OpenTofu and, with the vocabulary translation above, to Pulumi. It does not apply to AWS CDK, where no such artefact exists.*
 
-[`identity-and-network-access.md`](identity-and-network-access.md) ends by pointing here. The documentation is direct:
+[`encryption-and-secrets.md`](encryption-and-secrets.md) ends by pointing here. The documentation is direct:
 
 > "Terraform state and plan files contain detailed information about your infrastructure, including resource attributes and metadata that can contain sensitive values, such as initial database passwords or API tokens."
 
