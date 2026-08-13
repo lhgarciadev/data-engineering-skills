@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pre-commit gates for the dataforge skills suite.
 #
-# Three checks, each of which has already let a defect reach a commit at least
+# Four checks, each of which has already let a defect reach a commit at least
 # once. They ran as human discipline until now; this script is what stops them
 # depending on someone remembering.
 #
@@ -88,6 +88,28 @@ done)
 if [ -n "$DEAD" ]; then
   fail "afirma que un dominio no tiene skill. La suite esta completa en 9/9."
   echo "$DEAD" | sed 's/^/    /'
+fi
+
+
+# ---------------------------------------------------------------------------
+# Gate 4: a reference file over the 3500-word ceiling.
+#
+# Three of the nine skills (modeling, streaming, iac-cloud) declared a
+# 1600-3500 word band for their reference files; the other six were written
+# at a smaller scale and are not held to any band — see tests/gates/README.md
+# for why the floor is deliberately not gated here. Only the ceiling is
+# universal: past 3500 words a reference file stops being readable in one
+# sitting, regardless of which skill wrote it.
+# ---------------------------------------------------------------------------
+OVERLONG=$(echo "$FILES" | while read -r f; do
+  case "$f" in skills/*/references/*.md) ;; *) continue ;; esac
+  [ -f "$f" ] || continue
+  count=$(wc -w < "$f" | tr -d ' ')
+  [ "$count" -gt 3500 ] && echo "$f: $count words"
+done)
+if [ -n "$OVERLONG" ]; then
+  fail "un archivo de referencia supera las 3500 palabras."
+  echo "$OVERLONG" | sed 's/^/    /'
 fi
 
 if [ "$FAILED" -ne 0 ]; then
