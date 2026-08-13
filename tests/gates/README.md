@@ -60,8 +60,7 @@ printf '#!/usr/bin/env bash\nexec "$(git rev-parse --show-toplevel)/tests/gates/
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git commit *)",
-            "command": "out=$(tests/gates/pre-commit-gates.sh 2>&1); if [ -n \"$out\" ]; then printf \"%s\" \"$out\" | jq -Rs \"{hookSpecificOutput:{hookEventName:\\\"PreToolUse\\\",permissionDecision:\\\"deny\\\",permissionDecisionReason:.}}\"; fi",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); case \"$cmd\" in *\"git commit\"*) ;; *) exit 0 ;; esac; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; [ -x \"$root/tests/gates/pre-commit-gates.sh\" ] || exit 0; out=$(\"$root/tests/gates/pre-commit-gates.sh\" 2>&1) && exit 0; printf \"%s\" \"$out\" | jq -Rs \"{hookSpecificOutput:{hookEventName:\\\"PreToolUse\\\",permissionDecision:\\\"deny\\\",permissionDecisionReason:.}}\"",
             "timeout": 30,
             "statusMessage": "Verificando compuertas pre-commit"
           }
@@ -71,6 +70,33 @@ printf '#!/usr/bin/env bash\nexec "$(git rev-parse --show-toplevel)/tests/gates/
   }
 }
 ```
+
+Two things in that command look like clutter and are not. An earlier version of
+this block had both bugs, and both fail silently — the hook stays quiet, and quiet
+reads exactly like "nothing to report".
+
+- **The path is resolved through `git rev-parse`, not written relative.** A hook
+  command inherits whatever working directory the caller happens to have. From
+  anywhere but the repo root, a relative `tests/gates/pre-commit-gates.sh` is
+  `not found` — and a gate that cannot find itself blocks nothing.
+- **The `git commit` filter lives inside the command, not in an `if` field.**
+  Command hooks take `type`, `command`, `timeout` and `statusMessage`; an `if`
+  key is not part of the schema, so it is ignored rather than rejected and the
+  hook fires on *every* Bash call. The payload arrives on stdin, so the filter
+  reads `.tool_input.command` and exits 0 early when it is not a commit.
+
+After installing it, prove it denies — a hook that is silent on a real violation
+is indistinguishable from one that is working:
+
+```bash
+CMD=$(jq -re '.hooks.PreToolUse[]|select(.matcher=="Bash")|.hooks[]|select(.type=="command")|.command' .claude/settings.json)
+printf 'ruta: /home/probando/dev/cosa\n' > docs/leak-probe.md && git add docs/leak-probe.md
+echo '{"tool_input":{"command":"git commit -m x"}}' | bash -c "$CMD" | jq -r '.hookSpecificOutput.permissionDecision'
+git rm -q --cached docs/leak-probe.md && rm -f docs/leak-probe.md
+```
+
+Expected: `deny`. Anything else — including no output — means the hook is not
+wired, whatever the JSON looks like.
 
 ## Deliberately skipping a gate
 
