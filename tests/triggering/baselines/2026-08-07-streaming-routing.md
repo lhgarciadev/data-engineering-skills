@@ -70,7 +70,7 @@ description is the smaller risk — but the 19/19 above does not test it.
 | P8 | data-engineering | 3/3 | 2,2,2 |
 | P9 | streaming-data-engineering | 3/3 | 1,1,1 |
 
-All 14 regression cases hold at 3/3.
+All 19 regression cases hold at 3/3.
 
 ## What this does not establish
 
