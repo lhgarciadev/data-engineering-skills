@@ -53,12 +53,18 @@ echo "Duplicate slots: none"
 # ---------------------------------------------------------------------------
 # Load .meta -> id, arm, rep, bytes. Field 5 is bytes (analyze.sh:103).
 # A meta whose byte field is not an integer is counted, never guessed at.
+# The field count is checked first, as analyze.sh does: a row with the wrong
+# number of fields shifts a different column into `bytes`, and a numeric-looking
+# value in the wrong position passes the integer test silently.
 # ---------------------------------------------------------------------------
 METAS=$(mktemp) || exit 1
 trap 'rm -f "$METAS" "$ROWS"' EXIT
 bad_meta=0
 for m in "$RESULTS_DIR"/*.meta; do
   [ -f "$m" ] || continue
+  if [ "$(awk -F'\t' 'NR==1{print NF}' "$m")" != "8" ]; then
+    bad_meta=$((bad_meta + 1)); continue
+  fi
   IFS=$'\t' read -r m_id m_arm m_rep _m_chain m_bytes _rest < "$m"
   [[ "$m_bytes" =~ ^[0-9]+$ ]] || { bad_meta=$((bad_meta + 1)); continue; }
   printf '%s\t%s\t%s\t%s\n' "$m_id" "$m_arm" "$m_rep" "$m_bytes" >> "$METAS"

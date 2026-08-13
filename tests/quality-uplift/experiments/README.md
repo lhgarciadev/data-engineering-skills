@@ -155,11 +155,12 @@ discriminate.
 
 The sign flip has two candidate readings — a real arm-dependent effect, or sampling noise
 — and this run cannot separate them. At n=21 per arm the two `specific` estimates have
-overlapping 95% intervals (Fisher z: −0.14 → [−0.54, +0.31]; +0.53 → [+0.13, +0.78];
-common ground roughly [+0.13, +0.31]). That arithmetic is post-hoc and forms no part of
-the pre-registered rule; it is recorded to size the next run, not to soften this one.
+overlapping 95% intervals (Fisher z: −0.14 → [−0.54, +0.31]; +0.53 → [+0.13, +0.78]; the
+two intervals overlap between roughly +0.13 and +0.31, which records that they are not
+disjoint and nothing more). That arithmetic is post-hoc and forms no part of the
+pre-registered rule; it is recorded to size the next run, not to soften this one.
 
-Two things would resolve it, and both must be pre-registered before the numbers exist:
+Three things would resolve it, and all must be pre-registered before the numbers exist:
 
 1. **Enough samples per arm that a per-arm `r` has an interval narrower than the 0.2 flat
    bound.** Under the rule as written the bound is unusable at n=21, since the interval
@@ -169,6 +170,16 @@ Two things would resolve it, and both must be pre-registered before the numbers 
    existing. Correlating bytes against score *within* each case, then combining, separates
    between-case difficulty from the effect under test. This run cannot do that at 3 reps
    per case per arm.
+3. **A scale with headroom in the `with` arm.** The table above prints with-arm means of
+   1.98 `mechanism`, 1.92 `actionable` and 1.97 `specific` against a rubric maximum of 2
+   — at or near the ceiling on three of the four dimensions. A Pearson correlation
+   computed on scores packed that close to the top of the scale has very little variance
+   to work with, so more samples per arm may not buy what remedy 1 assumes: the next run
+   would need a wider scale, a finer rubric, or a case mix that spreads the with-arm
+   scores before extra reps can narrow a with-arm interval. This is an observation about
+   the design's measuring range, read off numbers already in the table; it is recorded
+   post-hoc, forms no part of the pre-registered rule, and asserts nothing about why the
+   `specific` sign flipped or about either hypothesis.
 
 Until one of those runs exists, the mechanism behind `r = 0.61` stays unresolved, exactly
 as `length-causality.sh` left it. Nothing here promotes either hypothesis, and this
@@ -194,11 +205,14 @@ would forfeit the only thing that makes this run worth more than the last one. T
 would have been specified differently had they been caught on 2026-08-13:
 
 - **The rule says `|r| < 0.2` for `specific` without saying which arm it is measured on.**
-  Read as the `with` arm alone, −0.14 satisfies it; read as pooled or `without`, it fails
-  badly. The verdict is unaffected — row 3's "inconsistent between arms" clause covers a
-  sign flip under either reading — but the ambiguity is real and a future rule should name
-  the arms explicitly.
+  Read as the `with` arm alone, −0.14 satisfies it and row 2 becomes satisfiable too; read
+  as pooled or `without`, it fails badly. The verdict is unaffected either way, because
+  row 3's "or inconsistent between arms" clause can only ever fire alongside another row
+  and therefore takes precedence by construction — a disjunct always in competition is
+  meaningful only if it wins. The ambiguity is still real, and a future rule should name
+  both the arms and the precedence explicitly.
 - **The rule treats "positive" as a bare sign test, with no magnitude or uncertainty
   floor.** `mechanism`/`with` at 0.15 counts as "positive" literally while being
-  indistinguishable from zero at this n ([−0.30, +0.55]). A rule that decides on signs
-  should state the n at which a sign is readable.
+  indistinguishable from zero at this n ([−0.30, +0.55], the same post-hoc Fisher-z
+  arithmetic, recorded and not acted on). A rule that decides on signs should state the n
+  at which a sign is readable.
