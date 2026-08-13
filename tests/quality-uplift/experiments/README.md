@@ -110,3 +110,95 @@ between 0.2 and the other dimensions' correlations falls in the third row, not t
 
 **"Does not resolve" is a legitimate outcome of this experiment.** The failure would be
 declaring resolved what is not, which is the defect this suite exists to catch.
+
+### Result — the diagnosis DOES NOT RESOLVE (third row)
+
+Applying the rule to `results/dld/run.txt`, row by row, before any interpretation:
+
+- **Row 1 — judge length-bias.** Requires all four dimensions positive, `specific`
+  included. `specific` in the `with` arm is **−0.14**. Negative. Row excluded.
+- **Row 2 — coverage additivity.** Requires `mechanism`/`actionable`/`tradeoff` positive
+  and `specific` flat, pre-defined as `|r| < 0.2`. `specific` is **−0.14** with,
+  **+0.53** without, **+0.41** pooled. Two of the three values are positive and well
+  above the 0.2 bound. Row excluded.
+- **Row 3 — does not resolve.** "Mixed, or inconsistent between arms." `specific` carries
+  **opposite signs across the two arms**: −0.14 with, +0.53 without. This row applies.
+
+The instrument reproduces the published pooled `r = 0.61` for the rubric total exactly,
+which is what licenses reading the rest of the table at all.
+
+### The 15 correlations
+
+| dimension | arm | n | r | mean bytes | mean score |
+|---|---|---|---|---|---|
+| mechanism | with | 21 | 0.15 | 2375 | 1.98 |
+| mechanism | without | 21 | 0.50 | 1771 | 1.65 |
+| mechanism | pooled | 42 | 0.42 | 2073 | 1.82 |
+| actionable | with | 21 | 0.31 | 2375 | 1.92 |
+| actionable | without | 21 | 0.59 | 1771 | 1.43 |
+| actionable | pooled | 42 | 0.51 | 2073 | 1.67 |
+| specific | with | 21 | **−0.14** | 2375 | 1.97 |
+| specific | without | 21 | **0.53** | 1771 | 1.51 |
+| specific | pooled | 42 | **0.41** | 2073 | 1.74 |
+| tradeoff | with | 21 | 0.56 | 2375 | 1.49 |
+| tradeoff | without | 21 | 0.48 | 1771 | 1.10 |
+| tradeoff | pooled | 42 | 0.55 | 2073 | 1.29 |
+| TOTAL | with | 21 | 0.59 | 2375 | 7.37 |
+| TOTAL | without | 21 | 0.65 | 1771 | 5.68 |
+| TOTAL | pooled | 42 | **0.61** | 2073 | 6.52 |
+
+The `specific` sign flip is the whole reading. It is also the one number this design was
+built to make decisive, and it came back arm-dependent — the discriminator did not
+discriminate.
+
+### What would resolve it
+
+The sign flip has two candidate readings — a real arm-dependent effect, or sampling noise
+— and this run cannot separate them. At n=21 per arm the two `specific` estimates have
+overlapping 95% intervals (Fisher z: −0.14 → [−0.54, +0.31]; +0.53 → [+0.13, +0.78];
+common ground roughly [+0.13, +0.31]). That arithmetic is post-hoc and forms no part of
+the pre-registered rule; it is recorded to size the next run, not to soften this one.
+
+Two things would resolve it, and both must be pre-registered before the numbers exist:
+
+1. **Enough samples per arm that a per-arm `r` has an interval narrower than the 0.2 flat
+   bound.** Under the rule as written the bound is unusable at n=21, since the interval
+   is wider than the decision it is meant to drive.
+2. **A within-case decomposition.** These correlations pool 7 cases × 3 reps. A case that
+   elicits longer *and* better answers moves `r` without any within-answer length effect
+   existing. Correlating bytes against score *within* each case, then combining, separates
+   between-case difficulty from the effect under test. This run cannot do that at 3 reps
+   per case per arm.
+
+Until one of those runs exists, the mechanism behind `r = 0.61` stays unresolved, exactly
+as `length-causality.sh` left it. Nothing here promotes either hypothesis, and this
+section deliberately stops without naming a favourite: the predecessor experiment's
+recorded failure was reading an inconclusive result into a tidy conclusion after the
+fact, and a consolation hypothesis is that same failure in a quieter voice.
+
+### Caveats that stand
+
+- **This run is observational.** It varies nothing. Even a clean split would have made one
+  hypothesis more plausible and would **not prove causation**; a split that is not clean
+  supports nothing at all.
+- **n = 42 answers across 7 cases**, 21 per arm. Small, and clustered by case.
+- **It does not measure uplift.** It measures what produces a correlation, not whether any
+  skill improves an answer. No number here says anything about whether the skills work.
+- **It does not verify the `P2.with.rep3` explanation** from spec §3.1. That remains a
+  conjecture about a single case, and this instrument was not built to test it.
+
+### Recorded against the rule, not acted on
+
+The rule was applied as written and is left as written; amending it after seeing numbers
+would forfeit the only thing that makes this run worth more than the last one. Two things
+would have been specified differently had they been caught on 2026-08-13:
+
+- **The rule says `|r| < 0.2` for `specific` without saying which arm it is measured on.**
+  Read as the `with` arm alone, −0.14 satisfies it; read as pooled or `without`, it fails
+  badly. The verdict is unaffected — row 3's "inconsistent between arms" clause covers a
+  sign flip under either reading — but the ambiguity is real and a future rule should name
+  the arms explicitly.
+- **The rule treats "positive" as a bare sign test, with no magnitude or uncertainty
+  floor.** `mechanism`/`with` at 0.15 counts as "positive" literally while being
+  indistinguishable from zero at this n ([−0.30, +0.55]). A rule that decides on signs
+  should state the n at which a sign is readable.
