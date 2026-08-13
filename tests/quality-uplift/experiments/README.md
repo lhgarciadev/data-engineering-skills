@@ -74,3 +74,39 @@ dimensions.
 - Both runs use the same four-dimension rubric. If the rubric is itself coverage-additive,
   this design cannot see it — it only shows whether the judge scores consistently against
   it.
+
+## `dimension-length-decomposition.sh`
+
+**Question.** `length-causality.sh` left the mechanism behind `r = 0.61` unresolved: it
+refuted "judge length-bias" without establishing the opposite. This instrument asks a
+question that experiment could not: **does the correlation live in all four rubric
+dimensions, or only in the three that require adding content?**
+
+**Hypothesis under test — coverage additivity.** The rubric asks for four distinct content
+elements. An answer containing all four is mechanically longer than one containing two,
+because covering four things costs words. Under this hypothesis `r = 0.61` is neither judge
+bias nor noise; it is length acting as a proxy for how many elements are present.
+
+**Why this discriminates where the previous experiment did not.** The two hypotheses
+predict **opposite signs for the same dimension**, `specific`:
+
+- If the judge rewards length, all four dimensions correlate positively with bytes,
+  `specific` included — a judge that pays for volume has no reason to penalise it.
+- If the rubric is coverage-additive, `mechanism`, `actionable` and `tradeoff` correlate
+  positively because they are content you add, while `specific` stays flat or goes
+  negative: a longer answer has more room for generic filler, and `specific` penalises
+  exactly that.
+
+### Reading rule — registered 2026-08-13, before the instrument was written
+
+| Observed | Reading |
+|---|---|
+| All four dimensions correlate positively with bytes, `specific` included | Supports judge length-bias |
+| `mechanism`/`actionable`/`tradeoff` positive, `specific` flat or negative | Supports coverage additivity |
+| Mixed, or inconsistent between arms | **Does not resolve.** Report as such |
+
+"Flat" is defined here, before any number exists: `|r| < 0.2` for `specific`. A value
+between 0.2 and the other dimensions' correlations falls in the third row, not the second.
+
+**"Does not resolve" is a legitimate outcome of this experiment.** The failure would be
+declaring resolved what is not, which is the defect this suite exists to catch.
