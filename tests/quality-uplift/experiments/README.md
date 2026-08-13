@@ -295,3 +295,30 @@ Mean observed uplift **1.6825**; mean maximum detectable uplift **2.3175**; rati
   means (1.49 vs. 1.92–1.98). If the rubric is re-scaled, `tradeoff` is where the
   remaining headroom actually lives — the other three dimensions have almost none left
   to find.
+
+## Rubric v2 — saturation gate
+
+**Question.** The v1 rubric saturated: three of four dimensions had ≥85% of
+with-arm answers at the maximum, with standard deviations of 0.071, 0.142 and
+0.203. The v2 rubric raises what the top score costs. **Does it actually leave
+room, or does it saturate too?**
+
+Answered by re-judging the 42 answers already on disk in `results/full/` — no
+answer generation, so the cost is judge calls only.
+
+### Threshold — registered 2026-08-13, before any v2 score existed
+
+The v2 **passes** if, on the with-arm:
+
+- **no** dimension has ≥50% of answers at the maximum (3); **and**
+- **all four** dimensions have SD ≥ 0.4.
+
+The v2 **fails** if either condition is unmet.
+
+0.4 is a deliberately lax floor: `tradeoff`, the only v1 dimension that
+discriminated, had SD 0.647, and requiring all four to match the best would be a
+harder bar than the problem needs.
+
+**"The v2 failed" is a legitimate outcome.** A redesign that still saturates is
+one that did not work, and the point of running this on already-paid-for data is
+to learn that before funding a campaign rather than after.
