@@ -1,0 +1,27 @@
+# Dimension-length decomposition
+
+Source: ../results/full
+Judgments: 63 rows
+
+Duplicate slots: none
+Metas read: 42   malformed: 0
+
+Answers joined: 42 (expected 42 for the full campaign)
+Judgment (id,rep) slots matched to a meta: 21 of 21
+
+dimension    arm             n        r mean bytes mean score
+mechanism    with           21     0.15       2375       1.98
+mechanism    without        21     0.50       1771       1.65
+mechanism    pooled         42     0.42       2073       1.82
+actionable   with           21     0.31       2375       1.92
+actionable   without        21     0.59       1771       1.43
+actionable   pooled         42     0.51       2073       1.67
+specific     with           21    -0.14       2375       1.97
+specific     without        21     0.53       1771       1.51
+specific     pooled         42     0.41       2073       1.74
+tradeoff     with           21     0.56       2375       1.49
+tradeoff     without        21     0.48       1771       1.10
+tradeoff     pooled         42     0.55       2073       1.29
+TOTAL        with           21     0.59       2375       7.37
+TOTAL        without        21     0.65       1771       5.68
+TOTAL        pooled         42     0.61       2073       6.52
