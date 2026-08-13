@@ -6,6 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN="${1:?usage: analyze.sh <run-dir>}"
 CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 
+# The dimension names come from the data, not from this script. A v1 campaign
+# carries mechanism/actionable/specific/tradeoff; a v2 campaign carries
+# assumptions in place of specific. Hardcoding either one makes this script
+# unable to read the other, and the v1 campaign is a committed historical
+# record. Derived from the raw file (not the sanitized one below) because the
+# schema check that builds the sanitized file needs these names first.
+DIMS_JSON="$(jq -c '[.with | keys_unsorted] | first' "$RUN/judgments.jsonl" 2>/dev/null | head -1)"
+[[ "$DIMS_JSON" =~ ^\[.*\]$ ]] || DIMS_JSON='[]'
+
 # Sanitize the judgment stream ONCE, up front, and report what was rejected.
 #
 # Every section below reads JUDGMENTS, not the raw file. Reading the raw file
@@ -21,8 +30,8 @@ CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 JUDGMENT_SCHEMA='
   def scores_ok:
     type == "object"
-    and has("mechanism") and has("actionable") and has("specific") and has("tradeoff")
-    and ([.mechanism, .actionable, .specific, .tradeoff] | all(type == "number"));
+    and (($dims - keys) | length == 0)
+    and ([.[$dims[]]] | all(type == "number"));
   has("id") and has("rep") and has("judge_rep") and has("more_useful")
   and (.with | scores_ok) and (.without | scores_ok)
 '
@@ -48,7 +57,8 @@ if [[ -f "$RUN/judgments.jsonl" ]]; then
     # One jq call yields both the verdict and the slot key: empty output means
     # the line failed the schema above.
     slot="$(printf '%s\n' "$line" \
-            | jq -r "if ($JUDGMENT_SCHEMA) then \"\(.id)|\(.rep)|\(.judge_rep)\" else empty end" \
+            | jq -r --argjson dims "$DIMS_JSON" \
+              "if ($JUDGMENT_SCHEMA) then \"\(.id)|\(.rep)|\(.judge_rep)\" else empty end" \
               2>/dev/null)"
     if [[ -z "$slot" ]]; then
       malformed=$((malformed + 1))
@@ -79,9 +89,8 @@ EXPECTED_N="$(jq -s '(map(.rep)|unique|length) * (map(.judge_rep)|unique|length)
 #
 # Note this changes what re-running against the 2026-08-05 campaign prints: that
 # digest's table was produced when totals used `add`. See its amendment 4.
-extra_keys="$(jq -s '
-  ["mechanism","actionable","specific","tradeoff"] as $dims
-  | [ .[] | select((((.with|keys) - $dims)|length) > 0 or (((.without|keys) - $dims)|length) > 0) ]
+extra_keys="$(jq -s --argjson dims "$DIMS_JSON" '
+  [ .[] | select((((.with|keys) - $dims)|length) > 0 or (((.without|keys) - $dims)|length) > 0) ]
   | length' "$JUDGMENTS" 2>/dev/null)"
 [[ "$extra_keys" =~ ^[0-9]+$ ]] || extra_keys=0
 
@@ -124,11 +133,11 @@ while IFS=$'\t' read -r id skill _prompt; do
   [[ "$id" == "ID" || -z "${id// }" ]] && continue
   row="$(jq -r --arg id "$id" '
     select(.id==$id)' "$JUDGMENTS" 2>/dev/null \
-  | jq -s -r --arg id "$id" --arg skill "$skill" --argjson exp "$EXPECTED_N" '
+  | jq -s -r --arg id "$id" --arg skill "$skill" --argjson exp "$EXPECTED_N" --argjson dims "$DIMS_JSON" '
       if length==0 then "| \($id) | \($skill) | – | – | – | not measurable | 0/\($exp) |"
       else
-        (map(.with|(.mechanism+.actionable+.specific+.tradeoff))|add/length) as $w |
-        (map(.without|(.mechanism+.actionable+.specific+.tradeoff))|add/length) as $o |
+        (map(.with|[.[$dims[]]]|add)|add/length) as $w |
+        (map(.without|[.[$dims[]]]|add)|add/length) as $o |
         (map(select(.more_useful=="with"))|length) as $pw |
         (if length == $exp then "" else " COUNT-MISMATCH" end) as $flag |
         "| \($id) | \($skill) | \($w*10|round/10) | \($o*10|round/10) | \(($w-$o)*10|round/10) | \($pw)/\(length) | \(length)/\($exp)\($flag) |"
@@ -169,10 +178,10 @@ echo "because the arm label is constant there. Read all three lines, not the fir
 echo
 { while IFS=$'\t' read -r id arm rep bytes; do
     [[ -n "$id" ]] || continue
-    tot=$(jq -r --arg id "$id" --arg rep "$rep" --arg arm "$arm" '
+    tot=$(jq -r --arg id "$id" --arg rep "$rep" --arg arm "$arm" --argjson dims "$DIMS_JSON" '
             select(.id==$id and .rep==($rep|tonumber))
             | (if $arm=="with" then .with else .without end)
-            | (.mechanism+.actionable+.specific+.tradeoff)' \
+            | ([.[$dims[]]]|add)' \
           "$JUDGMENTS" 2>/dev/null | jq -s 'if length==0 then empty else add/length end')
     [[ -n "$tot" ]] && printf '%s\t%s\t%s\n' "$arm" "$bytes" "$tot"
   done < "$METAS"; } | awk -F'\t' '
@@ -231,10 +240,9 @@ echo
 echo "Spec §6.1: a row that scores one answer higher but prefers the other is"
 echo "internally inconsistent, and that pair does not count."
 echo
-jq -s -r '
+jq -s -r --argjson dims "$DIMS_JSON" '
   map(select(.more_useful != "tie"))
-  | map(. + {wt:(.with|(.mechanism+.actionable+.specific+.tradeoff)),
-             ot:(.without|(.mechanism+.actionable+.specific+.tradeoff))})
+  | map(. + {wt:(.with|[.[$dims[]]]|add), ot:(.without|[.[$dims[]]]|add)})
   | map(select((.more_useful=="with" and .wt < .ot) or
                (.more_useful=="without" and .ot < .wt)))
   | if length==0 then "  none — all rows coherent"
