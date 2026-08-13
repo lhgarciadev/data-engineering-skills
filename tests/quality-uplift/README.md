@@ -212,8 +212,15 @@ nohup ./generate-answers.sh -r 3 -o results/full > full-answers.log 2>&1 &
 nohup ./judge-pairs.sh -o results/full -r 3 > full-judge.log 2>&1 &
 # expect 63 judgments
 
-./analyze.sh results/full | tee baselines/<date>-uplift.md
+./analyze.sh -x 3 results/full | tee baselines/<date>-uplift.md
 ```
+
+`-x 3` matches `rubric.md`'s current per-dimension scale (0-3, four dimensions, max 12
+per answer). `analyze.sh` defaults `-x` to 2 — the retired v1 scale — purely so it keeps
+reading the committed v1 baselines unchanged; running the *current* rubric through that
+default would understate the header's declared ceiling, and `analyze.sh` now aborts
+rather than print a report against the wrong one (see "What voids a campaign"). Check
+`rubric.md`'s stated per-dimension range before a campaign and pass `-x` to match it.
 
 ~42 `opus` answer sessions plus ~63 `sonnet` judgments, serial by design, roughly 45
 minutes and ~$16 at the per-answer cost observed while writing the eval plan. Do not

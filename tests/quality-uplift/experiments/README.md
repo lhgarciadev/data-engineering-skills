@@ -343,6 +343,13 @@ the four fall below the 0.4 floor. **Condition 2 is unmet.**
 The threshold fails the v2 if *either* condition is unmet. Both are.
 **Verdict: FAIL.**
 
+Nota: `results/headroom-v2/run.txt` reimprime, bajo el encabezado "Reading rule", la
+regla de lectura CONFIRMED/REFUTED propia del instrumento — el heurístico de
+saturación v1, no el estándar que juzga esta entrega. Aplicada mecánicamente a los
+números de esa misma corrida, esa regla arroja REFUTED ("no saturado"), una lectura
+distinta del umbral pre-registrado el 2026-08-13 arriba. El estándar vigente es ese
+umbral, y bajo él el veredicto es **FAIL**.
+
 ### Which dimensions did not leave room
 
 - **`mechanism` fails both conditions.** 57.1% of with-arm answers score the

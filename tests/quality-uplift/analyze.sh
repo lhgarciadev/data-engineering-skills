@@ -135,6 +135,20 @@ for m in "$RUN"/*.meta; do
   printf '%s\t%s\t%s\t%s\n' "$m_id" "$m_arm" "$m_rep" "$m_bytes" >> "$METAS"
 done
 
+# Guard: the declared per-dimension maximum (-x, default 2) must not be lower than
+# what the data actually contains. Mirrors rubric-headroom.sh:61-71: without this,
+# a v2 (0-3) run analyzed with the default -x prints a header declaring "max 8 per
+# answer" while a per-answer total of 10.3 appears nine lines later, exit 0, no
+# warning — the header's ceiling was assumed, not checked against the scores it is
+# describing. Abort instead of printing a report built on a wrong scale.
+OBSERVED_MAX="$(jq -s --argjson dims "$DIMS_JSON" '
+  [.[] | (.with, .without) | [.[$dims[]]] | .[]] | max' "$JUDGMENTS" 2>/dev/null)"
+if [[ "$OBSERVED_MAX" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] \
+   && awk -v o="$OBSERVED_MAX" -v m="$MAX" 'BEGIN { exit !(o > m) }'; then
+  echo "STOP — observed max score $OBSERVED_MAX exceeds declared per-dimension maximum -x $MAX; rerun with the correct -x" >&2
+  exit 1
+fi
+
 echo "# Quality-uplift report"
 echo
 echo "Run: \`$RUN\`.  Primary metric: rubric delta (with − without), max $MAX_TOTAL per answer."

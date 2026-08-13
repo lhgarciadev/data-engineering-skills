@@ -58,6 +58,37 @@ DIM_COUNT="$(echo "$DIMS_JSON" | jq 'length')"
 DIM_NAMES="$(echo "$DIMS_JSON" | jq -r 'join(" ")')"
 MAX_TOTAL=$((DIM_COUNT * MAX))
 
+# Guard: the dimension set above is read from row 1 alone and never reconciled
+# against rows 2..N — if row 1 is short a dimension (or carries an extra one) that
+# every other row actually has, the whole report silently computes over a narrower
+# (or wider) rubric than the file contains, with every other guard in this script
+# (duplicate slots, observed max) still reading clean and the script exiting 0.
+#
+# Reject that by comparing row 1's derived set against the *consensus* key set: the
+# most common .with/.without key set across every row in the file. A single row
+# carrying a stray extra key (a judge typo, e.g. "tradeeoff" alongside "tradeoff" in
+# the committed v1 campaign) does not make row 1 wrong — analyze.sh already reports
+# that class of anomaly (extra_keys) without voiding the run, because the value
+# lookup below reads dimensions by name and simply never touches an unlisted key. But
+# row 1 disagreeing with what the rest of the file agrees on means the set this
+# script builds its entire analysis from is the outlier, and that must abort, not
+# warn: this script's output is a pass/fail verdict on a rubric redesign.
+KEY_CHECK="$(jq -s '
+  [ .[] | (.with, .without) | (keys_unsorted | sort) ] as $keysets
+  | ($keysets | group_by(.) | max_by(length) | .[0]) as $consensus
+  | { consensus: $consensus,
+      disagree: ([$keysets[] | select(. != $consensus)] | length),
+      offending: ([$keysets[] | select(. != $consensus)] | unique) }
+' "$JUDGMENTS" 2>/dev/null)"
+CONSENSUS_KEYS="$(echo "$KEY_CHECK" | jq -c '.consensus' 2>/dev/null)"
+if [[ -n "$CONSENSUS_KEYS" && "$CONSENSUS_KEYS" != "null" ]] \
+   && [[ "$(echo "$DIMS_JSON" | jq -c 'sort' 2>/dev/null)" != "$(echo "$CONSENSUS_KEYS" | jq -c 'sort' 2>/dev/null)" ]]; then
+  DISAGREE_COUNT="$(echo "$KEY_CHECK" | jq -r '.disagree' 2>/dev/null)"
+  OFFENDING_KEYS="$(echo "$KEY_CHECK" | jq -c '.offending' 2>/dev/null)"
+  echo "STOP — the dimension set derived from row 1 ($DIMS_JSON) disagrees with the key set the rest of the file agrees on ($CONSENSUS_KEYS); $DISAGREE_COUNT row(s)/side(s) carry a different key set: $OFFENDING_KEYS" >&2
+  exit 1
+fi
+
 # Guard: the declared per-dimension maximum (-x, default 2) must not be lower than what
 # the data actually contains. Under-declaring it is not a warning-level mistake — every
 # "count@max" and "maximum detectable uplift" figure below would be computed against the
