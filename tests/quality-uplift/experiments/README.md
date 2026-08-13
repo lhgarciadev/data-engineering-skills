@@ -443,6 +443,78 @@ este FALLA es, de los dos, el que menos ve — y porque "los instrumentos
 discrepan sobre qué anula una campaña" es una pregunta de diseño, no un bug que
 se arregla eligiendo el más estricto sin pensarlo.
 
+### Lo que el brazo sin-skill dice, y por qué apunta a los casos
+
+Los números de arriba se leyeron como un veredicto sobre el rubric. El brazo
+sin-skill de la misma corrida sugiere que el rubric no es donde está el problema.
+
+**Por dimensión** (medias sobre las 21 respuestas, escala 0–3):
+
+| dimensión | media sin-skill | SD del brazo con-skill | compuerta |
+|---|---|---|---|
+| `mechanism` | 2.286 | 0.343 | falla |
+| `actionable` | 1.778 | 0.380 | falla |
+| `assumptions` | 1.714 | 0.839 | pasa |
+| `tradeoff` | 1.254 | 1.033 | pasa |
+
+El orden es monótono en los cuatro puntos: cuanto mejor responde ya el modelo
+**sin** la skill en una dimensión, menos varianza produce el rubric en el brazo
+**con** la skill. Las dos que fallan la compuerta son las dos donde el modelo base
+ya es competente.
+
+Esto es una ordenación sobre cuatro puntos, **no un coeficiente de correlación**,
+y se declara así a propósito: calcular un `r` sobre estos datos queda bajo la
+restricción de §6 —pre-registrar el tratamiento del clustering por caso (7 casos ×
+3 reps)— y ninguna cifra de este apartado la necesita.
+
+**Por caso** (totales sobre 12):
+
+| caso | sin skill | con skill | delta | techo restante (12 − sin) |
+|---|---|---|---|---|
+| P4 | **10.33** | 9.67 | **−0.67** | 1.67 |
+| P7 | 7.89 | 10.78 | 2.89 | 4.11 |
+| A1 | 7.33 | 9.78 | 2.44 | 4.67 |
+| P2 | 6.89 | 8.56 | 1.67 | 5.11 |
+| P1 | 6.67 | 9.44 | 2.78 | 5.33 |
+| A4 | 6.00 | 10.67 | **4.67** | 6.00 |
+| A2 | 4.11 | 5.67 | 1.56 | 7.89 |
+
+**P4 mide algo peor que nada**: el modelo sin la skill saca 10.33 de 12 y le gana
+al brazo con skill. Le quedan 1.67 puntos de techo, así que ese caso no puede
+mostrar uplift por construcción — cualquier número que aporte al promedio es ruido
+con formato de medición.
+
+Esto es exactamente la salvedad que el spec del v2 dejó escrita y fuera de alcance
+en §1.1: *"si los siete casos son demasiado fáciles para el modelo base, ningún
+rubric lo compensa"*. Se registró entonces como una pregunta abierta; estos
+números son la primera evidencia directa a favor.
+
+**La conclusión que NO se sigue de acá.** Nada de esto dice que la skill no
+sirva, ni que el uplift no exista. Dice que este conjunto de siete casos tiene
+poco margen para mostrarlo en dos de las cuatro dimensiones, y ninguno en P4.
+Tampoco dice que el v2 sea un buen rubric: falló su compuerta y eso sigue en pie.
+
+### Próximo paso, y su umbral — registrado 2026-08-13, antes de correrlo
+
+Antes de escribir un v3 del rubric, medir si los casos discriminan. Cuesta **cero
+generación de respuestas y cero llamadas de juez**: todo sale de
+`results/full-v2-judgments/` que ya está en disco.
+
+Un caso se declara **sin poder de medición** si su brazo sin-skill promedia
+**≥ 9.0 de 12** — es decir, le quedan 3 puntos o menos de techo, un cuarto de la
+escala. Bajo ese umbral, hoy P4 (10.33) queda descartado y ningún otro se acerca:
+el segundo es P7 con 7.89.
+
+El umbral se fija antes de correr nada y por la misma razón que el anterior: para
+que no lo elija después quien ya vio qué casos preferiría conservar. Si la próxima
+entrega lo cambia, que lo cambie explícitamente y diga por qué.
+
+**Lo que este paso no resuelve.** Descartar casos fáciles sube el uplift medido
+sin que la skill haya cambiado — es selección, no mejora. El resultado sirve para
+saber qué puede medir este eval, no para reportarlo como un uplift mayor. Un
+reemplazo honesto exige escribir casos nuevos y más difíciles, y eso sí cuesta una
+campaña.
+
 ### La forma de defecto que este harness produce
 
 Siete defectos se corrigieron durante esta entrega y los siete comparten forma:
