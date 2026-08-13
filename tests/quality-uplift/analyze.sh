@@ -3,7 +3,20 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RUN="${1:?usage: analyze.sh <run-dir>}"
+
+# Per-dimension maximum, overridable because the rubric scale is a property of
+# the rubric, not of this script. Defaults to 2 (the v1 and v2 rubric's own
+# per-dimension max) so a plain `analyze.sh <run-dir>` behaves exactly as
+# before for both.
+MAX=2
+while getopts "x:" opt; do
+  case "$opt" in
+    x) MAX="$OPTARG" ;;
+    *) echo "unknown option" >&2; exit 64 ;;
+  esac
+done
+shift $((OPTIND - 1))
+RUN="${1:?usage: analyze.sh [-x max-per-dim] <run-dir>}"
 CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 
 # The dimension names come from the data, not from this script. A v1 campaign
@@ -14,6 +27,14 @@ CASES="${CASES:-$SCRIPT_DIR/cases.tsv}"
 # schema check that builds the sanitized file needs these names first.
 DIMS_JSON="$(jq -c '[.with | keys_unsorted] | first' "$RUN/judgments.jsonl" 2>/dev/null | head -1)"
 [[ "$DIMS_JSON" =~ ^\[.*\]$ ]] || DIMS_JSON='[]'
+
+# The per-answer maximum the header reports is DIM_COUNT * MAX, not a literal
+# 8: hardcoding 8 was correct only by coincidence, because v1 happens to carry
+# 4 dimensions at a max of 2 each. v2 still carries 4 dimensions, but a report
+# that states its own ceiling should compute it, not assume it.
+DIM_COUNT="$(echo "$DIMS_JSON" | jq 'length')"
+[[ "$DIM_COUNT" =~ ^[0-9]+$ ]] || DIM_COUNT=0
+MAX_TOTAL=$((DIM_COUNT * MAX))
 
 # Sanitize the judgment stream ONCE, up front, and report what was rejected.
 #
@@ -116,7 +137,7 @@ done
 
 echo "# Quality-uplift report"
 echo
-echo "Run: \`$RUN\`.  Primary metric: rubric delta (with − without), max 8 per answer."
+echo "Run: \`$RUN\`.  Primary metric: rubric delta (with − without), max $MAX_TOTAL per answer."
 echo
 
 echo "## Uplift per skill"
