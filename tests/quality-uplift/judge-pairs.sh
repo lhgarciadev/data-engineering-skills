@@ -113,7 +113,30 @@ for with_txt in "$RUN"/*.with.rep*.txt; do
   done
 done
 
-wc -l < "$RUN/judgments.jsonl" | xargs -I{} echo "judgments: {}" >&2
+# Record what this run was INSTRUCTED to produce, not what it managed to produce.
+#
+# analyze.sh used to derive the expected judgment count from the surviving rows
+# (distinct .rep × distinct .judge_rep). That cannot see a *uniform* loss: if
+# judging pass 3 failed for every pair, the survivors contain only passes 1 and 2,
+# the expected count derives as 2, and every case reports a complete 2/2. A third
+# of the run vanishes and the table calls itself complete.
+#
+# The expectation has to come from the instruction, so it is written here — where
+# the reps are known before any judge is called — and read back by analyze.sh.
+ANSWER_PAIRS=$(ls "$RUN"/*.with.rep*.txt 2>/dev/null | wc -l | tr -d ' ')
+ANSWER_REPS=$(ls "$RUN"/*.with.rep*.txt 2>/dev/null \
+              | sed -E 's/.*\.rep([0-9]+)\.txt/\1/' | sort -u | wc -l | tr -d ' ')
+{ printf 'judge_reps\t%s\n' "$JUDGE_REPS"
+  printf 'answer_reps\t%s\n' "$ANSWER_REPS"
+  printf 'answer_pairs\t%s\n' "$ANSWER_PAIRS"
+  printf 'expected_rows\t%s\n' "$(( ANSWER_PAIRS * JUDGE_REPS ))"
+} > "$RUN/run-expected.tsv"
+
+ACTUAL_ROWS=$(wc -l < "$RUN/judgments.jsonl" | tr -d ' ')
+echo "judgments: $ACTUAL_ROWS" >&2
+if [[ "$ACTUAL_ROWS" -ne $(( ANSWER_PAIRS * JUDGE_REPS )) ]]; then
+  echo "INCOMPLETE — expected $(( ANSWER_PAIRS * JUDGE_REPS )) rows ($ANSWER_PAIRS pairs x $JUDGE_REPS judge reps), got $ACTUAL_ROWS" >&2
+fi
 if [[ -s "$RUN/judge-failures.tsv" ]]; then
   wc -l < "$RUN/judge-failures.tsv" | xargs -I{} echo "judge failures: {}" >&2
 fi

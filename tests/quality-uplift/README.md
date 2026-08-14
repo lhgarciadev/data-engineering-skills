@@ -300,20 +300,38 @@ silently dropped — so treat them as a backlog, not as polish.
   documentado en `experiments/README.md`: `rubric-headroom.sh` **no** aplica esa
   condición, así que los dos instrumentos discrepan sobre qué anula una campaña.
 
-**Prioridad alta — dos compuertas que hoy no pueden disparar:**
+**~~Prioridad alta — dos compuertas que hoy no pueden disparar~~ — CERRADAS 2026-08-13:**
 
-Estas van antes que el resto del backlog, y por una razón distinta: no es que falten,
-es que **están dando aseguramiento falso ahora**. Una compuerta rota es peor que
-ninguna, porque la ausencia se nota y el silencio no.
+- ~~La canaria anti-fuga de `check-generate.sh` grepea `EXPECTED`~~ **Cerrado.** Se
+  eliminó el patrón muerto y se separó en dos chequeos, porque eran dos fugas distintas:
+  una de *nombres de archivo* (`qprobe-`, `cases.tsv`) y otra de *contenido* — el prompt
+  de otro caso dentro de una respuesta, que es lo que pasa cuando el TSV entero baja por
+  stdin y donde ningún nombre de archivo aparece. La firma es los primeros 40 caracteres
+  del prompt, distintos entre los 7 casos, y se excluye el prompt propio: una respuesta
+  hace eco de su propia pregunta y compararla contra sí misma dispararía siempre.
+- ~~`EXPECTED_N` se deriva de las filas sobrevivientes~~ **Cerrado.** El conteo esperado
+  ahora sale de lo que la corrida fue **instruida** a producir, no de lo que logró:
+  `judge-pairs.sh` escribe `run-expected.tsv` antes de llamar al primer juez, y
+  `analyze.sh` lo lee y además contrasta el total de filas. Una corrida vieja sin ese
+  archivo sigue siendo analizable por el camino anterior, pero el reporte **declara** que
+  el conteo se derivó de sobrevivientes y que ahí una pérdida uniforme es invisible.
 
-- La canaria anti-fuga de `check-generate.sh:36` grepea `EXPECTED`, que es columna de
-  `tests/triggering/matrix.tsv` (`ID CATEGORY EXPECTED PROMPT`) y **no** de `cases.tsv`
-  (`ID SKILL PROMPT`). Sus otros dos patrones (`qprobe-`, `cases.tsv`) detectan que se
-  filtre un *nombre de archivo*, no que se filtre el *contenido* de otro caso — que es
-  la fuga contra la que existe. Grepear un token distintivo de una fila no-objetivo.
-- `EXPECTED_N` se deriva de las filas sobrevivientes, así que una pérdida **uniforme**
-  es invisible: si una pasada de juicio fallara para todos los pares, cada caso
-  reportaría conteo completo.
+**Hallazgo al arreglar la primera: el sandbox se filtra en las respuestas.**
+
+Al probar la canaria contra la campaña v1 saltó que **10 de 42 respuestas mencionan su
+propio sandbox** (`/tmp/qprobe-XXXXXX`, creado en `generate-answers.sh:69`). No es que el
+prompt se filtrara: el modelo **miró su directorio de trabajo** y lo reportó — *"en esta
+sesión no tengo nada de contexto, `/tmp/qprobe-lJtWDJ` está vacío"*.
+
+Reparto: 6 en el brazo `with` y 4 en `without`, sobre 21 cada uno, concentradas en P1, P2
+y A2. No es un sesgo grueso entre brazos, pero **A2 tiene 5 de sus 6 respuestas afectadas
+y es el caso que peor puntuó en el re-juicio v2** (con 5.67, sin 4.11, el más bajo de los
+siete). No es prueba de causalidad y no se midió como tal; el mecanismo plausible es que
+esas respuestas gastaron su texto explicando que no tenían contexto en vez de contestar.
+
+**Decidir antes de la próxima campaña:** si el sandbox debe ser invisible para el modelo,
+o si una respuesta que lo comenta debe descartarse como muestra inválida igual que una
+donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio sin marca.
 
 **Both harnesses:**
 
