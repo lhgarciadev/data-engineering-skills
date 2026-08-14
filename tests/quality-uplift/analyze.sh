@@ -92,12 +92,40 @@ if [[ -f "$RUN/judgments.jsonl" ]]; then
   done < "$RUN/judgments.jsonl"
 fi
 
-# Expected judgments per case, derived from the data rather than hardcoded:
-# distinct answer reps × distinct judging passes. A case that lands fewer than
-# this was averaged over less data than the table implies.
-EXPECTED_N="$(jq -s '(map(.rep)|unique|length) * (map(.judge_rep)|unique|length)' \
-              "$JUDGMENTS" 2>/dev/null)"
-[[ "$EXPECTED_N" =~ ^[0-9]+$ ]] || EXPECTED_N=0
+# Expected judgments per case: answer reps × judging passes. A case that lands
+# fewer than this was averaged over less data than the table implies.
+#
+# This is read from the run's own record of what it was INSTRUCTED to produce
+# (`run-expected.tsv`, written by judge-pairs.sh before any judge is called), not
+# derived from the rows that survived. Deriving it from survivors cannot see a
+# *uniform* loss: if judging pass 3 failed for every pair, the survivors hold only
+# passes 1 and 2, the expected count derives as 2, and every case reports a
+# complete 2/2 while a third of the run is missing.
+EXPECTED_SRC="instructed"
+ROW_SHORTFALL=""
+if [[ -f "$RUN/run-expected.tsv" ]]; then
+  _jr="$(awk -F'\t' '$1=="judge_reps"{print $2}'  "$RUN/run-expected.tsv")"
+  _ar="$(awk -F'\t' '$1=="answer_reps"{print $2}' "$RUN/run-expected.tsv")"
+  EXPECTED_N=$(( ${_jr:-0} * ${_ar:-0} ))
+else
+  # Runs judged before run-expected.tsv existed. The old derivation is kept so
+  # they stay analysable, but it is announced, because on this path a uniform
+  # loss is undetectable and silence would imply an assurance that is not there.
+  EXPECTED_SRC="derived from surviving rows"
+  EXPECTED_N="$(jq -s '(map(.rep)|unique|length) * (map(.judge_rep)|unique|length)' \
+                "$JUDGMENTS" 2>/dev/null)"
+fi
+[[ "$EXPECTED_N" =~ ^[0-9]+$ ]] && [[ "$EXPECTED_N" -gt 0 ]] || { EXPECTED_N=0; EXPECTED_SRC="unavailable"; }
+
+# Cross-check the run's total against what it was told to produce. A per-case
+# count cannot catch a loss that hit every case equally; this can.
+if [[ -f "$RUN/run-expected.tsv" ]]; then
+  _er="$(awk -F'\t' '$1=="expected_rows"{print $2}' "$RUN/run-expected.tsv")"
+  _actual="$(wc -l < "$JUDGMENTS" | tr -d ' ')"
+  if [[ -n "${_er:-}" ]] && [[ "$_actual" -ne "$_er" ]]; then
+    ROW_SHORTFALL="expected $_er judgment rows, found $_actual"
+  fi
+fi
 
 # Score objects carrying keys beyond the four rubric dimensions are counted and
 # reported. Totals sum the four named dimensions explicitly rather than `add`,
@@ -157,9 +185,23 @@ echo
 echo "## Uplift per skill"
 echo
 echo "\`judgments\` is rows counted against the $EXPECTED_N expected per case"
-echo "(distinct reps × distinct judging passes, derived from the data). Anything"
+echo "(answer reps × judging passes, $EXPECTED_SRC). Anything"
 echo "other than the expected count means that row averages a different amount of"
 echo "data than the others."
+if [[ "$EXPECTED_SRC" != "instructed" ]]; then
+  echo
+  echo "**Caveat: the expected count is $EXPECTED_SRC, not read from the run's own"
+  echo "record of what it was told to produce.** On this path a loss that hit every"
+  echo "case equally is invisible: if one judging pass failed for all pairs, the"
+  echo "expected count derives from the survivors and every case reports complete."
+  echo "Runs judged after run-expected.tsv was introduced do not have this hole."
+fi
+if [[ -n "$ROW_SHORTFALL" ]]; then
+  echo
+  echo "**INCOMPLETE RUN: $ROW_SHORTFALL.** The run produced fewer judgment rows than"
+  echo "it was instructed to. Per-case counts below may still all look complete if the"
+  echo "loss was uniform; this total is what catches that. Treat the table as partial."
+fi
 echo
 printf '| case | skill | with | without | delta | prefers with | judgments |\n'
 printf '|---|---|---|---|---|---|---|\n'
