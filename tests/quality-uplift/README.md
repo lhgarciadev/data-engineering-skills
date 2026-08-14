@@ -9,11 +9,39 @@ skill than without it?**
 Full design rationale: `docs/superpowers/specs/2026-08-05-quality-uplift-eval-design.md`.
 Implementation plan: `docs/superpowers/plans/2026-08-05-quality-uplift-eval-implementation.md`.
 
+## Estado al 2026-08-13: este eval todavía no responde su pregunta
+
+Tres entregas y ninguna produjo evidencia de uplift. El rubric v1 **saturó** (brazo
+con-skill 7.37 de 8). El diagnóstico de la correlación longitud↔puntaje devolvió **"no
+resuelve"**. El rubric v2 —cuatro dimensiones de 0 a 3, `specific` reemplazado por
+`assumptions`— **falló su propia compuerta pre-registrada**.
+
+El dato más útil salió del brazo **sin** skill: cuanto más competente ya es el modelo
+base en una dimensión, menos varianza produce el rubric ahí, monótono en los cuatro
+puntos. El caso P4 puntúa **más alto sin la skill que con ella**. Eso apunta a los casos
+y a las dimensiones elegidas, no al rubric — y ningún rubric crea varianza donde no hay
+diferencia que medir. Números, veredictos y el próximo umbral pre-registrado están en
+`experiments/README.md`.
+
+**Decisión abierta:** si vale seguir financiando este eval. Que responda su pregunta
+requiere casos nuevos y más difíciles (campaña paga), un rubric recortado a las
+dimensiones que discriminan, y el backlog de abajo. Antes de proponer un v3, correr la
+medición de dificultad de casos ya pre-registrada — cuesta cero llamadas de juez.
+
+Lo que el eval **sí** dejó probado: las dos compuertas de calibración funcionan bajo la
+escala 0–12 (el juez discrimina 11 contra 1 y no se compra con relleno), los instrumentos
+son agnósticos de versión y reproducen sus salidas v1 byte a byte, y hay una clase de
+defecto documentada que este harness produce por diseño (ver *La forma de defecto* en
+`experiments/README.md`).
+
 ## What this measures, and what it does not
 
 **Measures:** apparent usefulness of the answer to a senior data engineer, judged blind
-against a four-dimension rubric (mechanism, actionable, specific, tradeoff — see
-`rubric.md`), by an LLM judge (`sonnet`) that never sees which arm produced which answer.
+against a four-dimension rubric (mechanism, actionable, assumptions, tradeoff — see
+`rubric.md`; `assumptions` reemplazó a `specific` en el v2), by an LLM judge that never
+sees which arm produced which answer. El modelo se resuelve desde el alias `sonnet`, que
+**no** es un ID pineado — cada corrida registra el ID que efectivamente sirvió en
+`model.txt` dentro de su directorio (en las corridas del 2026-08-13: `claude-sonnet-5`).
 
 **Does not measure:**
 
@@ -263,12 +291,29 @@ silently dropped — so treat them as a backlog, not as polish.
 
 **Decide before the next campaign is run:**
 
-- A non-zero extra-key count is not in *What voids a campaign* above. A future campaign
-  could report `extra keys: 3`, publish its table as a measurement, and be internally
-  consistent with this document. The fix has three parts: `additionalProperties: false`
-  in the judge's `--json-schema`, summing only the four named dimensions instead of `add`,
-  and promoting a non-zero extra-key count to a voiding condition. Each affected row can
-  move a case delta by roughly 0.1–0.3, enough to flip the sign of a small one.
+- ~~A non-zero extra-key count is not in *What voids a campaign* above.~~ **CERRADO
+  2026-08-13.** Las tres partes están: `additionalProperties: false` en el
+  `--json-schema` del juez (dos veces, en `a` y `b`), la suma sobre exactamente las
+  dimensiones derivadas de los datos en vez de un `add` crudo, y el conteo de clave
+  extra promovido a condición que anula (`analyze.sh` imprime *"rows with score keys
+  outside the four rubric dimensions (VOIDS the campaign)"*). Queda un residual
+  documentado en `experiments/README.md`: `rubric-headroom.sh` **no** aplica esa
+  condición, así que los dos instrumentos discrepan sobre qué anula una campaña.
+
+**Prioridad alta — dos compuertas que hoy no pueden disparar:**
+
+Estas van antes que el resto del backlog, y por una razón distinta: no es que falten,
+es que **están dando aseguramiento falso ahora**. Una compuerta rota es peor que
+ninguna, porque la ausencia se nota y el silencio no.
+
+- La canaria anti-fuga de `check-generate.sh:36` grepea `EXPECTED`, que es columna de
+  `tests/triggering/matrix.tsv` (`ID CATEGORY EXPECTED PROMPT`) y **no** de `cases.tsv`
+  (`ID SKILL PROMPT`). Sus otros dos patrones (`qprobe-`, `cases.tsv`) detectan que se
+  filtre un *nombre de archivo*, no que se filtre el *contenido* de otro caso — que es
+  la fuga contra la que existe. Grepear un token distintivo de una fila no-objetivo.
+- `EXPECTED_N` se deriva de las filas sobrevivientes, así que una pérdida **uniforme**
+  es invisible: si una pasada de juicio fallara para todos los pares, cada caso
+  reportaría conteo completo.
 
 **Both harnesses:**
 
