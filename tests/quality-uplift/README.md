@@ -318,8 +318,7 @@ quality-uplift quedan **dormantes** junto con él (ver *Estado* arriba): no se a
 mientras esté cerrado, y son la condición de entrada para quien lo reabra. Los items de
 `tests/triggering/` **no los cierra ninguna decisión tomada acá**: ese harness verifica que
 dispare la skill correcta, no que la respuesta sea mejor. Al 2026-08-20 sus cinco items
-están cerrados y el único que sigue abierto es el del extractor duplicado, de la sección
-*Both harnesses*. **Su backlog vivo ahora vive con el harness vivo**, en
+están cerrados, y de la sección *Both harnesses* sólo queda abierto `await_memory`. **Su backlog vivo ahora vive con el harness vivo**, en
 `../triggering/README.md` § *Known issues*; lo que queda acá abajo es el registro
 histórico con la evidencia de cada cierre.
 
@@ -405,10 +404,13 @@ donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio 
 - `await_memory` and the chain-extraction `jq` are duplicated across the two harnesses —
   three copies of the latter. The chain extractor *is* the definition of "the skill
   fired", so the two harnesses can silently drift on the measurement itself. Extract a
-  shared `tests/lib/probe.sh`. **Sigue ABIERTO y es el único item vivo de este backlog**,
-  porque toca un harness que no está cerrado — se administra desde
-  `../triggering/README.md` § *Known issues*, donde también queda registrado que las tres
-  copias fueron verificadas coincidiendo el 2026-08-20.
+  shared `tests/lib/probe.sh`. **La mitad del `jq` quedó CERRADA el 2026-08-20**: no por
+  extracción sino por compuerta — `../gates/chain-extractor-agreement.sh` compara el texto
+  del filtro y su comportamiento sobre un fixture, y corre como gate 6 cuando alguna de
+  las tres se stagea. La duplicación sigue ahí; lo que cambió es que ahora es detectable.
+  Queda abierto sólo `await_memory`, que es una espera de memoria y no una medición: si
+  divergen cambia el ritmo, no los resultados. Se administra desde
+  `../triggering/README.md` § *Known issues*.
 
 **`tests/triggering/` specifically — los cinco CERRADOS el 2026-08-20; registro histórico, el backlog vivo está en `../triggering/README.md`:**
 
