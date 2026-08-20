@@ -93,9 +93,9 @@ def transform(rows: list[dict], config: PipelineConfig) -> Iterator[dict]:
 | `print()` for pipeline logging | Structured logging (`structlog` or stdlib + JSON formatter) with record/batch/stage context |
 | Append-only writes with no rerun story | Upsert/merge by partition key; make reruns idempotent by design |
 | Declaring a `merge` write disposition without declaring the key | dlt's merge job *"falls back to append"* when no merge keys are discovered, and a hand-rolled merge usually does the same — the rerun duplicates instead of failing. Declare the key and confirm the disposition took effect |
-| Storing a watermark in Airflow `XCom` expecting it to persist across DAG runs | XCom is scoped to one DAG run — the next run starts as if no watermark exists | Use an Airflow `Variable` (or an external control table) for state that must outlive a single run |
+| Storing a watermark in Airflow `XCom` expecting it to persist across DAG runs | XCom is scoped to one DAG run, so the next run starts as if no watermark existed — use an Airflow `Variable`, or an external control table, for state that must outlive a single run |
 | Renaming a pipeline, destination or dataset that the watermark state is keyed on | The next run finds no state and silently restarts from scratch — assert on startup that a watermark was actually found instead of defaulting to "everything" |
-| Assuming a full pull every run is always "the unsophisticated option" | For small/infrequently-updated sources it's simpler and trivially idempotent — no state to lose sync with | Reserve watermark/incremental logic for sources where a full pull is actually too slow |
+| Assuming a full pull every run is always "the unsophisticated option" | For small or infrequently-updated sources it's simpler and trivially idempotent, with no state to lose sync with — reserve watermark/incremental logic for sources where a full pull is genuinely too slow |
 | Testing only the "happy path" | Add edge cases: nulls, duplicates, malformed schemas, empty batches |
 | Hardcoded connection strings/paths in code | Externalize via env vars / config files / `pydantic-settings` |
 | No type hints on transformation functions | Add them and check with Pyright/mypy in CI — catches shape bugs pre-runtime |
