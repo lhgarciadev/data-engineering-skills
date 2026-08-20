@@ -9,7 +9,13 @@ skill than without it?**
 Full design rationale: `docs/superpowers/specs/2026-08-05-quality-uplift-eval-design.md`.
 Implementation plan: `docs/superpowers/plans/2026-08-05-quality-uplift-eval-implementation.md`.
 
-## Estado al 2026-08-13: este eval todavía no responde su pregunta
+## Estado al 2026-08-20: eval CERRADO
+
+Este eval queda **cerrado** sin haber producido evidencia de uplift, y por decisión
+explícita: no hay v3 del rubric ni campaña de casos nuevos. Abajo está el registro de
+por qué se cierra, qué quedó probado, y qué preguntas quedan sin responder a propósito.
+
+### Por qué se cierra
 
 Tres entregas y ninguna produjo evidencia de uplift. El rubric v1 **saturó** (brazo
 con-skill 7.37 de 8). El diagnóstico de la correlación longitud↔puntaje devolvió **"no
@@ -20,19 +26,51 @@ El dato más útil salió del brazo **sin** skill: cuanto más competente ya es 
 base en una dimensión, menos varianza produce el rubric ahí, monótono en los cuatro
 puntos. El caso P4 puntúa **más alto sin la skill que con ella**. Eso apunta a los casos
 y a las dimensiones elegidas, no al rubric — y ningún rubric crea varianza donde no hay
-diferencia que medir. Números, veredictos y el próximo umbral pre-registrado están en
+diferencia que medir. Números, veredictos y el umbral pre-registrado están en
 `experiments/README.md`.
 
-**Decisión abierta:** si vale seguir financiando este eval. Que responda su pregunta
-requiere casos nuevos y más difíciles (campaña paga), un rubric recortado a las
-dimensiones que discriminan, y el backlog de abajo. Antes de proponer un v3, correr la
-medición de dificultad de casos ya pre-registrada — cuesta cero llamadas de juez.
+Hacer que este eval responda su pregunta exige casos nuevos y más difíciles —una
+campaña paga— más un rubric recortado a las dimensiones que discriminan y el backlog de
+abajo. Eso es construir un instrumento de investigación para medir una suite de
+documentación: el costo no lo justifica mientras la suite misma sea el producto. Tres
+entregas de pulido de instrumento contra lo que los datos ahora señalan como un problema
+de dificultad de casos es la forma de un proyecto que se volvió su propio objetivo.
 
-Lo que el eval **sí** dejó probado: las dos compuertas de calibración funcionan bajo la
-escala 0–12 (el juez discrimina 11 contra 1 y no se compra con relleno), los instrumentos
-son agnósticos de versión y reproducen sus salidas v1 byte a byte, y hay una clase de
-defecto documentada que este harness produce por diseño (ver *La forma de defecto* en
-`experiments/README.md`).
+### Las cuatro decisiones abiertas, cerradas acá
+
+**1. Un v3 del rubric — descartado.** El brazo sin-skill muestra que a mayor competencia
+base del modelo en una dimensión, menos varianza produce el rubric ahí, monótono en los
+cuatro puntos. Ningún rubric crea varianza donde no hay diferencia que medir, así que la
+reescritura no ataca la causa.
+
+**2. La medición de dificultad de casos — respondida por el registro; su instrumento NO
+se construyó.** El umbral pre-registrado (un caso no puede medir si su brazo sin-skill
+promedia ≥ 9.0 de 12) se aplica leyendo la tabla por caso de `experiments/README.md`: P4
+queda descartado con 10.33 y el segundo más fácil es P7 con 7.89, lejos del umbral. El
+script que derivara eso de `results/full-v2-judgments/` de forma reproducible se decidió
+**no escribir**: su única función era alimentar un v3, y el v3 no va. Si el eval se
+reabre, ese script es el primer paso y sigue costando cero llamadas de juez.
+
+**3. `results/` versionado — no, y el harness no es auditable desde afuera.** Se acepta
+por escrito: `results/` está gitignoreado y las 42 respuestas de la campaña v1 existen
+sólo en la máquina donde se corrieron. Ninguna guarda de reproducción de este harness es
+re-corrible desde un clone limpio. Versionar esos datos para volverlo auditable no se
+hace, porque nadie va a auditar un eval cerrado. Quien lo reabra hereda esta limitación
+como condición de entrada, no como defecto a descubrir.
+
+**4. La fuga del sandbox — confound documentado, sin re-medición.** Las 10 de 42
+respuestas que mencionan su propio `/tmp/qprobe-XXXXXX` (detalle en *Known deferred
+issues*) siguen entrando al promedio sin marca. No se descartan como muestras inválidas
+ni se hace invisible el sandbox: ambas opciones sólo cambian números que ya no alimentan
+ninguna decisión. Si se corre una campaña nueva, hacer el sandbox invisible al modelo es
+condición previa, no un arreglo posterior.
+
+### Lo que el eval sí dejó probado
+
+Las dos compuertas de calibración funcionan bajo la escala 0–12: el juez discrimina 11
+contra 1 y no se compra con relleno. Los instrumentos son agnósticos de versión y
+reproducen sus salidas v1 byte a byte. Y hay una clase de defecto documentada que este
+harness produce por diseño (ver *La forma de defecto* en `experiments/README.md`).
 
 ## What this measures, and what it does not
 
@@ -274,6 +312,9 @@ discloses that it was judged before the blinding hardening in guard 4 existed, s
 judge structurally could have read the arm labels.
 
 ## Known deferred issues
+
+Dormante junto con el eval (ver *Estado* arriba). Nada de esto se arregla mientras el
+eval esté cerrado; es la condición de entrada para quien lo reabra.
 
 - `generate-answers.sh` exits 2 under `pipefail` when zero samples are accepted for a
   run. That reads as a generic pipe error, not "zero valid samples" — check the

@@ -496,6 +496,11 @@ Tampoco dice que el v2 sea un buen rubric: falló su compuerta y eso sigue en pi
 
 ### Próximo paso, y su umbral — registrado 2026-08-13, antes de correrlo
 
+> **Superado el 2026-08-20: el eval está cerrado.** Este paso nunca se instrumentó, por
+> decisión registrada en `../README.md` § *Estado al 2026-08-20*. El umbral y su
+> aplicación sobre la tabla de arriba siguen siendo válidos y son el primer paso si
+> alguien reabre el eval — lo que ya no está vigente es la premisa de que viene un v3.
+
 Antes de escribir un v3 del rubric, medir si los casos discriminan. Cuesta **cero
 generación de respuestas y cero llamadas de juez**: todo sale de
 `results/full-v2-judgments/` que ya está en disco.
