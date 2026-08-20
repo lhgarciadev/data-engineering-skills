@@ -1,6 +1,6 @@
 # External API Integration: Consuming APIs for Ingestion
 
-APIs are the most commonly underestimated ingestion source, because unlike a file in S3, there's a live, owned system on the other end — with quotas, latency, versions, and failures. The engineering here is in resilience and contract, not JSON parsing.
+APIs are the most commonly underestimated ingestion source, because unlike a file in S3, there's a live, owned system on the other end — with quotas, latency, versions, and failures. The engineering here is in resilience and contract, not JSON parsing. Before any of it, though: whether to write this extractor by hand at all is a prior decision — see [production-patterns.md](production-patterns.md) for when a declarative EL library or a managed connector service is the better call.
 
 ## HTTP fundamentals: acting on status code classes, not just codes
 

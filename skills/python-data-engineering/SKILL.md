@@ -37,6 +37,7 @@ Senior-level judgment calls for Python data pipelines — which tool or pattern 
 | Re-running a job safely after a partial failure | idempotent upsert-by-key | [production-patterns.md](references/production-patterns.md) |
 | Tracking which rows are new/changed since the last run | Watermark/cursor state — persisted outside a single DAG run | [production-patterns.md](references/production-patterns.md) |
 | Pipeline testing, error handling, config, logging | — | [production-patterns.md](references/production-patterns.md) |
+| Deciding whether to write an extractor at all, or reach for an EL library or a managed connector | Build-vs-buy — connector availability, source count, who operates it, how it's billed | [production-patterns.md](references/production-patterns.md) |
 | Calling an external API for ingestion (auth, pagination, rate limits) | Timeout + backoff/jitter + cursor pagination | [external-api-integration.md](references/external-api-integration.md) |
 | Laying out a new pipeline package's directory, or choosing Poetry vs `uv` | `config`/`extract`/`transform`/`load` layering, packaging conventions | [project-structure-data-engineering](../project-structure-data-engineering/references/package-layout.md) |
 

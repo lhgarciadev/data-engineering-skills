@@ -100,6 +100,8 @@ Two first-party tools implement "producer CI fails before a breaking change ship
 
 The Data Contract Specification itself doesn't define its own compatibility modes — any backward/forward-compatibility guarantee comes from the schema technology the contract references (Avro, Protobuf, JSON Schema) or from the CI tool's own change classification, not from the contract document's format.
 
+A third enforcement point sits in neither place: the ingestion library. dlt's `schema_contract` applies the same four-way decision this suite frames as fail/quarantine/drop/repair, per schema entity — `tables`, `columns`, `data_type` — through the modes `freeze` (raise, load nothing), `discard_row`, `discard_value`, and `evolve` (accept). Two properties decide how much weight it can carry. **The default is `evolve` on all three entities**, so out of the box every change is accepted. And a table the library has not created yet counts as new, which forces the column mode to `evolve` for that run regardless of what you configured. Ingestion-time enforcement is real and worth having, but it fires after the producer already shipped the change — it complements producer-side CI rather than replacing it, and it is the only one of the three that cannot fail a build.
+
 ## Common mistakes
 
 | Mistake | Why it hurts | Fix |
