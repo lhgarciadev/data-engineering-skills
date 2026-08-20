@@ -12,6 +12,7 @@ Senior-level judgment calls for designing, reviewing, and tuning Spark and PySpa
 ## When to use
 
 - Designing or reviewing a Spark or PySpark job, batch or otherwise
+- Confirming a workload actually needs a cluster, before designing or tuning a job for it — see the gate below
 - A job is slow and the cause isn't obvious — shuffle, skew, spilling, or a misleading benchmark
 - Choosing between `repartition` and `coalesce`, or deciding whether/how to broadcast a join
 - Diagnosing or fixing data skew in a join or an aggregation
@@ -19,6 +20,29 @@ Senior-level judgment calls for designing, reviewing, and tuning Spark and PySpa
 - A PySpark UDF is slow, or `.collect()`/`.toPandas()` is risking driver OOM
 - Not for Structured Streaming (watermarks, exactly-once semantics) — see `streaming-data-engineering`
 - Not for cluster deployment or infrastructure decisions (Terraform, Docker, cluster sizing) — see `iac-cloud-data-engineering`
+
+## Before tuning: does this workload need a cluster?
+
+Distribution is never free — it is a **cluster tax** charged on every job: JVM startup,
+task scheduling, serialization, and shuffle traffic over the network. A cluster earns that
+tax back when the data genuinely exceeds one machine. Below that line the same
+transformation finishes faster on a single node, with none of the tax and none of the
+tuning surface the rest of this skill exists to manage.
+
+The line is *not* "fits in RAM". Polars' lazy `scan_*` API and DuckDB both stream and
+spill out of core, so one machine handles datasets well past its own memory. Two checks
+decide it:
+
+- Does the data fit inside one machine's disk and memory envelope?
+- Is the job a scan, filter, aggregation, or join — the shape a single-node engine
+  expresses directly?
+
+Two yeses mean the cluster is optional, and reaching for it spends throughput instead of
+buying it. Run these checks before raising executor memory or partition counts: those
+levers reduce the cluster tax, they never remove it. For the selection rule between
+pandas, Polars, and DuckDB once the single-node answer is the right one, see
+[memory-and-performance.md](../python-data-engineering/references/memory-and-performance.md)
+in `python-data-engineering`.
 
 ## Quick reference
 
