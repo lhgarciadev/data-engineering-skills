@@ -11,22 +11,52 @@
 #
 # Reads results/<run>/<CASE>.rep<N>.jsonl plus the matrix that defines EXPECTED.
 # Usage: ./rescore.sh <results-dir> <matrix.tsv> [<matrix.tsv> ...]
+#
+# Exits non-zero when it cannot score what it was pointed at, rather than
+# printing a table of FAILs that look like findings. Three such cases:
+#   - no expectation resolved for a case (a matrix argument was omitted)
+#   - no expectations parsed at all
+#   - the rep count on disk disagrees with what the run was instructed to
+#     produce (see run-reps below)
 
 set -uo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DIR="${1:?usage: rescore.sh <results-dir> <matrix.tsv>...}"; shift
+[[ -d "$DIR" ]] || { echo "rescore: no such results dir: $DIR" >&2; exit 2; }
+
 declare -A EXPECTED
+N_EXPECTED=0
 for m in "$@"; do
+  [[ -f "$m" ]] || { echo "rescore: no such matrix: $m" >&2; exit 2; }
   while IFS=$'\t' read -r id _cat exp _prompt; do
     [[ "$id" == "ID" || -z "${id// }" ]] && continue
     EXPECTED["$id"]="$exp"
+    N_EXPECTED=$((N_EXPECTED+1))
   done < "$m"
 done
+# Counted while parsing on purpose: `${#EXPECTED[@]}` on an empty associative
+# array trips `set -u`, and that error does not stop the script — it degrades
+# into the NOEXPECT path instead of refusing to score. Same defect shape this
+# harness exists to catch.
+if (( N_EXPECTED == 0 )); then
+  echo "rescore: no expectations parsed from $# matrix argument(s) — nothing can be scored" >&2
+  exit 2
+fi
+
+# The expected rep count comes from what the run was INSTRUCTED to produce, not
+# from what survived on disk. run-matrix.sh writes run-reps before its first
+# probe; without it a stale .rep*.jsonl from a longer earlier run inflates the
+# denominator and manufactures a FLAKY verdict out of a complete run.
+EXPECTED_REPS=""
+if [[ -f "$DIR/run-reps" ]]; then
+  EXPECTED_REPS="$(tr -dc '0-9' < "$DIR/run-reps")"
+fi
+
+UNRESOLVED=0 MISCOUNTED=0
 
 printf 'ID\tEXPECTED\tHITS\tVERDICT\tPOSITIONS\tCHAINS\n'
 for id in $(ls "$DIR" | sed -n 's/^\([A-Z][0-9]*\)\.rep[0-9]*\.jsonl$/\1/p' | sort -u); do
-  exp="${EXPECTED[$id]:-?}"
+  exp="${EXPECTED[$id]:-}"
   hits=0 reps=0 positions=() chains=()
   for f in "$DIR/$id".rep*.jsonl; do
     [[ -f "$f" ]] || continue
@@ -37,13 +67,15 @@ for id in $(ls "$DIR" | sed -n 's/^\([A-Z][0-9]*\)\.rep[0-9]*\.jsonl$/\1/p' | so
     [[ -n "$chain" ]] || chain="NONE"
     chains+=("$(echo "$chain" | paste -sd'>' -)")
 
-    if [[ "$exp" == "NONE" ]]; then
-      # A quiet run means no DOMAIN skill fired; process skills do not count.
-      if ! grep -qv '^superpowers:' <<<"$chain" || [[ "$chain" == "NONE" ]]; then
-        hits=$((hits+1)); positions+=(-)
-      else
-        positions+=(x)
-      fi
+    [[ -n "$exp" ]] || { positions+=(?); continue; }
+
+    # One rule for both shapes of expectation. "No domain skill fired" is
+    # normalised to the token NONE and then matched like any other alternative,
+    # so a bare NONE and an alternation containing NONE score identically —
+    # scoring them apart is what misgraded A11.
+    domain_chain="$(grep -v '^superpowers:' <<<"$chain" | grep -v '^NONE$' || true)"
+    if [[ -z "$domain_chain" ]]; then
+      if [[ "|$exp|" == *"|NONE|"* ]]; then hits=$((hits+1)); positions+=(-); else positions+=(x); fi
       continue
     fi
 
@@ -55,11 +87,31 @@ for id in $(ls "$DIR" | sed -n 's/^\([A-Z][0-9]*\)\.rep[0-9]*\.jsonl$/\1/p' | so
     if (( found )); then hits=$((hits+1)); positions+=("$pos"); else positions+=(x); fi
   done
 
-  verdict="FAIL"
-  (( hits == reps && reps > 0 )) && verdict="PASS"
-  (( hits > 0 && hits < reps )) && verdict="FLAKY"
+  if [[ -z "$exp" ]]; then
+    verdict="NOEXPECT"; UNRESOLVED=$((UNRESOLVED+1)); exp="?"
+  elif [[ -n "$EXPECTED_REPS" ]] && (( reps != EXPECTED_REPS )); then
+    verdict="REPMISMATCH"; MISCOUNTED=$((MISCOUNTED+1))
+  else
+    verdict="FAIL"
+    (( hits == reps && reps > 0 )) && verdict="PASS"
+    (( hits > 0 && hits < reps )) && verdict="FLAKY"
+  fi
 
-  printf '%s\t%s\t%s/%s\t%s\t%s\t%s\n' \
-    "$id" "$exp" "$hits" "$reps" "$verdict" \
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$id" "$exp" "$hits/$reps" "$verdict" \
     "$(IFS=,; echo "${positions[*]}")" "$(IFS=' '; echo "${chains[*]}")"
 done
+
+rc=0
+if (( UNRESOLVED > 0 )); then
+  echo "rescore: $UNRESOLVED case(s) had no expectation — pass every matrix that defines them (verdict NOEXPECT, not FAIL)" >&2
+  rc=1
+fi
+if (( MISCOUNTED > 0 )); then
+  echo "rescore: $MISCOUNTED case(s) have a rep count other than the $EXPECTED_REPS this run was instructed to produce — stale or missing .rep*.jsonl (verdict REPMISMATCH)" >&2
+  rc=1
+fi
+if [[ -z "$EXPECTED_REPS" ]]; then
+  echo "rescore: NOTE — $DIR has no run-reps file, so the denominator came from the files on disk. A uniformly stale or missing rep is invisible in that mode." >&2
+fi
+exit $rc
