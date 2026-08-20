@@ -179,6 +179,14 @@ this file, with the live items below.
 
 - `await_memory` is still duplicated across the two harnesses. Low stakes: it is a memory
   wait, not a measurement, and a divergence changes pacing rather than results.
+- **No baseline exists for a weak model, so drift there cannot be detected.** Every digest
+  under `baselines/` is opus. `2026-08-20-postedit-routing.md` records the first haiku data
+  point and it stands alone, which is why the four `FAIL`s in it are not a finding — the
+  same cases pass 3/3 on opus, exactly as the *Model choice* rule above predicts. A second
+  haiku run in the same condition would turn that point into a measurement.
+  **Deliberately deferred on 2026-08-20:** it costs real calls and unblocks nothing, since
+  the day-to-day verdict is given on the model actually in use. Do it when someone needs
+  to detect drift on the weak model, not before.
 
 **Closed 2026-08-20 — the chain extractor's three copies.** `run-matrix.sh`, `rescore.sh`
 and `../quality-uplift/generate-answers.sh` each carry the `jq` filter that defines "the
