@@ -316,10 +316,12 @@ judge structurally could have read the arm labels.
 **Alcance de este backlog, porque cubre dos harnesses distintos.** Los items del eval de
 quality-uplift quedan **dormantes** junto con él (ver *Estado* arriba): no se arreglan
 mientras esté cerrado, y son la condición de entrada para quien lo reabra. Los items de
-`tests/triggering/` — y los de *Both harnesses* que toquen a ese lado — **siguen vivos**:
-ese harness verifica que dispare la skill correcta, no que la respuesta sea mejor, y no lo
-cierra ninguna decisión tomada acá. Al contrario: pesan más cuando se vuelve a editar
-skills.
+`tests/triggering/` **no los cierra ninguna decisión tomada acá**: ese harness verifica que
+dispare la skill correcta, no que la respuesta sea mejor. Al 2026-08-20 sus cinco items
+están cerrados y el único que sigue abierto es el del extractor duplicado, de la sección
+*Both harnesses*. **Su backlog vivo ahora vive con el harness vivo**, en
+`../triggering/README.md` § *Known issues*; lo que queda acá abajo es el registro
+histórico con la evidencia de cada cierre.
 
 - `generate-answers.sh` exits 2 under `pipefail` when zero samples are accepted for a
   run. That reads as a generic pipe error, not "zero valid samples" — check the
@@ -403,9 +405,12 @@ donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio 
 - `await_memory` and the chain-extraction `jq` are duplicated across the two harnesses —
   three copies of the latter. The chain extractor *is* the definition of "the skill
   fired", so the two harnesses can silently drift on the measurement itself. Extract a
-  shared `tests/lib/probe.sh`.
+  shared `tests/lib/probe.sh`. **Sigue ABIERTO y es el único item vivo de este backlog**,
+  porque toca un harness que no está cerrado — se administra desde
+  `../triggering/README.md` § *Known issues*, donde también queda registrado que las tres
+  copias fueron verificadas coincidiendo el 2026-08-20.
 
-**`tests/triggering/` specifically — VIVOS, este harness no está cerrado:**
+**`tests/triggering/` specifically — los cinco CERRADOS el 2026-08-20; registro histórico, el backlog vivo está en `../triggering/README.md`:**
 
 - ~~`rescore.sh` scores `NONE|X` inconsistently with bare `NONE`~~ **CERRADO 2026-08-20.**
   Ya no hay dos ramas: "ningún domain skill disparó" se normaliza al token `NONE` y se

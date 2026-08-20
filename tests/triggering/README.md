@@ -23,8 +23,10 @@ models confabulate about their own context.
 **`rescore.sh` is the authoritative verdict.** A domain skill counts if it fires
 *anywhere* in the invocation chain; `POSITIONS` records where.
 
-`run-matrix.sh` prints a live verdict while it runs, but that one looks only at the
-first skill invoked. Do not report it. The superpowers `SessionStart` hook mandates a
+`run-matrix.sh` prints a live verdict while it runs, and writes it to `summary.tsv`
+under a column named **`VERDICT_POS1`** — it looks only at the first skill invoked, and
+the column carries that in its name rather than in a caveat nobody reads. Do not report
+it. The superpowers `SessionStart` hook mandates a
 process skill first — verbatim: *"Fix this bug → systematic-debugging first, then domain
 skills"* — so a correct session in this environment routinely looks like
 
@@ -100,6 +102,19 @@ Then score:
 ./rescore.sh results/base-opus-with matrix.tsv matrix-adversarial.tsv
 ```
 
+`rescore.sh` **exits non-zero when it cannot score what it was pointed at**, rather than
+printing a table of `FAIL`s that read as findings:
+
+| Exit | Meaning |
+|---|---|
+| 0 | every case scored against a resolved expectation and the instructed rep count |
+| 1 | at least one `NOEXPECT` (no expectation for that case — a matrix argument was omitted) or `REPMISMATCH` (the reps on disk are not the number the run was instructed to produce) |
+| 2 | it refuses to score at all — missing results dir, missing matrix file, or no expectations parsed |
+
+Pass **every** matrix that defines the cases in the directory. Scoring against a partial
+set used to mark the undefined cases `FAIL`; it now names them `NOEXPECT` and fails the
+run.
+
 Results land in `results/<suite>-<model>-<arm>/`: a `.jsonl` event log per rep. Both
 `results/` and `*.log` are gitignored — they are 12 MB per full campaign and fully
 regenerable. Commit the digests under `baselines/` instead.
@@ -116,8 +131,20 @@ derived case files:
 
 Single samples lie. `-r 1` produced a 19/19 that collapsed to 10/19 once the
 contamination was fixed, and individual cases resolve to three different destinations
-across five reps. Verdicts: `PASS` = all reps hit, `FLAKY` = some, `FAIL` = none.
+across five reps. Verdicts: `PASS` = all reps hit, `FLAKY` = some, `FAIL` = none, plus
+the two that mean the run could not be scored — `NOEXPECT` and `REPMISMATCH`.
 **`FLAKY` is a finding, not noise** — a description that binds converges on one shape.
+
+Which is exactly why the denominator has to be trustworthy. `run-matrix.sh` writes
+`run-reps` into the output directory **before its first probe** — the number of reps the
+run was *instructed* to produce, not the number that survived — and clears the previous
+logs for each case it is about to re-run, scoped to that case so a `-c` top-up never
+erases the evidence for the others. `rescore.sh` reads `run-reps` and reports
+`REPMISMATCH` instead of scoring against the wrong denominator; with no such file it says
+so, because in that mode a uniformly stale or missing rep is invisible. Before this,
+a leftover `rep4` from a longer earlier run turned a complete 1-rep case into `1/2 FLAKY`
+and exited 0 — a manufactured finding, in the harness whose whole point is that `FLAKY`
+means something.
 
 ## Model choice
 
@@ -140,3 +167,36 @@ Claude Code ships a first-class eval runner (`claude plugin eval`) with a built-
 `--ablation with-without` arm, which would replace this script. It is gated behind early
 access and currently exits with `plugin eval is currently in early access` without running.
 When it opens up, port these cases to `evals/**/case.yaml` and retire this runner.
+
+## Known issues
+
+This harness is **live**. It answers a different question from the quality-uplift eval
+under `tests/quality-uplift/` — *did the right skill fire*, not *was the answer better* —
+and nothing about that eval's closure on 2026-08-20 applies here. Its backlog lives in
+this file, with the live items below.
+
+**Open — one item, and it is a drift risk by construction:**
+
+- `await_memory` and the chain-extraction `jq` are duplicated across the two harnesses,
+  three copies of the latter (`run-matrix.sh`, `rescore.sh`,
+  `../quality-uplift/generate-answers.sh`). The chain extractor *is* the operational
+  definition of "the skill fired", so the two harnesses can silently disagree about the
+  measurement itself. Checked 2026-08-20: the three agree — same `jq` filter, same
+  `sed 's/^dataforge://'`, same `NONE` fallback — and differ only in the join separator,
+  which is presentation. Extract a shared `tests/lib/probe.sh` before editing any of the
+  three, and re-check agreement rather than assuming it: nothing enforces it today.
+
+**Closed 2026-08-20**, all five with a demonstration that the check fails when it should,
+detail in `../quality-uplift/README.md` § *Known deferred issues*:
+
+- `rescore.sh` scoring `NONE|X` inconsistently with bare `NONE`, which misgraded A11.
+- `rescore.sh` degrading to all-`FAIL` when a matrix argument was omitted.
+- Stale `.rep*.jsonl` inflating the denominator and manufacturing `FLAKY`.
+- `run-matrix.sh` publishing a position-1 verdict under an uncaveated `VERDICT` column.
+- Nothing checking the 1024-byte frontmatter cap — now gate 5 of
+  `../gates/pre-commit-gates.sh`.
+
+The one open half of that last group is data, not code: `results/matrix-green1-opus-with/summary.tsv`
+still carries a superseded false finding. `results/` is gitignored, so it is a local
+artifact rather than bad data in the public repo — and, for the same reason, not
+reproducible from a clean clone.
