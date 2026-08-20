@@ -175,16 +175,22 @@ under `tests/quality-uplift/` — *did the right skill fire*, not *was the answe
 and nothing about that eval's closure on 2026-08-20 applies here. Its backlog lives in
 this file, with the live items below.
 
-**Open — one item, and it is a drift risk by construction:**
+**Open — nothing that blocks a run.**
 
-- `await_memory` and the chain-extraction `jq` are duplicated across the two harnesses,
-  three copies of the latter (`run-matrix.sh`, `rescore.sh`,
-  `../quality-uplift/generate-answers.sh`). The chain extractor *is* the operational
-  definition of "the skill fired", so the two harnesses can silently disagree about the
-  measurement itself. Checked 2026-08-20: the three agree — same `jq` filter, same
-  `sed 's/^dataforge://'`, same `NONE` fallback — and differ only in the join separator,
-  which is presentation. Extract a shared `tests/lib/probe.sh` before editing any of the
-  three, and re-check agreement rather than assuming it: nothing enforces it today.
+- `await_memory` is still duplicated across the two harnesses. Low stakes: it is a memory
+  wait, not a measurement, and a divergence changes pacing rather than results.
+
+**Closed 2026-08-20 — the chain extractor's three copies.** `run-matrix.sh`, `rescore.sh`
+and `../quality-uplift/generate-answers.sh` each carry the `jq` filter that defines "the
+skill fired", so a divergence would make the two harnesses disagree about what they
+measured. `../gates/chain-extractor-agreement.sh` now enforces agreement — filter text
+plus behaviour on a fixture — and runs as gate 6 of the pre-commit gates whenever one of
+the three is staged, which is the moment the drift would be introduced. The backlog asked
+for a shared `tests/lib/probe.sh` instead; the gate costs one file rather than an edit to
+three call sites, one of them in a dormant harness, and unlike a refactor it can be
+demonstrated failing. **Extraction is still the better answer the day there is a third
+reason to touch all three** — the gate does not make the duplication good, it makes it
+detectable.
 
 **Closed 2026-08-20**, all five with a demonstration that the check fails when it should,
 detail in `../quality-uplift/README.md` § *Known deferred issues*:

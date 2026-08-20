@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Pre-commit gates for the dataforge skills suite.
 #
-# Five checks, each of which has already let a defect reach a commit at least
-# once, or guards a cap the suite was measured against by hand. They ran as
-# human discipline until now; this script is what stops them depending on
-# someone remembering.
+# Six checks. Most have already let a defect reach a commit at least once; the
+# rest guard a quantity nobody can judge by eye. They ran as human discipline
+# until now; this script is what stops them depending on someone remembering.
 #
 # Exit 0 = clean. Exit 1 = at least one gate failed (and says which).
 #
@@ -137,6 +136,21 @@ done)
 if [ -n "$FRONTMATTER" ]; then
   fail "un frontmatter de SKILL.md supera el cap de 1024 bytes. Recorta el inventario de cobertura de la description, nunca los triggers ni la clausula de limites."
   echo "$FRONTMATTER" | sed 's/^/    /'
+fi
+
+# ---------------------------------------------------------------------------
+# Gate 6: the three copies of the chain extractor must still agree.
+#
+# Fires only when one of the three scripts that carry it is staged, which is
+# exactly the moment the drift would be introduced. The check itself lives in
+# chain-extractor-agreement.sh — it compares the filter text and its behaviour
+# on a fixture, and its header explains why one of those two is not enough.
+# ---------------------------------------------------------------------------
+if echo "$FILES" | grep -qE '^(tests/triggering/(run-matrix|rescore)\.sh|tests/quality-uplift/generate-answers\.sh)$'; then
+  if ! AGREE_OUT=$(tests/gates/chain-extractor-agreement.sh 2>&1); then
+    fail "las tres copias del extractor de cadena no coinciden. Cambialas las tres en el mismo commit, o extrae tests/lib/probe.sh."
+    echo "$AGREE_OUT" | sed 's/^/    /'
+  fi
 fi
 
 if [ "$FAILED" -ne 0 ]; then
