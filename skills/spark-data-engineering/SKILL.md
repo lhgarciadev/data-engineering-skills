@@ -29,11 +29,16 @@ tax back when the data genuinely exceeds one machine. Below that line the same
 transformation finishes faster on a single node, with none of the tax and none of the
 tuning surface the rest of this skill exists to manage.
 
-The line is *not* "fits in RAM". Polars' lazy `scan_*` API and DuckDB both stream and
-spill out of core, so one machine handles datasets well past its own memory. Two checks
+The line sits past "fits in RAM", but not as far past it as the two usual single-node
+engines are given credit for, and they differ. DuckDB spills blocking operators
+(`GROUP BY`, `JOIN`, `ORDER BY`, windowing) to disk by default, so it takes inputs beyond
+memory without being asked. Polars runs its **in-memory** engine unless you pass
+`.collect(engine="streaming")`, and even then peak memory is reduced rather than
+guaranteed bounded. Size against memory unless you have measured otherwise. Two checks
 decide it:
 
-- Does the data fit inside one machine's disk and memory envelope?
+- Does the data fit inside one machine's envelope — memory for Polars, memory plus spill
+  space for DuckDB?
 - Is the job a scan, filter, aggregation, or join — the shape a single-node engine
   expresses directly?
 
