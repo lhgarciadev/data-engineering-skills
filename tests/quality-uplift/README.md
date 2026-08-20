@@ -313,8 +313,13 @@ judge structurally could have read the arm labels.
 
 ## Known deferred issues
 
-Dormante junto con el eval (ver *Estado* arriba). Nada de esto se arregla mientras el
-eval esté cerrado; es la condición de entrada para quien lo reabra.
+**Alcance de este backlog, porque cubre dos harnesses distintos.** Los items del eval de
+quality-uplift quedan **dormantes** junto con él (ver *Estado* arriba): no se arreglan
+mientras esté cerrado, y son la condición de entrada para quien lo reabra. Los items de
+`tests/triggering/` — y los de *Both harnesses* que toquen a ese lado — **siguen vivos**:
+ese harness verifica que dispare la skill correcta, no que la respuesta sea mejor, y no lo
+cierra ninguna decisión tomada acá. Al contrario: pesan más cuando se vuelve a editar
+skills.
 
 - `generate-answers.sh` exits 2 under `pipefail` when zero samples are accepted for a
   run. That reads as a generic pipe error, not "zero valid samples" — check the
@@ -374,7 +379,7 @@ esas respuestas gastaron su texto explicando que no tenían contexto en vez de c
 o si una respuesta que lo comenta debe descartarse como muestra inválida igual que una
 donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio sin marca.
 
-**Both harnesses:**
+**Both harnesses** (el lado de triggering de estos sigue vivo):
 
 - `analyze.sh` never enforces the spec's "fewer than 3 accepted samples per arm ⇒ void"
   rule, and silently drops a `.meta` with no matching judgment from the correlation
@@ -400,7 +405,7 @@ donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio 
   fired", so the two harnesses can silently drift on the measurement itself. Extract a
   shared `tests/lib/probe.sh`.
 
-**`tests/triggering/` specifically:**
+**`tests/triggering/` specifically — VIVOS, este harness no está cerrado:**
 
 - `rescore.sh` scores `NONE|X` inconsistently with bare `NONE`: the `NONE` branch treats
   process skills as "no domain skill fired", the alternation branch does not, which

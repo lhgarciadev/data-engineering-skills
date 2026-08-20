@@ -14,6 +14,23 @@ def test_keep_valid_drops_malformed_rows():
 
 For transformation logic with many edge cases, consider `hypothesis` for property-based testing (generate inputs, assert invariants) alongside example-based `pytest` tests — it tends to surface edge cases (empty inputs, extreme values, unusual duplicates) that hand-written test cases miss.
 
+## Deciding whether to write the extractor at all
+
+Everything below assumes a prior call: that this extraction is yours to write. That is a **build-vs-buy** decision with three options — hand-written, which is what this file teaches; a declarative EL library embedded in your own code, where dlt is the current Python exponent alongside the Singer/Meltano ecosystem named later in this file; or a managed connector service such as Airbyte or Fivetran.
+
+A library of the second kind takes over normalizing nested data into relational tables, schema inference and destination migration, incremental state persistence, and keyed merge/upsert. It does not take over your source logic, pipeline-level retries (dlt's own docs: *"By default, `dlt` does not retry any of the pipeline steps"*), orchestration, the transformation layer, or the policy decision of what a schema change should do.
+
+Four questions separate the three:
+
+- **Does a maintained connector already exist for this exact source?** The most load-bearing question, and nearly binary. Vendor catalogues are tiered, and only the top tier carries a maintenance commitment — Airbyte documents archiving connectors it sees little usage of.
+- **How many sources will you maintain?** One well-understood source rarely repays a framework; a dozen usually does.
+- **Is nested-to-relational normalization a real problem here,** or is the payload already flat?
+- **Who operates what you buy, and how is it billed** — runtime hours, modified rows, or your own time?
+
+Check the licensing line before choosing the middle option: the dlt library is Apache-2.0, but its managed runtime, data-quality checks, transformation layer, and some of its sources and destinations — SQL Server Change Tracking among them, the mechanism recommended further down — are a separately licensed commercial product. "Open source library" and "the feature I need is open source" are different claims.
+
+One caveat over all of it: every published ladder for this decision is written by someone selling one of the three options. The four questions survive that bias because they ask about your situation rather than asserting anything about a product.
+
 ## Idempotency and safe reruns
 
 Write pipelines that can run twice without duplicating or corrupting data. The pattern every major orchestrator (Airflow, Dagster, Prefect) converges on is the same: **overwrite-or-merge by partition/key, never blind append.** Re-running the task for the same logical partition should produce the same end state, not a duplicate. Concretely:
@@ -35,6 +52,7 @@ Idempotent upserts above solve the *write* side of a safe rerun — once you hav
 - **A dedicated control table**, external to the orchestrator — the most portable choice, and the only one that survives an orchestrator migration.
 - **Orchestrator-native state**, but pick the mechanism actually meant for cross-run persistence. Airflow's `XCom` is for passing data *between tasks within one DAG run* — it's not designed to persist a value across separate runs; use an Airflow `Variable` for that instead. Dagster's sensor `cursor` (`context.cursor` / `update_cursor()`) is the mechanism actually built for this — it's tracked by the Dagster daemon across evaluations specifically to avoid duplicate work. Prefect's `Variable` serves the same role for flows.
 - **A checkpoint file**, the pattern the Singer/Meltano ELT ecosystem is built on: each run emits a `STATE` message to stdout, redirected to a file (`tap | target | tail -n 1 > state.json`), and the next run reads it back in. Simple, but it's now an artifact you have to manage and back up yourself.
+- **State the library owns for you**, if you took the buy side of the decision above: dlt keeps the cursor in a `_dlt_pipeline_state` table in the destination, committed with the data rather than beside it. Its docs state the property you actually want from any of these four — the state at the destination stays at the point the load package was created, so **incremental cursors are not advanced past data that did not load**. Build that same invariant into a hand-rolled control table: the watermark advances only after the rows it covers are committed. What this pattern adds is a new way to lose the state — it is keyed on pipeline name, destination and dataset, so renaming any of the three looks exactly like a first run.
 
 Picking the wrong one is the actual failure mode: state stored in something that doesn't outlive the run (a local variable, a task-only XCom) silently resets to "extract everything" or "extract nothing" on the next run, and neither failure looks like an error — it looks like a pipeline that ran successfully.
 
@@ -74,7 +92,9 @@ def transform(rows: list[dict], config: PipelineConfig) -> Iterator[dict]:
 | `try/except: pass` swallowing all errors in a batch | Split retryable vs non-retryable; dead-letter the latter instead of silently dropping it |
 | `print()` for pipeline logging | Structured logging (`structlog` or stdlib + JSON formatter) with record/batch/stage context |
 | Append-only writes with no rerun story | Upsert/merge by partition key; make reruns idempotent by design |
+| Declaring a `merge` write disposition without declaring the key | dlt's merge job *"falls back to append"* when no merge keys are discovered, and a hand-rolled merge usually does the same — the rerun duplicates instead of failing. Declare the key and confirm the disposition took effect |
 | Storing a watermark in Airflow `XCom` expecting it to persist across DAG runs | XCom is scoped to one DAG run — the next run starts as if no watermark exists | Use an Airflow `Variable` (or an external control table) for state that must outlive a single run |
+| Renaming a pipeline, destination or dataset that the watermark state is keyed on | The next run finds no state and silently restarts from scratch — assert on startup that a watermark was actually found instead of defaulting to "everything" |
 | Assuming a full pull every run is always "the unsophisticated option" | For small/infrequently-updated sources it's simpler and trivially idempotent — no state to lose sync with | Reserve watermark/incremental logic for sources where a full pull is actually too slow |
 | Testing only the "happy path" | Add edge cases: nulls, duplicates, malformed schemas, empty batches |
 | Hardcoded connection strings/paths in code | Externalize via env vars / config files / `pydantic-settings` |
