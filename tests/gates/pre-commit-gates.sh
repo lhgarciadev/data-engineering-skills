@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Pre-commit gates for the dataforge skills suite.
 #
-# Four checks, each of which has already let a defect reach a commit at least
-# once. They ran as human discipline until now; this script is what stops them
-# depending on someone remembering.
+# Five checks, each of which has already let a defect reach a commit at least
+# once, or guards a cap the suite was measured against by hand. They ran as
+# human discipline until now; this script is what stops them depending on
+# someone remembering.
 #
 # Exit 0 = clean. Exit 1 = at least one gate failed (and says which).
 #
@@ -110,6 +111,32 @@ done)
 if [ -n "$OVERLONG" ]; then
   fail "un archivo de referencia supera las 3500 palabras."
   echo "$OVERLONG" | sed 's/^/    /'
+fi
+
+# ---------------------------------------------------------------------------
+# Gate 5: a SKILL.md frontmatter over the 1024-byte cap.
+#
+# Past the cap the frontmatter stops loading and skill discovery breaks in the
+# shape every other gate here exists for: nothing errors, the skill simply
+# never fires. Nothing checked this until now, and the slack is thin — when
+# this gate landed, pipelines-architecture measured 1021 bytes and streaming
+# 1015, three and nine bytes under.
+#
+# The metric is the whole frontmatter block between the `---` markers counted
+# in BYTES, which is what the skill implementation plans have specified since
+# 2026-08-07. Bytes rather than characters is the conservative reading and the
+# difference is real here: the em dashes these descriptions are written with
+# cost three bytes each.
+# ---------------------------------------------------------------------------
+FRONTMATTER=$(echo "$FILES" | while read -r f; do
+  case "$f" in skills/*/SKILL.md) ;; *) continue ;; esac
+  [ -f "$f" ] || continue
+  n=$(awk '/^---$/{c++; next} c==1{print} c==2{exit}' "$f" | wc -c | tr -d ' ')
+  [ "$n" -gt 1024 ] && echo "$f: $n bytes (cap 1024, se pasa por $((n - 1024)))"
+done)
+if [ -n "$FRONTMATTER" ]; then
+  fail "un frontmatter de SKILL.md supera el cap de 1024 bytes. Recorta el inventario de cobertura de la description, nunca los triggers ni la clausula de limites."
+  echo "$FRONTMATTER" | sed 's/^/    /'
 fi
 
 if [ "$FAILED" -ne 0 ]; then

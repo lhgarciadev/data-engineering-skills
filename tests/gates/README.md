@@ -1,7 +1,8 @@
 # Pre-commit gates
 
-Four checks that used to be human discipline. Each of them had already let a
-defect reach a commit at least once before this directory existed.
+Five checks that used to be human discipline. The first four had each already
+let a defect reach a commit at least once before this directory existed. The
+fifth is the exception to that rule and is marked as such below.
 
 | Gate | What it catches | Where it failed before |
 |---|---|---|
@@ -9,9 +10,19 @@ defect reach a commit at least once before this directory existed.
 | Phantom skill reference | a `*-data-engineering` name with no matching directory under `skills/` | The phantom-invocation bug: a body naming a skill nobody could load |
 | Stale "no skill yet" claim | text asserting a data-engineering domain has no skill in the suite | The README still said 8 of 9 after the suite closed at 9/9 |
 | Reference file over 3500 words | any `skills/*/references/*.md` file exceeding the 3500-word ceiling | `event-time-windows-and-watermarks.md` shipped at 3503 words, past the 1600-3500 band its own delivery declared |
+| Frontmatter over the 1024-byte cap | any `skills/*/SKILL.md` whose frontmatter block, counted in bytes, exceeds 1024 | Nowhere yet — this is the one gate here that is preventive. Every skill delivery since 2026-08-07 checked the cap by hand, and it held; what earned the gate is that `pipelines-architecture` sits at 1021 bytes and `streaming` at 1015, so the next added clause breaks discovery in silence |
 
 The first run of this script found three live defects, all three of them
 already public. That is the argument for the directory.
+
+**On bytes rather than characters, for the frontmatter gate.** The metric is
+the whole block between the `---` markers measured with `wc -c`, the same
+command the skill implementation plans have specified since 2026-08-07. It is
+the conservative reading and the difference is not academic: these descriptions
+are written with em dashes, which cost three bytes each, so a character count
+reads several dozen bytes lower than the cap actually sees. Measuring the
+description text alone — rather than the whole block — reads lower still, and
+is the mistake to avoid when re-checking headroom by hand.
 
 ## Why only the ceiling is gated, not the floor
 
@@ -115,6 +126,12 @@ A check earns a place here when it has caught a real defect **and** the defect
 class is invisible to reading. Both halves matter: a gate for something a
 reviewer would have spotted anyway is noise, and noise is how a gate becomes
 something people learn to scroll past.
+
+The frontmatter gate satisfies the second half and not the first, which is why
+it is labelled preventive in the table. A gate may be added on the strength of
+the invisibility half alone when the quantity it guards cannot be judged by
+eye and the remaining margin is small enough to be spent by one edit — state
+which half is missing rather than implying both are met.
 
 Before adding one, run it in `--all` mode against the current tree. If it
 reports anything that is not a genuine defect, tighten it until it does not —

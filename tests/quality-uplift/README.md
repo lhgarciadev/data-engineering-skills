@@ -418,5 +418,11 @@ donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio 
 - `run-matrix.sh` writes its non-authoritative position-1 verdict to `summary.tsv` under a
   `VERDICT` column with no caveat, and `results/matrix-green1-opus-with/summary.tsv` still
   carries the exact false finding this branch spent a commit correcting.
-- Nothing checks the 1024-character frontmatter cap. `pipelines-architecture-data-engineering`
-  currently sits at 1021 with three characters of headroom.
+- ~~Nothing checks the 1024-character frontmatter cap.~~ **CERRADO 2026-08-20.** Es el
+  gate 5 de `tests/gates/pre-commit-gates.sh`, verificado fallando: un frontmatter
+  inflado 11 bytes reporta *"1032 bytes (cap 1024, se pasa por 8)"* y sale 1. Una
+  precisión sobre el item original: el cap se mide en **bytes**, no en caracteres, y
+  sobre el bloque entero de frontmatter, no sobre el texto de la description — que es la
+  métrica que los planes de implementación fijaron desde el 2026-08-07. Con esa métrica
+  `pipelines-architecture-data-engineering` está en 1021 y `streaming` en 1015. Medir
+  sólo la description da ~60 bytes menos y hace parecer que hay margen donde no hay.
