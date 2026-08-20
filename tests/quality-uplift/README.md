@@ -407,17 +407,31 @@ donde la skill no cargó. Hoy no es ninguna de las dos cosas: entra al promedio 
 
 **`tests/triggering/` specifically — VIVOS, este harness no está cerrado:**
 
-- `rescore.sh` scores `NONE|X` inconsistently with bare `NONE`: the `NONE` branch treats
-  process skills as "no domain skill fired", the alternation branch does not, which
-  misgrades case A11.
-- `rescore.sh` degrades to all-`FAIL` when a matrix argument is omitted, because the
-  unresolved expectation `?` matches nothing. It should report no-expectation and exit
-  non-zero.
-- Stale `.rep*.jsonl` files from a longer prior run inflate the denominator, manufacturing
-  `FLAKY` verdicts.
-- `run-matrix.sh` writes its non-authoritative position-1 verdict to `summary.tsv` under a
-  `VERDICT` column with no caveat, and `results/matrix-green1-opus-with/summary.tsv` still
-  carries the exact false finding this branch spent a commit correcting.
+- ~~`rescore.sh` scores `NONE|X` inconsistently with bare `NONE`~~ **CERRADO 2026-08-20.**
+  Ya no hay dos ramas: "ningún domain skill disparó" se normaliza al token `NONE` y se
+  matchea como cualquier otra alternativa, así que un `NONE` pelado y un `NONE|X` puntúan
+  igual. Verificado contra el script viejo sobre el mismo fixture: A11 daba `0/1 FAIL` y
+  ahora da `1/1 PASS`.
+- ~~`rescore.sh` degrades to all-`FAIL` when a matrix argument is omitted~~ **CERRADO
+  2026-08-20.** Un caso sin expectativa resuelta se reporta `NOEXPECT` y el script sale 1;
+  sin ninguna expectativa parseada sale 2 **sin imprimir tabla**. Ojo con la primera
+  versión de este arreglo, que era el mismo defecto disfrazado: `${#EXPECTED[@]}` sobre un
+  array asociativo vacío dispara `set -u`, el error se imprime, **no detiene nada** y el
+  camino degrada al de `NOEXPECT`. El conteo se lleva a mano al parsear.
+- ~~Stale `.rep*.jsonl` files from a longer prior run inflate the denominator~~ **CERRADO
+  2026-08-20.** Dos mitades: `run-matrix.sh` borra los logs *de ese caso* antes de
+  escribir los nuevos (por caso, nunca el directorio entero — vaciar todo rompería el
+  top-up con `-c`), y escribe `run-reps` antes del primer probe. `rescore.sh` lo lee y
+  reporta `REPMISMATCH` en vez de calcular sobre el denominador equivocado; sin ese
+  archivo **declara** que el denominador salió del disco. Verificado: un rep4 stale daba
+  `1/2 FLAKY` con exit 0, ahora da `REPMISMATCH` con exit 1.
+- ~~`run-matrix.sh` writes its non-authoritative position-1 verdict under a `VERDICT`
+  column with no caveat~~ **CERRADO 2026-08-20.** La columna se llama `VERDICT_POS1`: el
+  nombre carga la salvedad en vez de un caveat que nadie lee, y el resumen imprime el
+  comando de `rescore.sh` como veredicto autoritativo. **Queda abierta la mitad de los
+  datos:** `results/matrix-green1-opus-with/summary.tsv` todavía tiene el hallazgo falso,
+  pero `tests/triggering/results/` está gitignoreado — es un artefacto local, no dato
+  incorrecto en el repo público, y no es re-corrible desde un clone.
 - ~~Nothing checks the 1024-character frontmatter cap.~~ **CERRADO 2026-08-20.** Es el
   gate 5 de `tests/gates/pre-commit-gates.sh`, verificado fallando: un frontmatter
   inflado 11 bytes reporta *"1032 bytes (cap 1024, se pasa por 8)"* y sale 1. Una

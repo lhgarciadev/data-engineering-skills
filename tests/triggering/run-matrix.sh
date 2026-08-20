@@ -57,6 +57,12 @@ await_memory() {
 [[ -n "$OUTDIR" ]] || OUTDIR="$SCRIPT_DIR/results/$SUITE-$MODEL-$ARM"
 mkdir -p "$OUTDIR"
 
+# What this run was INSTRUCTED to produce, written before the first probe so a
+# later scorer can tell a complete run from a partial one. rescore.sh reads it;
+# without it the denominator comes from whatever .rep*.jsonl happen to be on
+# disk, and a stale rep from a longer earlier run manufactures a FLAKY verdict.
+echo "$REPS" > "$OUTDIR/run-reps"
+
 # The without-arm disables only the suite. Every other plugin, CLAUDE.md, and
 # hook stays in place so the arms differ by exactly one variable.
 settings_args=()
@@ -109,6 +115,12 @@ run_case() {
   local id="$1" category="$2" expected="$3" prompt="$4"
   local hits=0 firsts=() k fired first
 
+  # Drop this case's logs from any earlier run before writing new ones. Scoped
+  # to the case, never the whole directory: topping up one case with -c must not
+  # erase the evidence for the others. Left in place, a rep4 from a 5-rep run
+  # inflates the denominator of a 3-rep run and reads as FLAKY.
+  rm -f "$OUTDIR/$id".rep*.jsonl
+
   for (( k=1; k<=REPS; k++ )); do
     fired="$(probe_once "$id" "$prompt" "$k")"
     first="${fired%%,*}"
@@ -134,6 +146,11 @@ run_case() {
   dist=$(printf '%s\n' "${firsts[@]}" | sort | uniq -c | sort -rn \
          | awk '{printf "%sx%s ",$1,$2}')
 
+  # This verdict scores position 1 only — `first`, above. That is the wrong rule
+  # in this environment, because the SessionStart hook mandates a process skill
+  # before any domain skill, so a correct chain scores as a failure here. The
+  # column is named for the rule that computed it rather than carrying a caveat
+  # nobody reads; rescore.sh is the authoritative, chain-aware scorer.
   local verdict="FAIL"
   (( hits == REPS )) && verdict="PASS"
   (( hits > 0 && hits < REPS )) && verdict="FLAKY"
@@ -160,7 +177,7 @@ done < "$MATRIX"
 wait
 
 {
-  printf 'ID\tCATEGORY\tEXPECTED\tHITS\tVERDICT\tDISTRIBUTION\tREFS\n'
+  printf 'ID\tCATEGORY\tEXPECTED\tHITS\tVERDICT_POS1\tDISTRIBUTION\tREFS\n'
   cat "$OUTDIR"/*.result 2>/dev/null | sort
 } > "$OUTDIR/summary.tsv"
 
@@ -169,4 +186,6 @@ flaky=$(grep -c $'\tFLAKY\t' "$OUTDIR/summary.tsv" || true)
 total=$(( $(wc -l < "$OUTDIR/summary.tsv") - 1 ))
 echo "" >&2
 echo "=== $ARM / $MODEL / ${REPS} reps : $pass PASS, $flaky FLAKY, of $total cases ===" >&2
+echo "    VERDICT_POS1 scores the first skill only. For the authoritative verdict:" >&2
+echo "    ./rescore.sh $OUTDIR $MATRIX" >&2
 column -t -s $'\t' "$OUTDIR/summary.tsv"
