@@ -14,6 +14,8 @@ Testing validates what you already know might go wrong — you write an expectat
 - **Schema** — has the structure changed (a new column, a changed type)?
 - **Lineage** — the map that ties the other four together: what feeds what.
 
+**Treat the shape, not just this instance.** A vendor publishing a numbered pillar framework for a data-quality-adjacent topic is a recurring move, and the second one is already in circulation: dlt ships its own *"five pillars of data quality"* — Structural Integrity, Semantic Validity, Uniqueness & Relations, Privacy & Governance, Operational Health — on a page whose opening line disqualifies the competition (*"The data quality lifecycle has rarely been achievable in a single tool due to the runtime constraints of traditional ETL vendors"*) and whose capability table marks several rows as available only in the paid product. Different five, different topic, same move. When you meet a numbered framework in this space, find out who published it and what they sell before repeating the number. Sourcing: `docs/superpowers/research/2026-08-20-el-build-vs-buy-and-dlt-verification.md`.
+
 ## Lineage: OpenLineage and dbt's own DAG
 
 Unlike the five pillars, lineage has a genuinely neutral open standard behind it: [OpenLineage](https://openlineage.io), governed by the Linux Foundation AI & Data — "OpenLineage can never belong to a company... it belongs to us all," per its own foundation announcement. It models three entities — **Job** (a process that consumes/produces datasets), **Run** (one timed occurrence of a job), **Dataset** — emitted as events (`RunEvent`, `DatasetEvent`, `JobEvent`) as a pipeline executes.
@@ -42,7 +44,7 @@ One nuance the data-observability marketing around MTTR rarely mentions: Google 
 
 | Mistake | Why it hurts | Fix |
 |---|---|---|
-| Citing "the 5 pillars" as an industry standard | It's Monte Carlo's own marketing framing, even though other vendors reproduce it without attribution | Name it as Monte Carlo's framework when using it pedagogically |
+| Citing any vendor's numbered "pillars" framework as an industry standard | Monte Carlo's five observability pillars and dlt's five data-quality pillars are both marketing framings, and other vendors reproduce the first without attribution | Name the publisher, and check what they sell, before using the framework pedagogically |
 | Treating dbt's lineage graph and an orchestrator's asset lineage as the same thing | One is declared transformation dependencies inside a dbt project; the other is runtime orchestration dependencies across any asset type | Use dbt's DAG for impact analysis inside a dbt project; use the orchestrator's asset graph for cross-pipeline dependencies |
 | Presenting MTTD/MTTR as data-engineering-native metrics | They're imported from SRE/systems reliability, and their application to data quality specifically is vendor territory, not a neutral standard | Attribute the origin, and don't lean on MTTR alone as a trend metric without the caveat above |
 | Assuming Soda is "just an observability tool" | Its current (4.x) product spans both data-contract validation and observability as separate pillars | Check which Soda pillar (Contracts vs. Observability) a given feature actually belongs to before comparing it to a pure-play tool like Monte Carlo |
